@@ -1,5 +1,5 @@
 /**
- * brownie-dnd.js
+ * dnd.js
  * 
  * require prototype.js only
  *
@@ -58,7 +58,7 @@ DnD.SortableTable.prototype = {
 		this.active = false;
 		this.tables = (!tables) ? [] : (tables.constructor == Array) ? tables : [ tables ];
 		this.tables = this.tables.collect( function(table){return $(table);} );
-		this.options = Object.extend( DnD.SortableTable.DefaultOptions, options || {} );
+		this.options = Object.extend( $H(DnD.SortableTable.DefaultOptions), options || {} );
 		this.clickHandler = this.click.bindAsEventListener(this);
 		this.mousedownHandler = this.mousedown.bindAsEventListener(this);
 		this.mousemoveHandler = this.mousemove.bindAsEventListener(this);
