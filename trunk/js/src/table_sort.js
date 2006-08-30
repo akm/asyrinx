@@ -15,6 +15,12 @@ Object.extend(TableSort, {
     comapare: function(row1,row2) {
         var key1=row1["key"];
         var key2=row2["key"];
+        if (key1 == null && key2 == null)
+            return 0;
+        else if (key1 == null)
+            return -1;
+        else if (key2 == null)
+            return 1;
         return (key1<key2)?-1:(key1==key2)?0:1;
     }
 });
@@ -110,7 +116,8 @@ TableSort.AsNumber.prototype = {
 	   this.name = "AsNumber";
     },
     generate: function(row) {
-        return Number(this.keyGen.generate(row));
+        var result = this.keyGen.generate(row);
+        return (result)?result*1:0;
     }
 }
 
