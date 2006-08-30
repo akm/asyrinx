@@ -46,13 +46,11 @@ TableSort.prototype = {
             return this.rows;
         var rows = [];
         for(var i = 0; i < this.tables.length; i++) {
-            var rowCount = 0;
             var table = this.tables[i];
             for(var j = 0; j < table.tBodies.length; j++) {
                 var tBody = table.tBodies[j];
                 for(var k = 0; k < tBody.rows.length; k++) {
                     rows.push(tBody.rows[k]);
-                    rowCount++;
                 }
             }
         }
