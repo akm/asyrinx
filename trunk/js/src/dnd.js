@@ -207,7 +207,9 @@ DnD.SortableTable.prototype = {
 	},
 	
 	hideDragRect: function() {
-		this.dragRect.style.display = "none";
+	   if (!this.dragRect)
+	       return;
+	   this.dragRect.style.display = "none";
 	},
 	
 	createDragRect: function() {
