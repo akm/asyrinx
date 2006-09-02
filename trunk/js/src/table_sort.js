@@ -6,7 +6,6 @@
  * @copyright T.Akima
  * @license LGPL
  */
-
 TableSort = Class.create();
 TableSort.DefaultOptions = {
     "rememberRows": false

@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>table squeezer</title>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+	.drag_handle{ background-color: #89756A; padding: 0px; margin: 2px; width:20px; height:16px; cursor: pointer; }
+	.even{ background-color: #AAA; }
+	.odd{ background-color: #EEE; }
+--></style>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../lib/prototype.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/tree_process.js" ></script>
+</head>
+<body>
+テーブルの表示行を絞り込むテスト
+行検索: <input type="text" id="row_search" size="20"/>
+<table id="table0" class="dad_sortable" border="1" cellspacing="0" cellpadding="0" bordercolor="black">
+	<thead>
+		<tr>
+			<td>ID</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr><td>1</td><td>The Serverside.com</td><td>http://www.theserverside.com/</td></tr>
+		<tr><td>2</td><td>Eclipse.org</td><td>http://www.eclipse.org/</td></tr>
+		<tr><td>3</td><td>MSDN</td><td>http://msdn.microsoft.com/</td></tr>
+		<tr><td>4</td><td>IBM developerWorks</td><td>http://www-06.ibm.com/jp/developerworks/</td></tr>
+		<tr><td>5</td><td>codehaus</td><td>http://codehaus.org/</td></tr>
+	</tbody>
+</table>
+<script language="JavaScript" type="text/javascript"><!--
+
+--></script>
+
+<br/><br/><br/>
+
+二つのテーブルをまとめて処理できる<br/>
+名前: <input type="text" id="row_name_search" size="20"/>
+URL: <input type="text" id="row_url_search" size="20"/><br/>
+<div id="tables">
+<table id="table1" class="dad_sortable" border="1" cellspacing="0" cellpadding="0" bordercolor="black">
+	<thead>
+		<tr>
+			<td width="20">&nbsp;</td>
+			<td>ID</td>
+			<td>No.</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="even"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>1</td><td class="item_no">1</td><td>prototype.js</td><td>http://prototype.conio.net/</td></tr>
+		<tr class="odd"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>2</td><td class="item_no">2</td><td>script.aculo.us</td><td>http://script.aculo.us/</td></tr>
+		<tr class="even"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>3</td><td class="item_no">3</td><td>Rico</td><td>http://openrico.org/</td></tr>
+		<tr class="odd"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>4</td><td class="item_no">4</td><td>Ruby</td><td>http://www.ruby-lang.org/</td></tr>
+		<tr class="even"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>5</td><td class="item_no">5</td><td>Ruby on Rails</td><td>http://www.rubyonrails.org/</td></tr>
+	</tbody>
+</table>
+
+----------------------  separation  ------------------------
+
+<table id="table2" class="dad_sortable" border="1" cellspacing="0" cellpadding="0" bordercolor="black">
+	<thead>
+		<tr>
+			<td width="20">&nbsp;</td>
+			<td>ID</td>
+			<td>No.</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="odd"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>6</td><td class="item_no">6</td><td>java</td><td>http://java.sun.com/</td></tr>
+		<tr class="even"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>7</td><td class="item_no">7</td><td>apache httpd</td><td>http://httpd.apache.org/</td></tr>
+		<tr class="odd"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>8</td><td class="item_no">8</td><td>Tomcat</td><td>http://tomcat.apache.org/</td></tr>
+		<tr class="even"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>9</td><td class="item_no">9</td><td>JBoss</td><td>http://labs.jboss.com/</td></tr>
+		<tr class="odd"><td><div class="drag_handle"><img id="img1" src="stock-media-stop.png" height="20" ondragstart="return false;"/></div></td><td>10</td><td class="item_no">10</td><td>Seasar</td><td>http://www.seasar.org/</td></tr>
+	</tbody>
+</table>
+</div>
+
+<script language="JavaScript" type="text/javascript"><!--
+--></script>
+
+<div style="margin: 50px 0px  200px 0px;">
+検索にひっかかったやつと同じNoを持つ行を表示する
+<br/>
+行検索: <input type="text" id="row_search_group_by_no" size="20"/>
+<table id="table3" border="1" cellspacing="0" cellpadding="0">
+	<thead>
+		<tr>
+			<td>ID</td>
+			<td>No.</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="even"><td>1</td><td class="item_no">1</td><td>prototype.js</td><td>http://prototype.conio.net/</td></tr>
+		<tr class="odd"><td>2</td><td class="item_no">1</td><td>prototype.js v1.4.0 の使い方</td><td>http://www.imgsrc.co.jp/~kuriyama/prototype/prototype.js.html</td></tr>
+		<tr class="even"><td>3</td><td class="item_no">1</td><td>Prototype.js - Effectサンプル</td><td>http://hori-uchi.com/prototype/Effect.html</td></tr>
+		<tr class="odd"><td>4</td><td class="item_no">2</td><td>script.aculo.us</td><td>http://script.aculo.us/</td></tr>
+		<tr class="even"><td>5</td><td class="item_no">3</td><td>Rico</td><td>http://openrico.org/</td></tr>
+		<tr class="odd"><td>6</td><td class="item_no">4</td><td>Ruby</td><td>http://www.ruby-lang.org/</td></tr>
+		<tr class="even"><td>7</td><td class="item_no">4</td><td>Rubyとは - はてな</td><td>http://d.hatena.ne.jp/keyword/Ruby</td></tr>
+		<tr class="odd"><td>8</td><td class="item_no">4</td><td>Rubyist Magazine - るびま</td><td>http://jp.rubyist.net/magazine/</td></tr>
+		<tr class="even"><td>9</td><td class="item_no">5</td><td>Ruby on Rails</td><td>http://www.rubyonrails.org/</td></tr>
+		<tr class="odd"><td>10</td><td class="item_no">5</td><td>Rails API ドキュメント</td><td>http://railsapi.masuidrive.jp/</td></tr>
+	</tbody>
+</table>
+</div>
+<div>dummy</div>
+<script language="JavaScript" type="text/javascript"><!--
+var command = new TreeProcess.Command.Invocator( 
+    {"tables": [$("table3")]},
+    [
+        {   "iterations": "tables,tBodies,rows",
+            "command": new TreeProcess.Command.Delegate(
+                "findAll",
+                new TreeProcess.Command.Find({
+                    "result_name": "selectedRows",
+                    match: function(context) {
+                        this.matchingElement = this.matchingElement || $("row_search_group_by_no");
+                        var value = context.iterator.innerText || context.iterator.textContent || "";
+                        return value.indexOf(this.matchingElement.value) > -1;
+                    }
+                }),
+                "collect",
+                new TreeProcess.Command.Collect({"result_name": "whole_rows"})
+            )
+        },
+        {   "method": "appendRelations",
+            "iterations": null,
+            "command": {
+                getItemNo: function(row) {
+                    var td = document.getFirstElementByClassName("item_no", row);
+                    return (td) ? (td.innerText || td.textContent) : null;
+                },
+                appendRelations: function(context) {
+                    if (!context["selectedRows"])
+                        return false;
+                    var selectedRowItemNos = context.selectedRows.collect( this.getItemNo );
+                    context.selectedRows = [];
+                    for(var i = 0; i < context.whole_rows.length; i++) {
+                        var row = context.whole_rows[i];
+                        var itemNo = this.getItemNo(row);
+                        if (selectedRowItemNos.contains(itemNo))
+                            context.selectedRows.push(row);
+                    }
+                }
+            } 
+        },
+        {   "method": "showOrHide", 
+            "iterations": "tables, tBodies, rows",
+            "command": new TreeProcess.Command.ShowOrHide( {
+                predicate: function(context) {
+                    if (!context["selectedRows"])
+                        return false;
+                    return context["selectedRows"].contains(context["iterator"]);
+                }
+            } ) 
+        }
+    ] 
+);
+var processor = new TreeProcess.Processor();
+Event.observeDelay($("row_search_group_by_no"), "keyup", 
+    function(event){
+        processor.start(command);
+    }, 
+    false, 
+    {
+        before_setTimeout: function(event) {
+            processor.stop();
+        }
+    }
+);
+
+--></script>
+
+</body>
+</html>
