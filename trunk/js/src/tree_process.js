@@ -200,6 +200,10 @@ TreeProcess.Processor.prototype = {
         var f = null;
         if (command.constructor == Function) {
             f = command;
+            if (context.command_delay < 1)
+                f.call(command, context);
+            else
+                setTimeout(f.bind(null, context), context.command_delay * 1);
         } else {
     		var command_method = context["command_method"];
             if (!command_method)
@@ -208,11 +212,11 @@ TreeProcess.Processor.prototype = {
     			(command[command_method] || command[this.options.dispatch_method]);
             if (!f)
                throw "command has no method: " + context.command_method + " or " + this.options.dispatch_method;
+            if (context.command_delay < 1)
+                f.call(command, context);
+            else
+                setTimeout(f.bind(command, context), context.command_delay * 1);
         }
-        if (context.command_delay < 1)
-            f.call(command, context);
-        else
-            setTimeout(command.bind(context), context.command_delay * 1);
     },
     
     stop: function() {
