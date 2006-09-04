@@ -20,7 +20,8 @@ TreeProcess.Processor.DefaultContext = {
     "iteration": null,
     "iteration_name": null,
     "iterator": null,
-    "iterator_name": null
+    "iterator_name": null,
+    "command_delay": 0
 }
 TreeProcess.Processor.prototype = {
     initialize: function(options) {
@@ -208,7 +209,10 @@ TreeProcess.Processor.prototype = {
             if (!f)
                throw "command has no method: " + context.command_method + " or " + this.options.dispatch_method;
         }
-        f.call(command, context);
+        if (context.command_delay < 1)
+            f.call(command, context);
+        else
+            setTimeout(command.bind(context), context.command_delay * 1);
     },
     
     stop: function() {
