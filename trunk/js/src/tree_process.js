@@ -216,8 +216,10 @@ TreeProcess.Processor.prototype = {
         }
         if (context.command_delay < 1) 
             f.call(command, context);
-        else
-            setTimeout(f.bind(receiver, context), context.command_delay * 1);
+        else {
+            var contextCopy = Object.extend({}, context);
+            setTimeout(f.bind(receiver, contextCopy), context.command_delay * 1);
+        }
     },
     
     stop: function() {
