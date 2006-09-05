@@ -62,6 +62,9 @@ TreeProcess.Processor.prototype = {
     process_iteration: function(context) {
         if (!context.iterations)
             throw "no iterations in context" + context.inspect();
+		if (context.iterations.constructor != Array)
+			context.iterations = context.iterations.split(',');
+		context.iterations = context.iterations.collect(function(iter){ return iter.strip(); } );
         if (context.iteration_level == null || context.iteration_level == undefined )
             throw "no iteration_level in context: iterations" + context.iterations.inspect();
 		var context_bak = {
@@ -197,13 +200,11 @@ TreeProcess.Processor.prototype = {
         var command = context["command"];
         if (!command)
             throw "command is unspecified in context.";
+        var receiver = command;
         var f = null;
         if (command.constructor == Function) {
+            receiver = null;
             f = command;
-            if (context.command_delay < 1)
-                f.call(command, context);
-            else
-                setTimeout(f.bind(null, context), context.command_delay * 1);
         } else {
     		var command_method = context["command_method"];
             if (!command_method)
@@ -212,11 +213,11 @@ TreeProcess.Processor.prototype = {
     			(command[command_method] || command[this.options.dispatch_method]);
             if (!f)
                throw "command has no method: " + context.command_method + " or " + this.options.dispatch_method;
-            if (context.command_delay < 1)
-                f.call(command, context);
-            else
-                setTimeout(f.bind(command, context), context.command_delay * 1);
         }
+        if (context.command_delay < 1) 
+            f.call(command, context);
+        else
+            setTimeout(f.bind(receiver, context), context.command_delay * 1);
     },
     
     stop: function() {
@@ -264,9 +265,6 @@ TreeProcess.Command.Invocator.prototype = {
 	
 	prepareContext: function(context, invocation) {
 		context["iterations"] = invocation.iterations || [];
-		if (context.iterations.constructor != Array)
-			context.iterations = context.iterations.split(',');
-		context.iterations = context.iterations.collect(function(iter){ return iter.strip(); } );
 		context["command_method"] = invocation.method || "execute";
 		context["command"] = invocation.command;
 	}
