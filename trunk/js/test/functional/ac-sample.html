@@ -30,6 +30,18 @@ var products = [
     {id:16, category:2, name:"CUBE", asin:"B0000DJWJE", price: 2963 },
     {id:17, category:2, name:"となりのトトロ", asin:"B00005NJLP", price: 3664 }
 ];
+function selectProducts(params) {
+    var result = [];
+    for(var i = 0; i < products.length; i++) {
+        var p = products[i];
+        if (p.name.indexOf(params.name) < 0)
+            continue;
+        if (p.asin.indexOf(params.asin) < 0)
+            continue;
+        result.push(p);
+    }
+    return result;
+}
 
 --></script>
 
@@ -37,7 +49,7 @@ var products = [
 		<table><tr><td>
     		<label for="f_id">ID</label>
     		<input type="text" id="f_id" name="f_id" size="10"/>
-			<select id="f_category" name="f_category" style="z-index:0">
+			<select id="f_category" name="f_category">
 				<option value="1">書籍</option>
 				<option value="2">DVD</option>
 				<option value="3">CD</option>
@@ -179,7 +191,7 @@ ACFields.Mapping.InstanceMethods = {
         Event.observe(this.getField(), "focus", this.focusHandler, false);
     },
     fieldOnFocus: function(event) {
-        this.activateListener();
+        this.activateListeners();
     },
     activateListeners: function() {
         this.fieldKeyupHandler = this.fieldKeyup.bindAsEventListener(this);
@@ -232,12 +244,14 @@ ACFields.prototype = {
             if (!this.searching)
                 return;
             var mapping = this.mappings[i];
-            var value = mapping.getvalueFromField();
+            var value = mapping.getValueFromField();
             result[mapping.property] = value;
         }
         return result;
     },
     query: function(parameters, sender) {
+        if (this.options["query"])
+            this.options["query"](parameters, sender);
     }
 }
 
@@ -276,9 +290,11 @@ ACFields.BasicTable.Column.InstanceMethods = {
         }
     },
     initializeHtmlOptions: function() {
-        if (!this.htmlOptions["align"] && (!this.masterMap) && 
-            (this.type == "Number" || this.type == "Currency") ) {
-            this.htmlOptions["align"] = "right";
+        if (!this.htmlOptions["align"]){
+            var align = ((!this.options.masterMap) && 
+                (this.type == "Number" || this.type == "Currency")) ? "right" :
+                this.getField().style.align;
+            this.htmlOptions["align"] = align;
         }
     },
     buildCell: function(tr, values) {
@@ -360,20 +376,22 @@ ACFields.BasicTable.prototype = {
 				}
 			}
 		}
-        
-        
-        
     }
 }
 
 var mappings = [
    { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f_id") },
-   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category") },
+   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category"), htmlOptions:{"align":"center"} },
    { suggestive:true , visible:true , type:"String"  , property: "name", field: $("f_name") },
    { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f_asin") },
    { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f_price") }
 ];
-new ACFields(mappings);
+new ACFields(mappings, {
+    query: function(parameters, sender) {
+        var result = selectProducts(parameters);
+        table.execute(result);
+    }
+});
 var table = new ACFields.BasicTable($("amazon_products"), mappings);
 table.execute(products.slice(0, 10));
 
