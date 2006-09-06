@@ -45,6 +45,12 @@ Object.extend(Enumerable, EnumerableExt);
 
 Object.extend(Array.prototype, EnumerableExt);
 Object.extend(Array.prototype, {
+	remove: function( value ) {
+		var idx = this.indexOf( value );
+		if (idx > -1)
+			this.splice(idx, 1);
+		return idx;
+	},
     contains: function(value) {
         return (this.indexOf(value) > -1);
     },
@@ -156,6 +162,27 @@ Object.extend( Number.prototype, {
 	}
 } );
 
+Object.extend(Element, {
+	getAncestorByTagName: function( node, tagName ) {
+		for(var current = node; current != null; current = current.parentNode) {
+			if (current.tagName == tagName)
+				return current;
+		}
+		return null;
+	},
+	
+	getAncestorByClassName: function( node, className ) {
+		for(var current = node; current != null; current = current.parentNode) {
+			try{
+				if (Element.hasClassName(current, className))
+					return current;
+			} catch(e) { 
+			}
+		}
+		return null;
+	}
+});
+
 
 Object.extend(Event, {
 	observeDelay: function(element, name, observer, useCapture, options) {
@@ -191,7 +218,7 @@ Object.extend(Form.Element, {
     }
 });
 Form.Element.Deserializers = {
-	input: function(element) {
+	input: function(element, value) {
 		switch (element.type.toLowerCase()) {
 			case 'submit':
 			case 'hidden':
@@ -213,7 +240,7 @@ Form.Element.Deserializers = {
 		element.value = value;
 	},
 	select: function(element, value) {
-		Form.Element.Serializers[element.type == 'select-one' ?
+		Form.Element.Deserializers[element.type == 'select-one' ?
 			'selectOne' : 'selectMany'](element, value);
 	},
 	selectOne: function(element, value) {
@@ -248,8 +275,8 @@ Object.extend(HTMLElement, {
     setValue: function(element, value) {
         if (!element || !element.tagName)
             throw new Error("no element to setValue");
-        if (/input|textarea|select/.test(element.tagName)) {
-            return Form.Element.setValue(element);
+        if (/input|textarea|select/.test(element.tagName.toLowerCase())) {
+            return Form.Element.setValue(element, value);
         } else {
             element.innerHTML = value;
         }

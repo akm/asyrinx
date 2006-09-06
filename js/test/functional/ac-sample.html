@@ -85,6 +85,155 @@ function selectProducts(params) {
 
 <script language="javascript"    type="text/javascript" ><!--
 
+if (!HTMLTableElement) HTMLTableElement = {};
+
+HTMLTableElement.RowSelection = {};
+HTMLTableElement.RowSelection.DefaultOptions = {
+    color: "#FFFFFF",
+    backgroundColor: "#93A070",
+    listen: "tBodies",
+    activateSoon: true
+};
+HTMLTableElement.RowSelection.Methods = {
+    getTargets: function() {
+        if (this.options.listen.constructor != Array)
+            this.options.listen = [this.options.listen];
+        var result = [];
+        if (this.options.listen.length < 1) {
+            result.push(this.table);
+        } else {
+            for(var i = 0; i < this.options.listen.length; i++) {
+                var targetName = this.options.listen[i];
+                var targets = this.table[targetName];
+                targets = (targetName.endWith("s")) ? targets : [targets];
+                for(var j = 0; j < targets.length; j++)
+                    result.push(targets[j]);
+            }
+        }
+        return result;
+    },
+    selectRow: function(event, row) {
+        row.style.backgroundColor = this.options.backgroundColor;
+        row.style.color = this.options.color;
+        if (this.options['select'])
+            this.options.select(event, row, this);
+    },
+    deselectRow: function(event, row) {
+        row.style.backgroundColor = "";
+        row.style.color = "";
+        if (this.options['deselect'])
+            this.options.deselect(event, row, this);
+    }
+};
+
+HTMLTableElement.ClickRowSelection = Class.create();
+HTMLTableElement.ClickRowSelection.DefaultOptions = {
+    mode: "single" //single or multi
+};
+HTMLTableElement.ClickRowSelection.prototype = {
+    initialize: function(table, options) {
+        this.table = $(table);
+        this.options = Object.fill(options || {}, HTMLTableElement.RowSelection.DefaultOptions);
+        this.options = Object.fill(this.options, HTMLTableElement.ClickRowSelection.DefaultOptions);
+	    this.selectRow = this.options['selectRow'] || this.selectRow;
+        this.deselectRow = this.options['deselectRow'] || this.deselectRow;
+		if (this.options.activateSoon)
+    		this.activate();
+    },
+    activate: function() {
+        if (!this.tableClickHandler)
+            this.tableClickHandler = this.tableClick.bindAsEventListener(this);
+        this.targets = this.getTargets();
+        for(var i = 0; i < this.targets.length; i++)
+           Event.observe(this.targets[i], "click", this.tableClickHandler, false);
+    },
+    deactivate: function() {
+        if (!this.tableClickHandler || !this.targets)
+            return;
+        for(var i = 0; i < this.targets.length; i++)
+           Event.stopObserving(this.targets[i], "click", this.tableClickHandler, false);
+    },
+    tableClick: function(event) {
+        var row = Element.getAncestorByTagName(Event.element(event), "TR");
+        if (this.options.mode == "single") {
+            if (this.row == row) {
+                this.deselectRow(event, this.row);
+                this.row = null;
+            } else if (this.row == null) {
+                this.selectRow(event, row);
+                this.row = row;
+            } else {
+                this.deselectRow(event, this.row);
+                this.selectRow(event, row);
+                this.row = row;
+            }
+        } else {
+            if (!this.rows)
+                this.rows = [];
+            if (this.rows.contains(row)) {
+                this.deselectRow(event, row);
+                this.rows.remove(row);
+            } else {
+                this.selectRow(event, row);
+                this.rows.push(row);
+            }
+        }
+    }
+};
+Object.extend(HTMLTableElement.ClickRowSelection.prototype, HTMLTableElement.RowSelection.Methods);
+
+HTMLTableElement.MouseOverRowSelection = Class.create();
+HTMLTableElement.MouseOverRowSelection.DefaultOptions = {
+};
+HTMLTableElement.MouseOverRowSelection.prototype = {
+    initialize: function(table, options) {
+        this.table = $(table);
+        this.options = Object.fill(options || {}, HTMLTableElement.RowSelection.DefaultOptions);
+        this.options = Object.fill(this.options, HTMLTableElement.MouseOverRowSelection.DefaultOptions);
+	    this.selectRow = this.options['selectRow'] || this.selectRow;
+        this.deselectRow = this.options['deselectRow'] || this.deselectRow;
+		if (this.options.activateSoon)
+    		this.activate();
+    },
+    activate: function() {
+        this.tableMouseOverHandler = this.tableMouseOverHandler || this.tableMouseOver.bindAsEventListener(this);
+        this.tableMouseOutHandler = this.tableMouseOutHandler || this.tableMouseOut.bindAsEventListener(this);
+        this.targets = this.getTargets();
+        for(var i = 0; i < this.targets.length; i++) {
+            Event.observe(this.targets[i], "mouseover", this.tableMouseOverHandler, false);
+            Event.observe(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
+        }
+    },
+    deactivate: function() {
+        if (!this.targets || !this.tableMouseOverHandler || !this.tableMouseOutHandler )
+            return;
+        for(var i = 0; i < this.targets.length; i++)
+           Event.stopObserving(this.targets[i], "mouseover", this.tableMouseOverHandler, false);
+           Event.stopObserving(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
+    },
+    tableMouseOver: function(event) {
+        var row = Element.getAncestorByTagName(Event.element(event), "TR");
+        if (this.row == row) {
+            this.deselectRow(event, this.row);
+            this.row = null;
+        } else if (this.row == null) {
+            this.selectRow(event, row);
+            this.row = row;
+        } else {
+            this.deselectRow(event, this.row);
+            this.selectRow(event, row);
+            this.row = row;
+        }
+    },
+    tableMouseOut: function(event) {
+        if (this.row) {
+            this.deselectRow(event, this.row);
+        }
+        this.row = null;
+    }    
+};
+Object.extend(HTMLTableElement.MouseOverRowSelection.prototype, HTMLTableElement.RowSelection.Methods);
+
 
 
 ACFields = Class.create();
@@ -121,8 +270,8 @@ ACFields.Mapping = {
            to_string: function(value, mapping) { return (value) ? value.toString() : null; }
         }
     },
-    to_value: function(mapping){
-        var field = mapping.getField();
+    to_value: function(mapping, field){
+        field = field || mapping.getField();
         var value = HTMLElement.getValue(field);
         var mappingType = ACFields.Mapping.Types[mapping.type];
         if (!mappingType)
@@ -183,6 +332,12 @@ ACFields.Mapping.InstanceMethods = {
         if (!field)
             return null;
         return ACFields.Mapping.to_value(this);
+    },
+    setValueToField: function(value) {
+        var field = this.getField();
+        if (!field)
+            return;
+        HTMLElement.setValue(field, ACFields.Mapping.to_string(this, value));
     },
     observeField: function(acFields, options) {
         this.acFields = acFields;
@@ -252,6 +407,13 @@ ACFields.prototype = {
     query: function(parameters, sender) {
         if (this.options["query"])
             this.options["query"](parameters, sender);
+    },
+    select: function(values) {
+        for(var i = 0; i < this.mappings.length; i++) {
+            var mapping = this.mappings[i];
+            var value = values[mapping.property];
+            mapping.setValueToField(value);
+        }
     }
 }
 
@@ -279,19 +441,21 @@ ACFields.BasicTable.Column.InstanceMethods = {
         if (!field)
             return;
         this.options.masters = Form.Element.getSelectOptions(field);
-        this.options.masterMap = {};
+        this.options.masterValueToText = {};
+        this.options.masterTextToValue = {};
         this.options.arraySeparator = this.options.arraySeparator || " "; 
         for(var i = 0; i <  this.options.masters.length; i++) {
             var master = this.options.masters[i];
             var key = master.value;
             if (this.type == "Number" || this.type == "Currency")
                 key = key * 1
-            this.options.masterMap[key] = master.text;
+            this.options.masterValueToText[key] = master.text;
+            this.options.masterTextToValue[master.text] = key;
         }
     },
     initializeHtmlOptions: function() {
         if (!this.htmlOptions["align"]){
-            var align = ((!this.options.masterMap) && 
+            var align = ((!this.options.masterValueToText) && 
                 (this.type == "Number" || this.type == "Currency")) ? "right" :
                 this.getField().style.align;
             this.htmlOptions["align"] = align;
@@ -300,6 +464,7 @@ ACFields.BasicTable.Column.InstanceMethods = {
     buildCell: function(tr, values) {
 		var td = tr.insertCell(-1);
 		tr.appendChild(td);
+		Element.addClassName(td, this.property);
 		td.innerHTML = this.to_cell_html(tr, values);
 		for(var attr in this.htmlOptions)
 		  td[attr] = this.htmlOptions[attr];
@@ -309,15 +474,15 @@ ACFields.BasicTable.Column.InstanceMethods = {
     },
     to_cell_html: function(tr, values) {
         this.initializeColumnOptions();
-        var value = values[this.property];
         var field = this.getField();
         if (!this.options["masters"] && field.tagName.toLowerCase() == "select")
             this.prepareMastersFrom(field);
-        if (this.options.masterMap) {
+        var value = values[this.property];
+        if (this.options.masterValueToText) {
             keys = (value.constructor == Array) ? value : [value];
             var texts = [];
             for(var i = 0; i < keys.length; i++) {
-                var text = this.options.masterMap[ keys[i] ]; 
+                var text = this.options.masterValueToText[ keys[i] ]; 
                 if (text)
                     texts.push(text);
             }
@@ -328,6 +493,37 @@ ACFields.BasicTable.Column.InstanceMethods = {
         if (value == null || value == undefined)
             value = "";
         return value;
+    },
+    parseCell: function(tr, values) {
+        var td = document.getFirstElementByClassName(this.property, tr);
+		values[this.property] = this.to_cell_value(tr, td);
+    },
+    to_cell_value: function(tr, td, values) {
+        this.initializeColumnOptions();
+        var field = this.getField();
+        if (!this.options["masters"] && field.tagName.toLowerCase() == "select")
+            this.prepareMastersFrom(field);
+        var value = HTMLElement.getValue(td);
+        if (this.options.masterTextToValue) {
+            texts = value.split(this.options.arraySeparator);
+            if (field.type && field.type == "select-multiple") {
+                var result = [];
+                for(var i = 0; i < texts.length; i++) {
+                    var value = this.options.masterTextToValue[ texts[i] ]; 
+                    result.push(value);
+                }
+                return result;
+            } else {
+                for(var i = 0; i < texts.length; i++) {
+                    var value = this.options.masterTextToValue[ texts[i] ]; 
+                    if (value)
+                        return value;
+                }
+                return null;
+            }
+        } else {
+            return ACFields.Mapping.to_value(this, td);
+        }
     }
     
 }
@@ -376,6 +572,14 @@ ACFields.BasicTable.prototype = {
 				}
 			}
 		}
+    },
+    toValues: function(row) {
+		var result = {};
+		for(var i = 0; i < this.mappings.length; i++) {
+			var mapping = this.mappings[i];
+			mapping.parseCell(row, result); 
+		}
+		return result;
     }
 }
 
@@ -386,14 +590,20 @@ var mappings = [
    { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f_asin") },
    { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f_price") }
 ];
-new ACFields(mappings, {
+var acFields = new ACFields(mappings, {
     query: function(parameters, sender) {
         var result = selectProducts(parameters);
-        table.execute(result);
+        rowGenerator.execute(result);
     }
 });
-var table = new ACFields.BasicTable($("amazon_products"), mappings);
-table.execute(products.slice(0, 10));
+var rowGenerator = new ACFields.BasicTable($("amazon_products"), mappings);
+rowGenerator.execute(products.slice(0, 10));
+var selection = new HTMLTableElement.MouseOverRowSelection($("amazon_products"));
+Event.observe($("amazon_products"), "click", function(event) {
+    var values = rowGenerator.toValues(selection.row);
+    acFields.select(values);
+}, false);
+
 
 --></script>
 
