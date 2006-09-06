@@ -238,7 +238,7 @@ Object.extend(HTMLElement, {
     getValue: function(element) {
         if (!element || !element.tagName)
             throw new Error("no element to getValue");
-        if (/input|textarea|select/.test(element.tagName)) {
+        if (/input|textarea|select/.test(element.tagName.toLowerCase())) {
             return Form.Element.getValue(element);
         } else {
             element = $(element);
