@@ -61,12 +61,12 @@ TreeProcess.Processor.prototype = {
     
     process_iteration: function(context) {
         if (!context.iterations)
-            throw "no iterations in context" + context.inspect();
+            throw new Error("no iterations in context" + context.inspect());
 		if (context.iterations.constructor != Array)
 			context.iterations = context.iterations.split(',');
 		context.iterations = context.iterations.collect(function(iter){ return iter.strip(); } );
         if (context.iteration_level == null || context.iteration_level == undefined )
-            throw "no iteration_level in context: iterations" + context.iterations.inspect();
+            throw new Error("no iteration_level in context: iterations" + context.iterations.inspect());
 		var context_bak = {
 			"iteration_level": context.iteration_level,
 			"iteration_name": context.iteration_name,
@@ -78,26 +78,23 @@ TreeProcess.Processor.prototype = {
 			if (iteration_level < context.iterations.length) {
 		        var iteration_names = context.iterations[iteration_level];
 		        if (!iteration_names)
-		            throw "no iteration_names in context: level[" + iteration_level + "] in " + context.iterations.inspect();
+		            throw new Error("no iteration_names in context: level[" + iteration_level + "] in " + context.iterations.inspect());
 				if (iteration_names.constructor != Array)
 					iteration_names = [iteration_names];
-				try {
-					for(var i = 0; i < iteration_names.length; i++) {
-						context.iteration_name = iteration_names[i];
-						context.iteration = (context.iterator) ? context.iterator[context.iteration_name] : context[context.iteration_name];
-						if (!context.iteration) {
-							throw "no context.iteration:" + 
-								" context.iteration_name=" + context.iteration_name + 
-								" context.iteration_level=" + context.iteration_level;
-						}
-						var process_method = (context.iteration_name.endWith("s")) ? this.process_plural : this.process_singular;
-						process_method.apply(this, [context]);
+				for(var i = 0; i < iteration_names.length; i++) {
+					context.iteration_name = iteration_names[i];
+					context.iteration = (context.iterator) ? context.iterator[context.iteration_name] : context[context.iteration_name];
+					if (!context.iteration) {
+						throw new Error("no context.iteration:" + 
+							" context.iteration_name=" + context.iteration_name + 
+							" context.iteration_level=" + context.iteration_level);
 					}
-				} finally {
+					var process_method = (context.iteration_name.endWith("s")) ? this.process_plural : this.process_singular;
+					process_method.apply(this, [context]);
 				}
 			} else {
 				if (context.iterations.length > 0)
-					throw "something wrong...";
+					throw new Error("something wrong...");
 				this.process_impl(context);
 			}
 		} finally {
@@ -123,10 +120,10 @@ TreeProcess.Processor.prototype = {
 			context[context.iterator_name] = context.iterator; 
 	        try {
 				if (!context.iterator) {
-					throw "no context.iteration:" + 
+					throw new Error("no context.iteration:" + 
 						" context.iteration_name=" + context.iteration_name + 
 						" context.iterator_name=" + context.iterator_name + 
-						" context.iteration_level=" + context.iteration_level;
+						" context.iteration_level=" + context.iteration_level);
 				}
 				this.process_impl(context);
 	        } catch(ex) {
@@ -155,10 +152,10 @@ TreeProcess.Processor.prototype = {
 			context.iterators.push(context.iterator);
 			context[context.iterator_name] = context.iterator; 
 			if (!context.iterator) {
-				throw "no context.iteration:" + 
+				throw new Error("no context.iteration:" + 
 					" context.iteration_name=" + context.iteration_name + 
 					" context.iterator_name=" + context.iterator_name + 
-					" context.iteration_level=" + context.iteration_level;
+					" context.iteration_level=" + context.iteration_level);
 			}
 			this.process_impl(context);
         } catch(ex) {
@@ -199,7 +196,7 @@ TreeProcess.Processor.prototype = {
     execute_command: function(context) {
         var command = context["command"];
         if (!command)
-            throw "command is unspecified in context.";
+            throw new Error("command is unspecified in context.");
         var receiver = command;
         var f = null;
         if (command.constructor == Function) {
@@ -208,11 +205,11 @@ TreeProcess.Processor.prototype = {
         } else {
     		var command_method = context["command_method"];
             if (!command_method)
-                throw "command_method is unspecified in context.";
+                throw new Error("command_method is unspecified in context.");
             f = (command_method.call) ? command_method : 
     			(command[command_method] || command[this.options.dispatch_method]);
             if (!f)
-               throw "command has no method: " + context.command_method + " or " + this.options.dispatch_method;
+               throw new Error("command has no method: " + context.command_method + " or " + this.options.dispatch_method);
         }
         if (context.command_delay < 1) 
             f.call(command, context);
@@ -230,7 +227,7 @@ TreeProcess.Processor.prototype = {
 TreeProcess.Command = {
 	extend: function() {
 		if (arguments.length < 2)
-			throw "Neather command nor extension is specified";
+			throw new Error("Neather command nor extension is specified");
 		var args = $A(arguments);
 		var command = args.shift();
 		args = args.flatten();
@@ -241,7 +238,7 @@ TreeProcess.Command = {
 	checkExtension: function(command, name, properties) {
 		for(var i = 0; i < properties.length; i++) {
 			if (!command[properties[i]])
-				throw name + " needs '" + properties[i] + "'";
+				throw new Error(name + " needs '" + properties[i] + "'");
 		}
 	}
 };
