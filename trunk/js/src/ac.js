@@ -63,9 +63,17 @@ ACFields.Mapping = {
         return mappingType.to_string(value, mapping);
     }
 };
+ACFields.Mapping.DefaultIgnoreKeyRanges = [
+    $R(0, Event.KEY_BACK_SPACE, true),
+    $R(Event.KEY_BACK_SPACE + 1, Event.KEY_SPACE, true),
+    $R(Event.KEY_SPACE+1, Event.KEY_DELETE, false),
+    $R(Event.KEY_F1, Event.KEY_SCROLL_LOCK, false),
+    $R(Event.KEY_IME_ON, Event.KEY_IME_OFF, false)
+];
 ACFields.Mapping.DefaultOptions = {
     TrueString: "○",
-    FalseString: "×"
+    FalseString: "×",
+    ignoreTriggerKeyRanges: ACFields.Mapping.DefaultIgnoreKeyRanges
 };
 ACFields.Mapping.InstanceMethods = {
     initializeOptions: function() {
@@ -144,8 +152,21 @@ ACFields.Mapping.InstanceMethods = {
         Event.stopObserving(this.field, "keyup", this.fieldKeyupHandler, false);
     },
     fieldKeyup: function(event) {
+        if (!this.isQueryTrigger(event))
+            return;
         this.acFields.searching = false;
         setTimeout(this.acFields.search.bind(this.acFields, this), this.options["keyup_delay"]);
+    },
+    isQueryTrigger: function(event) {
+        if (!this.options.ignoreTriggerKeyRanges)
+            return true;
+        var keyCode = event.keyCode || event.charCode || event.which;
+        for(var i = 0; i < this.options.ignoreTriggerKeyRanges.length; i++) {
+            var ignoreKeyRange = this.options.ignoreTriggerKeyRanges[i];
+            if (ignoreKeyRange.include(keyCode))
+                return false;
+        }
+        return true;
     }
 };
 ACFields.DefaultOptions = {
@@ -361,11 +382,13 @@ ACFields.BasicTable.prototype = {
             }
         }
 		if (!list || list.length < 1) {
-			var tr = this.tBody.insertRow(-1);
-			var td = tr.insertCell(0);
-			td.colSpan = this.mappings.length;
-			var content = document.createTextNode( this.options["empty_list_message"] );
-			td.appendChild(content);
+		    if (this.options["empty_list_message"]) {
+    			var tr = this.tBody.insertRow(-1);
+    			var td = tr.insertCell(0);
+    			td.colSpan = this.mappings.length;
+    			var content = document.createTextNode( this.options["empty_list_message"] );
+    			td.appendChild(content);
+		    }
 		} else {
 			for(var i = 0; i < list.length; i++) {
 				var values = list[i];
