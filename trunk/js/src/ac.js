@@ -112,9 +112,18 @@ ACFields.Mapping.InstanceMethods = {
             return;
         HTMLElement.setValue(field, ACFields.Mapping.to_string(this, value));
     },
+    clearField: function() {
+        var field = this.getField();
+        if (!field)
+            return;
+        HTMLElement.setValue(field, this.defaultValue || "");
+    },
     observeField: function(acFields, options) {
         this.acFields = acFields;
         this.options = Object.extend(this.options || {}, options);
+        var field = this.getField();
+        if (!field) 
+            return;
         this.focusHandler = this.fieldOnFocus.bindAsEventListener(this);
         Event.observe(this.getField(), "focus", this.focusHandler, false);
     },
@@ -122,8 +131,12 @@ ACFields.Mapping.InstanceMethods = {
         this.activateListeners();
     },
     activateListeners: function() {
+        var field = this.getField();
+        if (!field) 
+            return;
         this.fieldKeyupHandler = this.fieldKeyup.bindAsEventListener(this);
-        Event.observe(this.field, "keyup", this.fieldKeyupHandler, false);
+        var field = this.getField();
+        Event.observe(field, "keyup", this.fieldKeyupHandler, false);
     },
     deactivateListeners: function() {
         if (!this.fieldKeyupHandler)
@@ -134,7 +147,6 @@ ACFields.Mapping.InstanceMethods = {
         this.acFields.searching = false;
         setTimeout(this.acFields.search.bind(this.acFields, this), this.options["keyup_delay"]);
     }
-    
 };
 ACFields.DefaultOptions = {
     "keyup_delay": 500
@@ -162,9 +174,22 @@ ACFields.prototype = {
     search: function(sender) {
         this.searching = true;
         var parameters = this.getParameters();
+        if (!this.parameterModified(parameters))
+            return;
+        this.lastParameters = parameters; 
         if (!this.searching)
             return;
         this.query(parameters, sender);
+    },
+    parameterModified: function(params) {
+        if (!this.lastParams)
+            return true;
+        for(var prop in params) {
+            if (params[prop] != this.lastParams[prop])
+                return true;
+        }
+        this.lastParams = params;
+        return false;
     },
     getParameters: function() {
         var result = {};
@@ -186,6 +211,12 @@ ACFields.prototype = {
             var mapping = this.mappings[i];
             var value = values[mapping.property];
             mapping.setValueToField(value);
+        }
+    },
+    clear: function() {
+        for(var i = 0; i < this.mappings.length; i++) {
+            var mapping = this.mappings[i];
+            mapping.clearField();
         }
     }
 }
@@ -230,7 +261,7 @@ ACFields.BasicTable.Column.InstanceMethods = {
         if (!this.htmlOptions["align"]){
             var align = ((!this.options.masterValueToText) && 
                 (this.type == "Number" || this.type == "Currency")) ? "right" :
-                this.getField().style.align;
+                Element.getStyle(this.getField(), "text-align");
             this.htmlOptions["align"] = align;
         }
     },

@@ -9,6 +9,11 @@
 <script language="javascript" type="text/javascript" src="../../src/table_selection.js" ></script>
 <script language="javascript" type="text/javascript" src="../../src/ac.js" ></script>
 
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+	.number{ text-align: right; }
+	.currency{ text-align: right; }
+--></style>
+
 </head>
 <body>
 <script language="javascript"    type="text/javascript" ><!--
@@ -49,7 +54,7 @@ function selectProducts(params) {
 	<form name="f">
 		<table><tr><td>
     		<label for="f_id">ID</label>
-    		<input type="text" id="f_id" name="f_id" size="10"/>
+    		<input type="text" id="f_id" name="f_id" size="10" autocomplete="off" class="number"/>
 			<select id="f_category" name="f_category">
 				<option value="1">書籍</option>
 				<option value="2">DVD</option>
@@ -66,7 +71,10 @@ function selectProducts(params) {
 		</td></tr>
 		<tr><td>
 			<label for="f_price">価格</label>
-			<input type="text" id="f_price" name="f_price" autocomplete="off"/>
+			<input type="text" id="f_price" name="f_price" autocomplete="off" class="currency"/>
+		</td></tr>
+		<tr><td>
+			<a href="javascript:void(0)" id="btn_clear">クリア</a>
 		</td></tr>
 		</table>
 	</form>
@@ -88,7 +96,7 @@ function selectProducts(params) {
 
 var mappings = [
    { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f_id") },
-   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category"), htmlOptions:{"align":"center"} },
+   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category"), defaultValue:1, htmlOptions:{"align":"center"} },
    { suggestive:true , visible:true , type:"String"  , property: "name", field: $("f_name") },
    { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f_asin") },
    { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f_price") }
@@ -106,7 +114,7 @@ Event.observe($("amazon_products"), "click", function(event) {
     var values = rowGenerator.toValues(selection.row);
     acFields.select(values);
 }, false);
-
+Event.observe($("btn_clear"), "click", acFields.clear.bind(acFields), false);
 
 --></script>
 
