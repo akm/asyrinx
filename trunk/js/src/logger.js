@@ -216,7 +216,7 @@ LogWindow.prototype = {
 			firstTime =  false;
 		this._window = window.open('', this._windowName, "resizable=yes,scrollbars=yes,top=0,left=0");
 		if (firstTime) {
-			this._window.document.clear();
+			this._window.document.innerHTML = "";
 			this._window.document.write("<head><title>" + this._windowName + "</title></head>\n");
 		}
 		return this._window;

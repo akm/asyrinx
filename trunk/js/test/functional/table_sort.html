@@ -9,7 +9,6 @@
 	.odd{ background-color: #EEE; }
 --></style>
 <script language="javascript" type="text/javascript" charset="UTF-8" src="../../lib/prototype.js" ></script>
-<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/logger.js" ></script>
 <script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/table_sort.js" ></script>
 </head>
 <body>
@@ -35,15 +34,15 @@
 	</tbody>
 </table>
 <script language="JavaScript" type="text/javascript"><!--
-var sorter0 = new TableSort($("table0"), {"rememberRows": true});
-new TableSort.Trigger($("table0_head_id"), sorter0, new TableSort.AsNumber(new TableSort.InnerText("col_id"))); 
-new TableSort.Trigger($("table0_head_name"), sorter0, new TableSort.InnerText("col_name")); 
-var urlTrigger = new TableSort.Trigger($("table0_head_url"), sorter0, new TableSort.InnerText("col_url"));
+var sorter0 = new HTMLTableElement.Sort($("table0"), {"rememberRows": true});
+new HTMLTableElement.Sort.Trigger($("table0_head_id"), sorter0, new HTMLTableElement.Sort.AsNumber(new HTMLTableElement.Sort.InnerText("col_id"))); 
+new HTMLTableElement.Sort.Trigger($("table0_head_name"), sorter0, new HTMLTableElement.Sort.InnerText("col_name")); 
+var urlTrigger = new HTMLTableElement.Sort.Trigger($("table0_head_url"), sorter0, new HTMLTableElement.Sort.InnerText("col_url"));
 Event.observe($("toggle_reversible_table0_url"), "click", function(event){ 
   urlTrigger.options["reversible"] = $("toggle_reversible_table0_url").checked;
 }, false); 
 --></script>
-TableSort.InnerTextの第2引数がundefinedなので、大文字と小文字を区別しています。
+HTMLTableElement.Sort.InnerTextの第2引数がundefinedなので、大文字と小文字を区別しています。
 
 
 <br/><br/><br/>
@@ -138,10 +137,10 @@ TableSort.InnerTextの第2引数がundefinedなので、大文字と小文字を
 </table>
 </div>
 <script language="JavaScript" type="text/javascript"><!--
-var sorter1 = new TableSort(["table1", "table2"]);
-new TableSort.Trigger($("table1_head_id"), sorter1, new TableSort.AsNumber(new TableSort.InnerText("col_id")) ); 
-new TableSort.Trigger($("table1_head_name"), sorter1, new TableSort.InnerText("col_name", true)); 
-new TableSort.Trigger($("table1_head_url"), sorter1, new TableSort.InnerText("col_url")); 
+var sorter1 = new HTMLTableElement.Sort(["table1", "table2"]);
+new HTMLTableElement.Sort.Trigger($("table1_head_id"), sorter1, new HTMLTableElement.Sort.AsNumber(new HTMLTableElement.Sort.InnerText("col_id")) ); 
+new HTMLTableElement.Sort.Trigger($("table1_head_name"), sorter1, new HTMLTableElement.Sort.InnerText("col_name", true)); 
+new HTMLTableElement.Sort.Trigger($("table1_head_url"), sorter1, new HTMLTableElement.Sort.InnerText("col_url")); 
 --></script>
 テーブルが二つ指定されても各テーブルの行数を変えずにソートできます。
 名前に関してはTableSort.InnerTextの第2引数がtrueなので、大文字と小文字を区別していません。
@@ -225,13 +224,13 @@ new TableSort.Trigger($("table1_head_url"), sorter1, new TableSort.InnerText("co
 	</tbody>
 </table>
 <script language="JavaScript" type="text/javascript"><!--
-var sorter2 = new TableSort("table3");
-new TableSort.Trigger($("table3_head_id"), sorter2, new TableSort.AsNumber(new TableSort.InnerText("col_id")) ); 
-new TableSort.Trigger($("table3_head_categories"), sorter2, 
-    new TableSort.KeyJoin( [
-        new TableSort.InnerText("col_name1", true),
-        new TableSort.Reverse(new TableSort.InnerText("col_name2", true)),
-        new TableSort.InnerText("col_name3", true)
+var sorter2 = new HTMLTableElement.Sort("table3");
+new HTMLTableElement.Sort.Trigger($("table3_head_id"), sorter2, new HTMLTableElement.Sort.AsNumber(new HTMLTableElement.Sort.InnerText("col_id")) ); 
+new HTMLTableElement.Sort.Trigger($("table3_head_categories"), sorter2, 
+    new HTMLTableElement.Sort.KeyJoin( [
+        new HTMLTableElement.Sort.InnerText("col_name1", true),
+        new HTMLTableElement.Sort.Reverse(new HTMLTableElement.Sort.InnerText("col_name2", true)),
+        new HTMLTableElement.Sort.InnerText("col_name3", true)
     ] )
 );
 --></script>
