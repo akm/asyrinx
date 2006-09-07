@@ -16,7 +16,8 @@ HTMLTableElement.RowSelection.DefaultOptions = {
     color: "#FFFFFF",
     backgroundColor: "#93A070",
     listen: "tBodies",
-    activateSoon: true
+    activateSoon: true,
+    rotation: true
 };
 HTMLTableElement.RowSelection.Methods = {
     initialize: function(table, options) {
@@ -44,17 +45,61 @@ HTMLTableElement.RowSelection.Methods = {
         }
         return result;
     },
-    selectRow: function(event, row) {
+    selectRow: function(row, event) {
+        if (!row)
+            return;
         row.style.backgroundColor = this.options.backgroundColor;
         row.style.color = this.options.color;
         if (this.options['select'])
             this.options.select(event, row, this);
     },
-    deselectRow: function(event, row) {
+    deselectRow: function(row, event) {
+        if (!row)
+            return;
         row.style.backgroundColor = "";
         row.style.color = "";
         if (this.options['deselect'])
             this.options.deselect(event, row, this);
+    },
+    getFirstRow: function() {
+        if (!this.targets)
+            return null;
+        for(var i = 0; i < this.targets.length; i++) {
+            var target = this.targets[i];
+            for(var j = 0; j < target.rows.length; j++) {
+                return target.rows[j];
+            }
+        }
+        return null;
+    },
+    getLastRow: function() {
+        if (!this.targets)
+            return null;
+        for(var i = this.targets.length -1; i > -1; i--) {
+            var target = this.targets[i];
+            for(var j = target.rows.length -1; j > -1; j--) {
+                return target.rows[j];
+            }
+        }
+        return null;
+    },
+    
+    moveTo: function(siblingName, methodName, event) {
+        var current = this.row;
+        var dest = ((current) ? current[siblingName] : this[methodName]()) || ((this.options.rotation) ? this[methodName]() : null);
+        if (!dest)
+            return;
+        this.row = dest;
+        this.selectRow(dest, event);
+        this.deselectRow(current, event);
+    },
+    
+    next: function(event) {
+        this.moveTo("nextSibling", "getFirstRow");
+    },
+    
+    prev: function(event) {
+        this.moveTo("previousSibling", "getLastRow");
     }
 };
 
@@ -84,24 +129,24 @@ HTMLTableElement.ClickRowSelection.prototype = {
         var row = Element.getAncestorByTagName(Event.element(event), "TR");
         if (this.options.mode == "single") {
             if (this.row == row) {
-                this.deselectRow(event, this.row);
+                this.deselectRow(this.row, event);
                 this.row = null;
             } else if (this.row == null) {
-                this.selectRow(event, row);
+                this.selectRow(row, event);
                 this.row = row;
             } else {
-                this.deselectRow(event, this.row);
-                this.selectRow(event, row);
+                this.deselectRow(this.row, event);
+                this.selectRow(row, event);
                 this.row = row;
             }
         } else {
             if (!this.rows)
                 this.rows = [];
             if (this.rows.contains(row)) {
-                this.deselectRow(event, row);
+                this.deselectRow(row, event);
                 this.rows.remove(row);
             } else {
-                this.selectRow(event, row);
+                this.selectRow(row, event);
                 this.rows.push(row);
             }
         }
@@ -111,6 +156,7 @@ Object.extend(HTMLTableElement.ClickRowSelection.prototype, HTMLTableElement.Row
 
 HTMLTableElement.MouseOverRowSelection = Class.create();
 HTMLTableElement.MouseOverRowSelection.DefaultOptions = {
+    "deselectOnMouseOut": false
 };
 HTMLTableElement.MouseOverRowSelection.prototype = {
     initialize: function(table, options) {
@@ -119,37 +165,41 @@ HTMLTableElement.MouseOverRowSelection.prototype = {
     },
     activate: function() {
         this.tableMouseOverHandler = this.tableMouseOverHandler || this.tableMouseOver.bindAsEventListener(this);
-        this.tableMouseOutHandler = this.tableMouseOutHandler || this.tableMouseOut.bindAsEventListener(this);
+        if (this.options["deselectOnMouseOut"])
+            this.tableMouseOutHandler = this.tableMouseOutHandler || this.tableMouseOut.bindAsEventListener(this);
         this.targets = this.getTargets();
         for(var i = 0; i < this.targets.length; i++) {
             Event.observe(this.targets[i], "mouseover", this.tableMouseOverHandler, false);
-            Event.observe(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
+            if (this.tableMouseOutHandler)
+                Event.observe(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
         }
     },
     deactivate: function() {
         if (!this.targets || !this.tableMouseOverHandler || !this.tableMouseOutHandler )
             return;
-        for(var i = 0; i < this.targets.length; i++)
-           Event.stopObserving(this.targets[i], "mouseover", this.tableMouseOverHandler, false);
-           Event.stopObserving(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
+        for(var i = 0; i < this.targets.length; i++) {
+            Event.stopObserving(this.targets[i], "mouseover", this.tableMouseOverHandler, false);
+            if (this.tableMouseOutHandler)
+                Event.stopObserving(this.targets[i], "mouseout", this.tableMouseOutHandler, false);
+        }
     },
     tableMouseOver: function(event) {
         var row = Element.getAncestorByTagName(Event.element(event), "TR");
         if (this.row == row) {
-            this.deselectRow(event, this.row);
+            this.deselectRow(this.row, event);
             this.row = null;
         } else if (this.row == null) {
-            this.selectRow(event, row);
+            this.selectRow(row, event);
             this.row = row;
         } else {
-            this.deselectRow(event, this.row);
-            this.selectRow(event, row);
+            this.deselectRow(this.row, event);
+            this.selectRow(row, event);
             this.row = row;
         }
     },
     tableMouseOut: function(event) {
         if (this.row) {
-            this.deselectRow(event, this.row);
+            this.deselectRow(this.row, event);
         }
         this.row = null;
     }    

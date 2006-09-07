@@ -75,6 +75,8 @@ function selectProducts(params) {
 		</td></tr>
 		<tr><td>
 			<a href="javascript:void(0)" id="btn_clear">クリア</a>
+			&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" id="btn_prev">prev</a>
+			&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" id="btn_next">next</a>
 		</td></tr>
 		</table>
 	</form>
@@ -110,11 +112,22 @@ var acFields = new ACFields(mappings, {
 });
 rowGenerator.execute(products.slice(0, 10));
 var selection = new HTMLTableElement.MouseOverRowSelection($("amazon_products"));
-Event.observe($("amazon_products"), "click", function(event) {
+Event.observe($("btn_prev"), "click", selection.prev.bindAsEventListener(selection), false);
+Event.observe($("btn_next"), "click", selection.next.bindAsEventListener(selection), false);
+Event.observe($("btn_clear"), "click", acFields.clear.bind(acFields), false);
+
+var selectRow = function(event) {
     var values = rowGenerator.toValues(selection.row);
     acFields.select(values);
-}, false);
-Event.observe($("btn_clear"), "click", acFields.clear.bind(acFields), false);
+};
+
+Event.observe($("amazon_products"), "click", selectRow, false);
+
+new HTMLElement.KeyHandler([$("f_name"), $("f_asin")], [
+    {key: Event.KEY_UP    , stopEvent: true, method: selection.prev.bindAsEventListener(selection)},
+    {key: Event.KEY_DOWN  , stopEvent: true, method: selection.next.bindAsEventListener(selection)},
+    {key: Event.KEY_RETURN, stopEvent: true, method: selectRow}
+]); 
 
 --></script>
 
