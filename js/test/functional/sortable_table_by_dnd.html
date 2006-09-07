@@ -9,6 +9,8 @@
 	.odd{ background-color: #EEE; }
 --></style>
 <script language="javascript" type="text/javascript" charset="UTF-8" src="../../lib/prototype.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/logger.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/prototype_ext.js" ></script>
 <script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/dnd.js" ></script>
 </head>
 <body>
@@ -33,7 +35,7 @@
 <script language="JavaScript" type="text/javascript"><!--
 
 Event.observe(window, "load", function(event){
-	var sortableTable = new DnD.SortableTable( "table0" );
+	var sortableTable = new HTMLTableElement.DnDSortable( "table0" );
 }, false);
 
 --></script>
@@ -85,55 +87,45 @@ Event.observe(window, "load", function(event){
 </div>
 <script language="JavaScript" type="text/javascript"><!--
 
-EvenOdd = {
-    value: "odd",
-    reverse: function() {
-        return (this.value == "even") ? "odd" : "even";
-    },
-    succ: function() {
-        this.value = this.reverse();
-        return this.value;
-    }
-}
+
+var evenOddClasses = new EvenOdd();
 
 Event.observe(window, "load", function(event){
-	var sortableTable = new DnD.SortableTable(
+	var sortableTable = new HTMLTableElement.DnDSortable(
 		[ "table1", "table2"]
 	);
 	Object.extend(sortableTable, {
 			getDraggingRow: function(event) {
 				var t = Event.element(event);
-				var handle = DnD.DOM.getAncestorByClassName(t, "drag_handle");
-				return (handle) ? DnD.DOM.getAncestorByTag(handle, "TR") : null;
+				var handle = Element.getAncestorByClassName(t, "drag_handle");
+				return (handle) ? Element.getAncestorByTagName(handle, "TR") : null;
 			},
 			getAcceptingRow: function(event) {
 				var t = Event.element(event);
-				if (DnD.DOM.getAncestorByTag(t, "TBODY"))
-					return DnD.DOM.getAncestorByTag(t, "TR");
-				else if (DnD.DOM.getAncestorByTag(t, "THEAD")) {
-					var table = DnD.DOM.getAncestorByTag(t, "TABLE");
+				if (Element.getAncestorByTagName(t, "TBODY"))
+					return Element.getAncestorByTagName(t, "TR");
+				else if (Element.getAncestorByTagName(t, "THEAD")) {
+					var table = Element.getAncestorByTagName(t, "TABLE");
 					if(table.tBodies.length < 1)
 						return null;
 					var tbody = table.tBodies[0];
 					if(tbody.rows.length > 0)
 						return tbody.rows[0];
 					else
-						return DnD.DOM.getAncestorByTag(t, "TR");
+						return Element.getAncestorByTagName(t, "TR");
 				} else
 					return null;
 			},
 			afterMoveRow: function( row ) {
 				var item_no_cells = document.getElementsByClassName("item_no", $("tables"));
+				var rows = [];
 				for(var i = 0; i < item_no_cells.length; i++) {
 					var cell = item_no_cells[i];
-					var tr = DnD.DOM.getAncestorByTag(cell, "TR");
-					EvenOdd.succ();
-					if (!Element.hasClassName(tr, EvenOdd.value)) {
-				        Element.removeClassName(tr, EvenOdd.reverse());
-				        Element.addClassName(tr, EvenOdd.value);
-					}
+					var tr = Element.getAncestorByTagName(cell, "TR");
+					rows.push(tr);
 					cell.innerHTML = this.seqRowIndex(tr);
 				}
+				evenOddClasses.applyClassName(rows);
 			}
 	} );
 	Event.observe($("draggable_toggle"), "click", function(event) {

@@ -6,11 +6,15 @@
  * @copyright T.Akima
  * @license LGPL
  */
-TableSort = Class.create();
-TableSort.DefaultOptions = {
+if (!window["HTMLTableElement"]) {
+    HTMLTableElement = {};
+}
+
+HTMLTableElement.Sort = Class.create();
+HTMLTableElement.Sort.DefaultOptions = {
     "rememberRows": false
 }
-Object.extend(TableSort, {
+Object.extend(HTMLTableElement.Sort, {
     comapare: function(row1,row2) {
         var key1=row1["key"];
         var key2=row2["key"];
@@ -23,19 +27,19 @@ Object.extend(TableSort, {
         return (key1<key2)?-1:(key1==key2)?0:1;
     }
 });
-TableSort.prototype = {
+HTMLTableElement.Sort.prototype = {
 	initialize: function(tables, options) {
 		this.active = false;
 		this.tables = (!tables) ? [] : (tables.constructor == Array) ? tables : [ tables ];
 		this.tables = this.tables.collect( function(table){return $(table);} );
-		this.options = Object.extend( $H(TableSort.DefaultOptions), options || {} );
+		this.options = Object.extend( $H(HTMLTableElement.Sort.DefaultOptions), options || {} );
     },
     
     run: function(keyMaker) {
         var rows = this.getTargetRows();
         var rowCountsOfBodies = this.getRowCountsOfBodies();
         var rowsWithKey = this.getRowsWithKey( rows, keyMaker );
-        var comparator = (keyMaker["compare"]) ? keyMaker["compare"].bind(keyMaker) : TableSort.comapare; 
+        var comparator = (keyMaker["compare"]) ? keyMaker["compare"].bind(keyMaker) : HTMLTableElement.Sort.comapare; 
         rowsWithKey.sort(comparator);
         this.relocateRows(rowsWithKey.pluck("row"), rowCountsOfBodies);
     },
@@ -91,14 +95,14 @@ TableSort.prototype = {
     }
 }
 
-TableSort.Reverse = Class.create();
-TableSort.Reverse.prototype = {
+HTMLTableElement.Sort.Reverse = Class.create();
+HTMLTableElement.Sort.Reverse.prototype = {
 	initialize: function(keyGen) {
 	   this.keyGen = keyGen;
 	   this.name = "Reverse";
     },
     compare: function(row1,row2){
-        this.comparator = this.comparator || ((this.keyGen["compare"]) ? this.keyGen["compare"].bind(this.keyGen) : TableSort.comapare);
+        this.comparator = this.comparator || ((this.keyGen["compare"]) ? this.keyGen["compare"].bind(this.keyGen) : HTMLTableElement.Sort.comapare);
         return -1 * this.comparator(row1,row2);
     },
     generate: function(row) {
@@ -106,8 +110,8 @@ TableSort.Reverse.prototype = {
     }
 }
 
-TableSort.AsNumber = Class.create();
-TableSort.AsNumber.prototype = {
+HTMLTableElement.Sort.AsNumber = Class.create();
+HTMLTableElement.Sort.AsNumber.prototype = {
 	initialize: function(keyGen) {
 	   this.keyGen = keyGen;
 	   this.name = "AsNumber";
@@ -118,8 +122,8 @@ TableSort.AsNumber.prototype = {
     }
 }
 
-TableSort.InnerTextByClassName = Class.create();
-TableSort.InnerTextByClassName.prototype = {
+HTMLTableElement.Sort.InnerTextByClassName = Class.create();
+HTMLTableElement.Sort.InnerTextByClassName.prototype = {
 	initialize: function(className, ignoreCase) {
 	   this.className = className;
 	   this.ignoreCase = ignoreCase;
@@ -133,11 +137,11 @@ TableSort.InnerTextByClassName.prototype = {
         return (!this.ignoreCase) ? result : (result) ? result.toLowerCase() : result;
     }
 }
-TableSort.InnerText = TableSort.InnerTextByClassName;
+HTMLTableElement.Sort.InnerText = HTMLTableElement.Sort.InnerTextByClassName;
 
 
-TableSort.KeyJoin = Class.create();
-TableSort.KeyJoin.prototype = {
+HTMLTableElement.Sort.KeyJoin = Class.create();
+HTMLTableElement.Sort.KeyJoin.prototype = {
 	initialize: function(keyGens) {
 	   this.keyGens = keyGens || [];
 	   this.name = "KeyJoin";
@@ -172,7 +176,7 @@ TableSort.KeyJoin.prototype = {
             this.comparators = [];
             for(var i = 0; i < this.keyGens.length; i++) {
                 var keyGen = this.keyGens[i];
-                var f = (keyGen["compare"]) ? keyGen["compare"].bind(keyGen) : TableSort.comapare;
+                var f = (keyGen["compare"]) ? keyGen["compare"].bind(keyGen) : HTMLTableElement.Sort.comapare;
                 this.comparators.push(f);
             }
         }
@@ -191,16 +195,16 @@ TableSort.KeyJoin.prototype = {
     }
 }
 
-TableSort.Trigger = Class.create();
-TableSort.Trigger.DefaultOptions = {
+HTMLTableElement.Sort.Trigger = Class.create();
+HTMLTableElement.Sort.Trigger.DefaultOptions = {
     "reversible": true
 }
-TableSort.Trigger.prototype = {
+HTMLTableElement.Sort.Trigger.prototype = {
 	initialize: function(source, sorter, keyMaker, options) {
         this.source = $(source);
         this.sorter = sorter;
         this.keyMaker = keyMaker;
-        this.options = Object.extend( $H(TableSort.Trigger.DefaultOptions), options || {} );
+        this.options = Object.extend( $H(HTMLTableElement.Sort.Trigger.DefaultOptions), options || {} );
         this.desc = false;
         this.active = false;
         this.activate();
@@ -220,7 +224,7 @@ TableSort.Trigger.prototype = {
     },
     
     click: function(event) {
-        var keyMaker = (this.desc) ? new TableSort.Reverse(this.keyMaker) : this.keyMaker;
+        var keyMaker = (this.desc) ? new HTMLTableElement.Sort.Reverse(this.keyMaker) : this.keyMaker;
         this.sorter.run(keyMaker);
         if (this.options["reversible"])
             this.desc = !this.desc;

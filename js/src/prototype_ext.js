@@ -11,6 +11,45 @@ document.getFirstElementByClassName = function(className, element) {
 	return (!elements || elements.length < 1) ? null : elements[0];
 }
 
+if (window.getSelection) {
+    document.getSelection = document.getSelection || function(){ return window.getSelection().toString() };
+    window.clearSelection = window.clearSelection || function(){ 
+        var selection = window.getSelection(); 
+        selection.removeAllRanges();
+    };
+} else if (document.selection) {
+    document.getSelection = document.getSelection || function(){ return document.selection.createRange().text; };
+    window.getSelection = window.getSelection || function(){ return document.selection; };
+    window.clearSelection = window.clearSelection || function(){ document.selection.clear(); };
+} else {
+    document.getSelection = document.getSelection || Prototype.emptyFunction;
+    window.getSelection = window.getSelection || Prototype.emptyFunction;
+    window.clearSelection = window.clearSelection || Prototype.emptyFunction;
+}
+
+if (!document.setSelection) {
+    if (document.selection) {
+        document.setSelection = function(value) {
+            document.selection.createRange().text = value;
+        }
+    } else if (window.setSelection) {
+        document.setSelection = function() {
+            return window.setSelection.apply(window, arguments);
+        }
+    } else {
+        document.setSelection = function(event, value) {
+            var length = event.textLength;
+            var start = event.selectionStart;
+            var end = event.selectionEnd;
+            if (end == 1 || end == 2) end = length;
+            e.value = event.value.substring(0, start) + v + event.value.substr(end, length);
+        }
+    }
+    
+    
+}
+
+
 Object.extend(Object, {
     fill: function(target, properties) {
         for(var prop in properties) {
@@ -282,3 +321,61 @@ Object.extend(HTMLElement, {
         }
     }
 });
+
+
+
+
+Rotation = Class.create();
+Rotation.Methods = {
+    initialize: function(values) {
+        this.index = 0;
+        this.values = values;
+    },
+    first: function() {
+        this.index = 0;
+        return this.value();
+    },
+    value: function(index) {
+        index = (index == null || index == undefined) ? this.index : index;
+        return this.values[index];
+    },
+    testNext: function() {
+        var index = this.nextIndex();
+        var result = this.value(index);
+        return result;
+    },
+    next: function() {
+        this.index = this.nextIndex();
+        return this.value();
+    },
+    nextIndex: function() {
+        var result = this.index + 1;
+        return (result < this.values.length) ? (result) : 0;
+    },
+    succ: function() {
+        return this.next();
+    }
+};
+Object.extend(Rotation.prototype, Rotation.Methods); 
+
+EvenOdd = Class.create();
+Object.extend(EvenOdd.prototype, Rotation.Methods);
+Object.extend(EvenOdd.prototype, {
+    initialize: function(firstValue, secondValue) {
+        Rotation.Methods.initialize.apply(this, [
+            [firstValue || "even", secondValue || "odd"]
+        ]);
+        this.reverse = this.testNext;
+    },
+    applyClassName: function(elements) {
+        this.first();
+        for(var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+			if (!Element.hasClassName(element, this.value())) {
+		        Element.removeClassName(element, this.reverse());
+		        Element.addClassName(element, this.value());
+			}
+			this.succ();
+        }
+    }
+} );

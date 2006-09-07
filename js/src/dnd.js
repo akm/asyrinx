@@ -7,41 +7,12 @@
  * @license LGPL
  */
 
-DnD = {};
-DnD.DOM = {
-	getAncestorByTag: function( node, tagName ) {
-		for(var current = node; current != null; current = current.parentNode) {
-			if (current.tagName == tagName)
-				return current;
-		}
-		return null;
-	},
-	
-	getAncestorByClassName: function( node, className ) {
-		for(var current = node; current != null; current = current.parentNode) {
-			try{
-				if (Element.hasClassName(current, className))
-					return current;
-			} catch(e) { 
-			}
-		}
-		return null;
-	}
+if (!window["HTMLTableElement"]) {
+    HTMLTableElement = {};
 }
-DnD.Control = {
-	getAbsolutePosition: function( element, container ) {
-		var result = { x:0, y:0 };
-		var target = element;
-		while( target && target != container ) {
-			result.x += target.offsetLeft;
-			result.y += target.offsetTop;
-			target = target.offsetParent;
-		}
-		return result;
-	}	
-}
-DnD.SortableTable = Class.create();
-DnD.SortableTable.DefaultOptions = {
+
+HTMLTableElement.DnDSortable = Class.create();
+HTMLTableElement.DnDSortable.DefaultOptions = {
     "dragRect": {
         "offsetLeft": -5,
         "offsetTop":  -5,
@@ -51,14 +22,24 @@ DnD.SortableTable.DefaultOptions = {
         "borderStyle": "dotted",
         "borderWidth": "2px"
     },
-    "listen_mousemove": (navigator.appName == "Microsoft Internet Explorer") ? true : false
+    "positionDragRect": (!(/Firefox/.test(navigator.userAgent)) ? null : 
+        function(dragRect, tr) {
+    		dragRect.style.width = "20px";
+    		dragRect.style.height = "12px";
+    		var trPosition = Position.positionedOffset(tr);
+    		dragRect.style.top = (trPosition[1] + 2 )  + "px";
+    		dragRect.style.left = (trPosition[0] + tr.offsetWidth - 25) + "px";
+    	}
+    )
 }
-DnD.SortableTable.prototype = {
+HTMLTableElement.DnDSortable.prototype = {
 	initialize: function(tables, options) {
 		this.active = false;
 		this.tables = (!tables) ? [] : (tables.constructor == Array) ? tables : [ tables ];
 		this.tables = this.tables.collect( function(table){return $(table);} );
-		this.options = Object.extend( $H(DnD.SortableTable.DefaultOptions), options || {} );
+		this.options = Object.extend( $H(HTMLTableElement.DnDSortable.DefaultOptions), options || {} );
+		if (this.options.positionDragRect)
+		  this.positionDragRect = this.options.positionDragRect;
 		this.clickHandler = this.click.bindAsEventListener(this);
 		this.mousedownHandler = this.mousedown.bindAsEventListener(this);
 		this.mousemoveHandler = this.mousemove.bindAsEventListener(this);
@@ -72,8 +53,7 @@ DnD.SortableTable.prototype = {
     	   Event.observe( t, "click", this.clickHandler, false);
     	   Event.observe( t, "mousedown", this.mousedownHandler, false);
     	   Event.observe( t, "mouseup", this.mouseupHandler, true);
-    	   if (this.options["listen_mousemove"])
-    	       Event.observe( t, "mousemove", this.mousemoveHandler, true);
+  	       Event.observe( t, "mousemove", this.mousemoveHandler, true);
         }
         this.active = true;
 	},
@@ -84,8 +64,7 @@ DnD.SortableTable.prototype = {
             Event.stopObserving( t, "click", this.clickHandler, false);
             Event.stopObserving( t, "mousedown", this.mousedownHandler, false);
             Event.stopObserving( t, "mouseup", this.mouseupHandler, true);
-            if (this.options["listen_mousemove"])
-                Event.stopObserving( t, "mousemove", this.mousemoveHandler, true);
+            Event.stopObserving( t, "mousemove", this.mousemoveHandler, true);
         }
         this.active = false;
 	},
@@ -114,6 +93,7 @@ DnD.SortableTable.prototype = {
 	mousemove: function(event) {
 		if (!this.draggingRow)
 			return;
+        window.clearSelection();
 		if (!Event.isLeftClick(event)) {
 			this.mouseup(event);
 			return;
@@ -136,13 +116,13 @@ DnD.SortableTable.prototype = {
 	
 	getDraggingRow: function(event) {
 		var t = Event.element(event);
-		var tr = DnD.DOM.getAncestorByTag(t, "TR");
+		var tr = Element.getAncestorByTagName(t, "TR");
 		return tr;
 	},
 	
 	getAcceptingRow: function(event, dragginRow) {
 		var t = Event.element(event);
-		var tr = DnD.DOM.getAncestorByTag(t, "TR");
+		var tr = Element.getAncestorByTagName(t, "TR");
 		return tr;
 	},
 	
@@ -150,7 +130,7 @@ DnD.SortableTable.prototype = {
 	   if (!tr)
 	       return null;
 	   var result = 0;
-	   var table = DnD.DOM.getAncestorByTag(tr, "TABLE");
+	   var table = Element.getAncestorByTagName(tr, "TABLE");
 	   var tableIndex = this.tables.indexOf(table);
 	   for(var i = 0; i < tableIndex; i++) {
 	       var t = this.tables[i];
@@ -198,11 +178,7 @@ DnD.SortableTable.prototype = {
 	
 	showDragRect: function(tr) {
 		this.dragRect = this.dragRect || this.createDragRect();
-		this.dragRect.style.width = (tr.offsetWidth + this.options.dragRect.offsetWidth)+ "px";
-		this.dragRect.style.height = (tr.offsetHeight + this.options.dragRect.offsetHeight)+ "px";
-		var trPosition = DnD.Control.getAbsolutePosition(tr);
-		this.dragRect.style.top = (trPosition.y + this.options.dragRect.offsetTop)  + "px";
-		this.dragRect.style.left = (trPosition.x + this.options.dragRect.offsetLeft) + "px";
+		this.positionDragRect(this.dragRect, tr);
 		this.dragRect.style.display = "";
 	},
 	
@@ -210,6 +186,14 @@ DnD.SortableTable.prototype = {
 	   if (!this.dragRect)
 	       return;
 	   this.dragRect.style.display = "none";
+	},
+	
+	positionDragRect: function(dragRect, tr) {
+		dragRect.style.width = (tr.offsetWidth + this.options.dragRect.offsetWidth)+ "px";
+		dragRect.style.height = (tr.offsetHeight + this.options.dragRect.offsetHeight)+ "px";
+		var trPosition = Position.positionedOffset(tr);
+		dragRect.style.top = (trPosition[1] + this.options.dragRect.offsetTop)  + "px";
+		dragRect.style.left = (trPosition[0] + this.options.dragRect.offsetLeft) + "px";
 	},
 	
 	createDragRect: function() {
