@@ -49,17 +49,14 @@ function selectProducts(params) {
     return result;
 }
 
+LogWindow.open();
+
 --></script>
 
 	<form name="f">
 		<table><tr><td>
     		<label for="f_id">ID</label>
     		<input type="text" id="f_id" name="f_id" size="10" autocomplete="off" class="number"/>
-			<select id="f_category" name="f_category">
-				<option value="1">書籍</option>
-				<option value="2">DVD</option>
-				<option value="3">CD</option>
-			</select>
 		</td></tr>
 		<tr><td>
 			<label for="f_name">名前</label>
@@ -69,9 +66,17 @@ function selectProducts(params) {
 			<label for="f_asin">ASIN</label>
 			<input type="text" id="f_asin" name="f_asin" autocomplete="off"/>
 		</td></tr>
+		<table><tr><td>
+			<select id="f_category" name="f_category">
+				<option value="1">書籍</option>
+				<option value="2">DVD</option>
+				<option value="3">CD</option>
+			</select>
+		</td></tr>
 		<tr><td>
 			<label for="f_price">価格</label>
-			<input type="text" id="f_price" name="f_price" autocomplete="off" class="currency"/>
+			<input type="text" id="f_price" name="f_price" autocomplete="off" class="currency"
+			     onclick='glogger.debugObj("event", event)'/>
 		</td></tr>
 		<tr><td>
 			<a href="javascript:void(0)" id="btn_clear">クリア</a>
@@ -104,11 +109,15 @@ var mappings = [
    { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f_price") }
 ];
 var rowGenerator = new ACFields.BasicTable($("amazon_products"), mappings);
+
+var ignoreKeyRanges = ACFields.Mapping.DefaultIgnoreKeyRanges.clone();
+
 var acFields = new ACFields(mappings, {
     query: function(parameters, sender) {
         var result = selectProducts(parameters);
         rowGenerator.execute(result);
     }
+    
 });
 rowGenerator.execute(products.slice(0, 10));
 var selection = new HTMLTableElement.MouseOverRowSelection($("amazon_products"));
@@ -120,14 +129,93 @@ var selectRow = function(event) {
     var values = rowGenerator.toValues(selection.row);
     acFields.select(values);
 };
-
 Event.observe($("amazon_products"), "click", selectRow, false);
 
-new HTMLElement.KeyHandler([$("f_name"), $("f_asin")], [
-    {key: Event.KEY_UP    , stopEvent: true, method: selection.prev.bindAsEventListener(selection)},
-    {key: Event.KEY_DOWN  , stopEvent: true, method: selection.next.bindAsEventListener(selection)},
-    {key: Event.KEY_RETURN, stopEvent: true, method: selectRow}
-]); 
+if (!window["HTMLInputElement"]) HTMLInputElement = {};
+
+HTMLInputElement.PullDown = Class.create();
+HTMLInputElement.PullDown.DefaultOptions = {
+};
+HTMLInputElement.PullDown.DefaultPaneStyle = {
+	"cursor": "default",
+	"border": "1px solid rgb(0, 0, 0)",
+	"backgroundColor": "#FFF0C0",
+	"width": "500px",
+	"height": "200px",
+	"overflow": "scroll"
+};
+HTMLInputElement.PullDown.DefaultPaneOptions = {
+    "zIndex": 10
+};
+HTMLInputElement.PullDown.Methods = {
+    initialize: function(options, paneStyle, paneOptions) {
+		this.options = Object.extend( $H(HTMLInputElement.PullDown.DefaultOptions), options || {} );
+		this.paneStyle = Object.extend( $H(HTMLInputElement.PullDown.DefaultPaneStyle), paneStyle || {} );
+		this.paneOptions = Object.extend( $H(HTMLInputElement.PullDown.DefaultPaneOptions), paneOptions || {} );
+        this.visible = false;
+        this.pane = this.options.pane || null;
+    },
+	createPane: function() {
+		var result = document.createElement("DIV");
+		result.style.position = "absolute";
+		result.style.display = "none";
+		Element.setStyle(result, this.paneStyle);
+        
+        LogWindow.open();
+        glogger.debugObj("this.paneOptions", this.paneOptions);
+        
+		Object.extendProperties(result, this.paneOptions);
+		document.body.appendChild(result);
+		return result;
+	},
+    toggle: function(event) {
+        if (this.visible)
+            this.hide(event);
+        else
+            this.show(event);
+    },
+    show: function(event) {
+        if (!this.pane)
+            this.pane = this.createPane();
+        var field = Event.element(event);
+		var fieldPosition = Position.positionedOffset(field);
+        this.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
+		this.pane.style.left = (fieldPosition[0]) + "px";
+        Element.show(this.pane);
+        this.visible = true;
+    },
+    hide: function(event) {
+        if (!this.pane)
+            return;
+        Element.hide(this.pane);
+        this.visible = false;
+    }
+};
+Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
+
+ACFields.PullDown = Class.create();
+Object.extend(ACFields.PullDown.prototype, HTMLInputElement.PullDown.Methods);
+Object.extend(ACFields.PullDown.prototype, {
+	createPane: function() {
+		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
+		this.table = document.createElement("TABLE");
+		result.appendChild(this.table);
+        this.rowGenerator = new ACFields.BasicTable(this.table, mappings);
+		return result;
+	}
+});
+
+var pullDown = new ACFields.PullDown();
+
+new Event.KeyHandler([$("f_name"), $("f_asin")], [
+    {event: "keydown", key: Event.KEY_UP    , stopEvent: true, method: selection.prev.bindAsEventListener(selection)},
+    {event: "keydown", key: Event.KEY_DOWN  , stopEvent: true, method: selection.next.bindAsEventListener(selection)},
+    {event: "keydown", key: Event.KEY_SPACE , ctrl: true, stopEvent: true, method: pullDown.toggle.bindAsEventListener(pullDown)},
+    {event: "keydown", key: Event.KEY_RETURN, stopEvent: true, method: selectRow}
+]);
+Event.observe($("f_name"), "blur", function(event) {
+    pullDown.hide();
+}, false);
 
 --></script>
 

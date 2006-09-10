@@ -76,9 +76,11 @@ ACFields.Mapping.DefaultOptions = {
     ignoreTriggerKeyRanges: ACFields.Mapping.DefaultIgnoreKeyRanges
 };
 ACFields.Mapping.InstanceMethods = {
-    initializeOptions: function() {
+    initializeOptions: function(options) {
         if (!this.options)
             this.options = {};
+        if (options)
+            Object.fill(this.options, options);
         Object.fill(this.options, ACFields.Mapping.DefaultOptions);
     },
 
@@ -170,7 +172,8 @@ ACFields.Mapping.InstanceMethods = {
     }
 };
 ACFields.DefaultOptions = {
-    "keyup_delay": 500
+    "keyup_delay": 500,
+    "ignoreTriggerKeyRanges": ACFields.Mapping.DefaultOptions.ignoreTriggerKeyRanges
 };
 ACFields.prototype = {
     initialize: function(mappings, options) {
@@ -181,10 +184,11 @@ ACFields.prototype = {
         this.observeFieldFocus();
     },
     initializeMapping: function() {
+        var commonOptions = {"ignoreTriggerKeyRanges": this.options.ignoreTriggerKeyRanges };
         for(var i = 0; i < this.mappings.length; i++) {
             var mapping = this.mappings[i];
             Object.fill(mapping, ACFields.Mapping.InstanceMethods);
-            mapping.initializeOptions();
+            mapping.initializeOptions(commonOptions);
         }
     },
     observeFieldFocus: function() {

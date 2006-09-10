@@ -45,8 +45,6 @@ if (!document.setSelection) {
             e.value = event.value.substring(0, start) + v + event.value.substr(end, length);
         }
     }
-    
-    
 }
 
 
@@ -57,6 +55,15 @@ Object.extend(Object, {
                 target[prop] = properties[prop];
         }
         return target;
+    },
+    extendProperties: function(destination, source) {
+        for (var property in source) {
+            var value = source[property];
+            if (value && value.constructor == Function)
+                continue;
+            destination[property] = value;
+        }
+        return destination;
     }
 });
 
@@ -84,6 +91,15 @@ Object.extend(Enumerable, EnumerableExt);
 
 Object.extend(Array.prototype, EnumerableExt);
 Object.extend(Array.prototype, {
+	clone: function() {
+		return Array.apply(null, this);
+		/*
+		var result = new Array(this.length);
+		for(var i = 0; i < this.length; i++)
+			result[i] = this[i];
+		return result;
+		*/
+	},
 	remove: function( value ) {
 		var idx = this.indexOf( value );
 		if (idx > -1)
@@ -362,6 +378,71 @@ Object.extend(Event, {
 	}
 });
 
+Event.KeyHandler = Class.create();
+Event.KeyHandler.DefaultOptions = {
+    activateSoon: true,
+    events: ["keydown", "keyup"],
+    handleOnMatch: true
+};
+Event.KeyHandler.prototype = {
+    initialize: function(handlingFields, actions, options) {
+		this.handlingFields = (!handlingFields) ? [] : (handlingFields.constructor == Array) ? handlingFields : [ handlingFields ];
+		this.handlingFields = this.handlingFields.collect( function(field){return $(field);} );
+        this.actions = actions;
+        this.options = Object.fill(options || {}, Event.KeyHandler.DefaultOptions);
+        if (this.options.activateSoon)
+            this.activate();
+    },
+    activate: function() {
+        if (!this.handler)
+            this.handler = this.handle.bindAsEventListener(this);
+        for(var i = 0; i < this.handlingFields.length; i++) {
+            var field = this.handlingFields[i];
+            for(var j = 0; j < this.options.events.length; j++) {
+                var eventName = this.options.events[j];
+                Event.observe(field, eventName, this.handler, true);
+            }
+        }
+    },
+    deactivate: function() {
+        if (!this.handler)
+            return;
+        for(var i = 0; i < this.handlingFields.length; i++) {
+            var field = this.handlingFields[i];
+            for(var i = 0; i < this.options.events.length; i++) {
+                var eventName = this.options.events[i];
+                Event.stopObserving(field, eventName, this.handler, true);
+            }
+        }
+    },
+    matchFunctionKey: function(action, actionKeyName, event, eventKeyName) {
+        return !((action[actionKeyName] == false && event[eventKeyName]) || 
+            (action[actionKeyName] == true && !event[eventKeyName]));
+    },
+    match: function(action, event, keyCode) {
+        var result =(keyCode == action.key) &&
+            this.matchFunctionKey(action, "alt", event, "altKey") &&
+            this.matchFunctionKey(action, "ctrl", event, "ctrlKey") &&
+            this.matchFunctionKey(action, "shift", event, "shiftKey");
+        return (this.options.handleOnMatch) ? result : !result;
+    },
+    handle: function(event) {
+        var keyCode = event.keyCode || event.charCode || event.which;
+        LogWindow.open();
+        glogger.debugObj("event", event);
+        for(var i = 0; i < this.actions.length; i++) {
+            var action = this.actions[i];
+            if (this.match(action, event, keyCode)) {
+                if (action.event.indexOf(event.type) > -1)
+                    action.method(event);
+                if (action.stopEvent)
+                    Event.stop(event);
+                break;
+            }
+        }
+    }
+}
+
 Object.extend(Form.Element, {
     setValue: function(element, value) {
         element = $(element);
@@ -445,44 +526,6 @@ Object.extend(HTMLElement, {
         }
     }
 });
-
-HTMLElement.KeyHandler = Class.create();
-HTMLElement.KeyHandler.DefaultOptions = {
-    activateSoon: true
-}
-HTMLElement.KeyHandler.prototype = {
-    initialize: function(handlingFields, actions, options) {
-		this.handlingFields = (!handlingFields) ? [] : (handlingFields.constructor == Array) ? handlingFields : [ handlingFields ];
-		this.handlingFields = this.handlingFields.collect( function(field){return $(field);} );
-        this.actions = actions;
-        this.options = Object.fill(options || {}, HTMLElement.KeyHandler.DefaultOptions);
-        if (this.options.activateSoon)
-            this.activate();
-    },
-    activate: function() {
-        this.keyDownHandler = this.keyDown.bindAsEventListener(this);
-        for(var i = 0; i < this.handlingFields.length; i++)
-            Event.observe(this.handlingFields[i], "keydown", this.keyDownHandler, true);
-    },
-    deactivate: function() {
-        if (!this.keyDownHandler)
-            return;
-        for(var i = 0; i < this.handlingFields.length; i++)
-            Event.stopObserving(this.handlingFields[i], "keydown", this.keyDownHandler, true);
-    },
-    keyDown: function(event) {
-        var keyCode = event.keyCode || event.charCode || event.which;
-        for(var i = 0; i < this.actions.length; i++) {
-            var action = this.actions[i];
-            if (keyCode == action.key) {
-                action.method(event);
-                if (action.stopEvent)
-                    Event.stop(event);
-                break;
-            }
-        }
-    }
-}
 
 
 
