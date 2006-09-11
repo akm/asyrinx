@@ -97,7 +97,7 @@ ACFields.Mapping.InstanceMethods = {
             this.field = field;
             return this.field;
         } else if (this.field["className"]) {
-            var baseElement = $(args[0]);
+            var baseElement = $(arguments[0]);
             var fieldClassName = this.field["className"];
             if (!baseElement)
                 throw new Error("no baseElement specified for className[" + fieldClassName + "]");
@@ -178,7 +178,7 @@ ACFields.DefaultOptions = {
 ACFields.prototype = {
     initialize: function(mappings, options) {
 		this.searching = false;
-		this.options = Object.extend( $H(ACFields.DefaultOptions), options || {} );
+		this.options = Object.fill( options || {}, ACFields.DefaultOptions );
         this.mappings = mappings;
         this.initializeMapping();
         this.observeFieldFocus();
@@ -198,23 +198,29 @@ ACFields.prototype = {
     },
     search: function(sender) {
         this.searching = true;
+        if (this.mappings.indexOf(sender) < 0) {
+            sender = this.mappings.select( function(m){ return sender == m.getField();} );
+        }
         var parameters = this.getParameters();
         if (!this.parameterModified(parameters))
             return;
-        this.lastParameters = parameters; 
         if (!this.searching)
             return;
         this.query(parameters, sender);
     },
     parameterModified: function(params) {
-        if (!this.lastParams)
-            return true;
-        for(var prop in params) {
-            if (params[prop] != this.lastParams[prop])
+        try {
+            if (!this.lastParams)
                 return true;
+            for(var prop in params) {
+                if (params[prop] != this.lastParams[prop]) {
+                    return true;
+                }
+            }
+            return false;
+        } finally {
+            this.lastParams = params;
         }
-        this.lastParams = params;
-        return false;
     },
     getParameters: function() {
         var result = {};
@@ -357,17 +363,24 @@ ACFields.BasicTable.Column.InstanceMethods = {
     
 }
 ACFields.BasicTable.DefaultOptions = {
-    "empty_list_message": "該当無し    "
+    "noRecordHTML": "no record found.",
+    "clearSelectionHTML": "[clear selection]"
 };
 ACFields.BasicTable.prototype = {
     initialize: function(tBody, mappings, options) {
         this.tBody = $(tBody);
         if (!this.tBody)
             throw new Error("no table or tbody specified");
-        if (this.tBody.tagName.toLowerCase() == "table")
-             this.tBody = this.tBody.tBodies[0];
+        if (this.tBody.tagName.toLowerCase() == "table") {
+            var table = this.tBody;
+            if (table.tBodies.length < 1) {
+                var newBody = document.createElement("TBODY");
+                table.appendChild(newBody);
+            }
+            this.tBody = table.tBodies[0];
+        }
         this.mappings = mappings;
-		this.options = Object.extend( $H(ACFields.BasicTable.DefaultOptions), options || {} );
+		this.options = Object.fill( options || {}, ACFields.BasicTable.DefaultOptions );
 		this.initializeMappingsAsColumn();
     },
     initializeMappingsAsColumn: function() {
@@ -385,13 +398,14 @@ ACFields.BasicTable.prototype = {
                 this.tBody.deleteRow(0);
             }
         }
+        this.lastNoRecordRow = null;
 		if (!list || list.length < 1) {
-		    if (this.options["empty_list_message"]) {
+		    if (this.options["noRecordHTML"]) {
     			var tr = this.tBody.insertRow(-1);
     			var td = tr.insertCell(0);
     			td.colSpan = this.mappings.length;
-    			var content = document.createTextNode( this.options["empty_list_message"] );
-    			td.appendChild(content);
+    			td.innerHTML = this.options["noRecordHTML"];
+    			this.lastNoRecordRow = tr;
 		    }
 		} else {
 			for(var i = 0; i < list.length; i++) {
@@ -403,6 +417,14 @@ ACFields.BasicTable.prototype = {
 				}
 			}
 		}
+		this.lastClearSelectionRow = null;
+	    if (this.options["clearSelectionHTML"]) {
+			var tr = this.tBody.insertRow(-1);
+			var td = tr.insertCell(0);
+			td.colSpan = this.mappings.length;
+			td.innerHTML = this.options["clearSelectionHTML"];
+			this.lastClearSelectionRow = tr;
+	    }
     },
     toValues: function(row) {
 		var result = {};
@@ -411,6 +433,15 @@ ACFields.BasicTable.prototype = {
 			mapping.parseCell(row, result); 
 		}
 		return result;
+    },
+    getRowType: function(row) {
+        if (!row)
+            return null;
+        if (row == this.lastNoRecordRow)
+            return "noRecord";
+        if (row == this.lastClearSelectionRow)
+            return "clearSelection";
+        return "others";
     }
 }
  

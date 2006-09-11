@@ -235,7 +235,29 @@ Object.extend(Element, {
 			}
 		}
 		return null;
-	}
+	},
+	
+    scrollXIfInvisible: function(element, scrollable) {
+        Element._scrollIfInvisible(element, scrollable, 
+            "x", "offsetLeft", "offsetWidth",
+            "scrollLeft", "clientWidth");
+    },
+    
+    scrollYIfInvisible: function(element, scrollable) {
+        Element._scrollIfInvisible(element, scrollable, 
+            "y", "offsetTop", "offsetHeight",
+            "scrollTop", "clientHeight");
+    },
+    
+    _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
+        element = $(element);
+        scrollable = $(scrollable) || window;
+        var pos = element[elementPos] ? element[elementPos] : element[elementOffsetPos];
+        if (scrollable[scrollableProp] > pos )
+            scrollable[scrollableProp] = pos;
+        else if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize])
+            scrollable[scrollableProp] = pos - scrollable[scrollableClientSize] + element[elementOffsetSize];
+    }
 });
 
 
@@ -365,7 +387,7 @@ Object.extend(Event, {
 });
 Object.extend(Event, {
 	observeDelay: function(element, name, observer, useCapture, options) {
-		options = Object.extend( $H({"delay":500}), options || {} );
+		options = Object.fill( options || {}, {"delay":500} );
 		var actual_observer = function(event) {
 			var _event = Object.extend({}, event);
 			if (options["before_setTimeout"])
@@ -382,7 +404,8 @@ Event.KeyHandler = Class.create();
 Event.KeyHandler.DefaultOptions = {
     activateSoon: true,
     events: ["keydown", "keyup"],
-    handleOnMatch: true
+    handleOnMatch: true,
+    acceptableInterval: 500
 };
 Event.KeyHandler.prototype = {
     initialize: function(handlingFields, actions, options) {
@@ -419,23 +442,26 @@ Event.KeyHandler.prototype = {
         return !((action[actionKeyName] == false && event[eventKeyName]) || 
             (action[actionKeyName] == true && !event[eventKeyName]));
     },
-    match: function(action, event, keyCode) {
-        var result =(keyCode == action.key) &&
-            this.matchFunctionKey(action, "alt", event, "altKey") &&
-            this.matchFunctionKey(action, "ctrl", event, "ctrlKey") &&
-            this.matchFunctionKey(action, "shift", event, "shiftKey");
+    matchAction: function(action, event, keyCode) {
+        return (keyCode == action.key) &&
+               this.matchFunctionKey(action, "alt", event, "altKey") &&
+               this.matchFunctionKey(action, "ctrl", event, "ctrlKey") &&
+               this.matchFunctionKey(action, "shift", event, "shiftKey")
+    },
+    isHandlingAction: function(action, event, keyCode) {
+        var result = (action.match && action.match(action, event, keyCode, this)) ||
+            this.matchAction(action, event, keyCode);
         return (this.options.handleOnMatch) ? result : !result;
     },
     handle: function(event) {
         var keyCode = event.keyCode || event.charCode || event.which;
-        LogWindow.open();
-        glogger.debugObj("event", event);
         for(var i = 0; i < this.actions.length; i++) {
             var action = this.actions[i];
-            if (this.match(action, event, keyCode)) {
-                if (action.event.indexOf(event.type) > -1)
+            if (this.isHandlingAction(action, event, keyCode)) {
+                if (action.event.indexOf(event.type) > -1) {
                     action.method(event);
-                if (action.stopEvent)
+                }
+                if (action.stopEvent == undefined || action.stopEvent == null || action.stopEvent == true)
                     Event.stop(event);
                 break;
             }
