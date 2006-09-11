@@ -444,4 +444,140 @@ ACFields.BasicTable.prototype = {
         return "others";
     }
 }
+
+
+ACFields.PullDown = Class.create();
+ACFields.PullDown.DefaultOptions = {
+    activateSoon: true,
+    closeOnSelect: true,
+    toggleOnDblClick: true,
+    searchOnShow: true,
+    searchingHTML: "searching・・・"
+};
+ACFields.PullDown.DefaultTableOptions = {
+    "cellpadding": "0",
+    "cellspacing": "0",
+    "border": "0"
+};
+ACFields.PullDown.DefaultTableStyle = {
+    "empty-cells": "show"
+};
+ACFields.PullDown.Methods = {}
+Object.extend(ACFields.PullDown.Methods, HTMLInputElement.PullDown.Methods);
+Object.extend(ACFields.PullDown.Methods, {
+    initialize: function(mappings, queryMethod, options) {
+        options = Object.fill( options || {}, ACFields.PullDown.DefaultOptions);
+        HTMLInputElement.PullDown.Methods.initialize.apply(this, [options]);
+        this.tableOptions = Object.fill( this.options["table"] || {}, ACFields.PullDown.DefaultTableOptions);
+        this.tableStyle = Object.fill( this.tableOptions["style"] || {}, ACFields.PullDown.DefaultTableStyle);
+        this.mappings = mappings;
+        this.queryMethod = queryMethod;
+        this.acFields = new ACFields(this.mappings, {"query": this.invokeQuery.bind(this) });
+        if (this.options.activateSoon)
+            this.activate();
+    },
+    activate: function() {
+        var suggestives = this.mappings.
+            select( function(mapping){return mapping.suggestive;}).
+            collect( function(mapping) { return mapping.getField();} );
+        var visibleHandlingMatcher = this.matchWhenVisible.bind(this);
+        new Event.KeyHandler(suggestives, [
+            {event: "keydown", key: Event.KEY_UP    , method: this.rowUp.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_DOWN  , method: this.rowDown.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_SPACE , ctrl: true, method: this.toggle.bindAsEventListener(this)},
+            {event: "keydown", key: Event.KEY_ESC   , method: this.hide.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_RETURN, method: this.selectRow.bindAsEventListener(this), match: visibleHandlingMatcher}
+        ]);
+        for(var i = 0; i < suggestives.length; i++) {
+            Event.observe($(suggestives[i]), "blur", this.hide.bindAsEventListener(this) , false);
+            if (this.options.toggleOnDblClick) 
+                Event.observe($(suggestives[i]), "dblclick", this.toggle.bindAsEventListener(this) , false);
+        }
+    },
+    matchWhenVisible: function(action, event, keyCode, keyHandler) {
+        return (this.visible && keyHandler.matchAction(action, event, keyCode));
+    },
+    appendSearchingDiv: function(dest) {
+    	if (!this.options.searchingHTML || this.searchingDiv)
+    	   return;
+        this.searchingDiv = document.createElement("DIV");
+        this.searchingDiv.innerHTML = this.options.searchingHTML;
+        dest.appendChild(this.searchingDiv);
+    },
+	createPane: function() {
+		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
+		this.appendSearchingDiv(result);
+		this.table = document.createElement("TABLE");
+		if (this.tableOptions.style)
+		  delete this.tableOptions.style;
+		Object.extendProperties(this.table, this.tableOptions);
+		Element.setStyle(this.table, this.tableStyle);
+		result.appendChild(this.table);
+        this.rowGenerator = new ACFields.BasicTable(this.table, this.mappings, this.options["rowGenerator"]);
+        this.selection = new HTMLTableElement.MouseOverRowSelection(this.table);
+        Event.observe(this.table, "click", this.selectRow.bindAsEventListener(this), false);
+		return result;
+	},
+    invokeQuery: function(parameters, sender) {
+        if (!this.queryMethod)
+            throw new Error("no queryMethod specified");
+        if (this.searchingDiv) {
+            Element.show(this.searchingDiv);
+            if (this.table)
+                Element.hide(this.table);
+        }
+        this.queryCallbackBind = this.queryCallbackBind || this.queryCallback.bind(this); 
+        var result = this.queryMethod.apply(null, [parameters, this.queryCallbackBind]);
+        if (result && result.constructor == Array)
+            this.showQueryResult(result);
+    },
+    queryCallback: function(result) {
+        this.showQueryResult(result);
+    },
+    showQueryResult: function(result) {
+        if (this.searchingDiv)
+            Element.hide(this.searchingDiv);
+        if (!this.table)
+            this.createPane();
+        Element.show(this.table);
+        this.rowGenerator.execute(result);
+    },
+    rowUp: function(event) {
+        if (!this.selection)
+            return;
+        this.selection.prev(event);
+        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+    },
+    rowDown: function(event) {
+        if (!this.selection)
+            return;
+        this.selection.next(event);
+        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+    },
+    selectRow: function(event) {
+        var rowType = this.rowGenerator.getRowType(this.selection.row);
+        if (rowType == "noRecord") {
+            return;
+        } else if (rowType == "clearSelection") {
+            this.acFields.clear();
+        } else {
+            var values = this.rowGenerator.toValues(this.selection.row);
+            this.acFields.select(values);
+        }
+        if (this.options.closeOnSelect)
+            this.hide(event);
+    },
+    toggle: function(event) {
+        HTMLInputElement.PullDown.Methods.toggle.apply(this, arguments);
+    },
+    hide: function(event) {
+        HTMLInputElement.PullDown.Methods.hide.apply(this, arguments);
+    },
+    show: function(event) {
+        HTMLInputElement.PullDown.Methods.show.apply(this, arguments);
+        if (this.options.searchOnShow)
+            this.acFields.search(Event.element(event));
+    }
+});
+Object.extend(ACFields.PullDown.prototype, ACFields.PullDown.Methods);
  

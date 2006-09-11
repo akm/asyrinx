@@ -238,25 +238,69 @@ Object.extend(Element, {
 	},
 	
     scrollXIfInvisible: function(element, scrollable) {
-        Element._scrollIfInvisible(element, scrollable, 
-            "x", "offsetLeft", "offsetWidth",
-            "scrollLeft", "clientWidth");
+        scrollable = scrollable || window;
+        if (scrollable == window) {
+            Element._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth",
+                "scrollX", "innerWidth");
+        } else {
+            Element._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth",
+                "scrollLeft", "clientWidth");
+        }
     },
     
     scrollYIfInvisible: function(element, scrollable) {
-        Element._scrollIfInvisible(element, scrollable, 
-            "y", "offsetTop", "offsetHeight",
-            "scrollTop", "clientHeight");
+        scrollable = scrollable || window;
+        if (scrollable == window) {
+            Element._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight",
+                "scrollY", "innerHeight");
+        } else {
+            Element._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight",
+                "scrollTop", "clientHeight");
+        }
     },
     
     _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
         element = $(element);
         scrollable = $(scrollable) || window;
         var pos = element[elementPos] ? element[elementPos] : element[elementOffsetPos];
-        if (scrollable[scrollableProp] > pos )
-            scrollable[scrollableProp] = pos;
-        else if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize])
-            scrollable[scrollableProp] = pos - scrollable[scrollableClientSize] + element[elementOffsetSize];
+        if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize]) {
+            var diff = pos - scrollable[scrollableClientSize] + element[elementOffsetSize] - scrollable[scrollableProp];
+            if (scrollable == window) {
+                if (elementPos == "x")
+                    scrollable.scrollBy(diff, 0)
+                else
+                    scrollable.scrollBy(0, diff);
+            } else {
+                scrollable[scrollableProp] = pos - scrollable[scrollableClientSize] + element[elementOffsetSize];
+            }
+        } else if (scrollable[scrollableProp] > pos ) {
+            var diff = scrollable[scrollableProp] - pos;
+            if (scrollable == window) {
+                if (elementPos == "x")
+                    scrollable.scrollBy(diff, 0)
+                else
+                    scrollable.scrollBy(0, diff);
+            } else {
+                scrollable[scrollableProp] = pos;
+            }
+        }
+    },
+    
+    hide: function() {
+        for (var i = 0; i < arguments.length; i++) {
+            var element = $(arguments[i]);
+            element.style.display = 'none';
+        }
+    },
+    show: function() {
+        for (var i = 0; i < arguments.length; i++) {
+            var element = $(arguments[i]);
+            element.style.display = '';
+        }
     }
 });
 
@@ -553,6 +597,83 @@ Object.extend(HTMLElement, {
     }
 });
 
+
+if (!window["HTMLInputElement"]) HTMLInputElement = {};
+
+HTMLInputElement.PullDown = Class.create();
+HTMLInputElement.PullDown.DefaultOptions = {
+    hideTimeout: 500,
+    hideSoonOnKeyEvent: true
+};
+HTMLInputElement.PullDown.DefaultPaneStyle = {
+	"cursor": "default",
+	"border": "1px solid black",
+	"backgroundColor": "white",
+	"width": "500px",
+	"max-height": "200px",
+	"overflow": "scroll"
+};
+HTMLInputElement.PullDown.DefaultPaneOptions = {
+};
+HTMLInputElement.PullDown.Methods = {
+    initialize: function(options) {
+		this.options = Object.fill( options || {}, HTMLInputElement.PullDown.DefaultOptions );
+		this.paneOptions = Object.fill( this.options["pane"] || {}, HTMLInputElement.PullDown.DefaultPaneOptions );
+		this.paneStyle = Object.fill( this.paneOptions["style"] || {}, HTMLInputElement.PullDown.DefaultPaneStyle );
+        this.visible = false;
+    },
+	createPane: function() {
+		var result = document.createElement("DIV");
+		result.style.position = "absolute";
+		result.style.display = "none";
+		if (this.paneOptions.style)
+		  delete this.paneOptions.style;
+		Object.extendProperties(result, this.paneOptions);
+		Element.setStyle(result, this.paneStyle);
+		document.body.appendChild(result);
+		return result;
+	},
+    toggle: function(event) {
+        if (this.visible)
+            this.hide(event);
+        else
+            this.show(event);
+    },
+    show: function(event) {
+        if (!this.pane)
+            this.pane = this.createPane();
+		this.updatePaneRect(event);
+        Element.show(this.pane);
+        this.visible = true;
+        try{
+            Element.scrollYIfInvisible(this.pane);
+        }catch(ex){
+        }
+    },
+    hide: function(event) {
+        if (this.options.hideTimeout < 1) {
+            this._hide(event);
+        } else if (this.options.hideSoonOnKeyEvent && (event && event.type && event.type.indexOf("key") > -1)) {
+            this._hide(event);
+        } else {
+            var _event = Object.extend({}, event);
+            setTimeout(this._hide.bind(this, _event), this.options.hideTimeout);
+        }
+    },
+    _hide: function(event) {
+        if (!this.pane)
+            return;
+        Element.hide(this.pane);
+        this.visible = false;
+    },
+    updatePaneRect: function(event) {
+        var field = Event.element(event);
+		var fieldPosition = Position.positionedOffset(field);
+        this.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
+		this.pane.style.left = (fieldPosition[0]) + "px";
+    }
+};
+Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
 
 
 Rotation = Class.create();
