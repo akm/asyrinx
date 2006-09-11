@@ -49,8 +49,6 @@ function selectProducts(params) {
     return result;
 }
 
-LogWindow.open();
-
 --></script>
 
 	<form name="f">
@@ -100,6 +98,225 @@ LogWindow.open();
 </table>
 
 <script language="javascript"    type="text/javascript" ><!--
+if (!window["HTMLInputElement"]) HTMLInputElement = {};
+
+HTMLInputElement.PullDown = Class.create();
+HTMLInputElement.PullDown.DefaultOptions = {
+    hideTimeout: 500,
+    hideSoonOnKeyEvent: true
+};
+HTMLInputElement.PullDown.DefaultPaneStyle = {
+	"cursor": "default",
+	"border": "1px solid black",
+	"backgroundColor": document.body.style.backgroundColor || "white",
+	"width": "500px",
+	"max-height": "200px",
+	"overflow": "scroll"
+};
+HTMLInputElement.PullDown.DefaultPaneOptions = {
+};
+HTMLInputElement.PullDown.Methods = {
+    initialize: function(options) {
+		this.options = Object.fill( options || {}, HTMLInputElement.PullDown.DefaultOptions );
+		this.paneOptions = Object.fill( this.options["pane"] || {}, HTMLInputElement.PullDown.DefaultPaneOptions );
+		this.paneStyle = Object.fill( this.paneOptions["style"] || {}, HTMLInputElement.PullDown.DefaultPaneStyle );
+        this.visible = false;
+        this.pane = this.options.pane || null;
+    },
+	createPane: function() {
+		var result = document.createElement("DIV");
+		result.style.position = "absolute";
+		result.style.display = "none";
+		if (this.paneOptions.style)
+		  delete this.paneOptions.style;
+		Object.extendProperties(result, this.paneOptions);
+		Element.setStyle(result, this.paneStyle);
+		document.body.appendChild(result);
+		return result;
+	},
+    toggle: function(event) {
+        if (this.visible)
+            this.hide(event);
+        else
+            this.show(event);
+    },
+    show: function(event) {
+        if (!this.pane)
+            this.pane = this.createPane();
+		this.updatePaneRect(event);
+        Element.show(this.pane);
+        this.visible = true;
+    },
+    hide: function(event) {
+        if (this.options.hideTimeout < 1) {
+            this._hide(event);
+        } else if (this.options.hideSoonOnKeyEvent && (event && event.type && event.type.indexOf("key") > -1)) {
+            this._hide(event);
+        } else {
+            var _event = Object.extend({}, event);
+            setTimeout(this._hide.bind(this, _event), this.options.hideTimeout);
+        }
+    },
+    _hide: function(event) {
+        if (!this.pane)
+            return;
+        Element.hide(this.pane);
+        this.visible = false;
+    },
+    updatePaneRect: function(event) {
+        var field = Event.element(event);
+		var fieldPosition = Position.positionedOffset(field);
+        this.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
+		this.pane.style.left = (fieldPosition[0]) + "px";
+    }
+};
+Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
+
+ACFields.PullDown = Class.create();
+ACFields.PullDown.DefaultOptions = {
+    activateSoon: true,
+    closeOnSelect: true,
+    toggleOnDblClick: true,
+    searchOnShow: true,
+    searchingHTML: "searching・・・"
+};
+ACFields.PullDown.DefaultTableOptions = {
+    "cellpadding": "0",
+    "cellspacing": "0",
+    "border": "0"
+};
+ACFields.PullDown.DefaultTableStyle = {
+    "empty-cells": "show"
+};
+ACFields.PullDown.Methods = {}
+Object.extend(ACFields.PullDown.Methods, HTMLInputElement.PullDown.Methods);
+Object.extend(ACFields.PullDown.Methods, {
+    initialize: function(mappings, queryMethod, options, paneStyle, paneOptions) {
+        options = Object.fill( options || {}, ACFields.PullDown.DefaultOptions);
+        HTMLInputElement.PullDown.Methods.initialize.apply(this, [options, paneStyle, paneOptions]);
+        this.tableOptions = Object.fill( this.options["table"] || {}, ACFields.PullDown.DefaultTableOptions);
+        this.tableStyle = Object.fill( this.tableOptions["style"] || {}, ACFields.PullDown.DefaultTableStyle);
+        this.mappings = mappings;
+        this.queryMethod = queryMethod;
+        this.acFields = new ACFields(this.mappings, {"query": this.invokeQuery.bind(this) });
+        if (this.options.activateSoon)
+            this.activate();
+    },
+    activate: function() {
+        var suggestives = this.mappings.
+            select( function(mapping){return mapping.suggestive;}).
+            collect( function(mapping) { return mapping.getField();} );
+        var visibleHandlingMatcher = this.matchWhenVisible.bind(this);
+        new Event.KeyHandler(suggestives, [
+            {event: "keydown", key: Event.KEY_UP    , method: this.rowUp.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_DOWN  , method: this.rowDown.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_SPACE , ctrl: true, method: this.toggle.bindAsEventListener(this)},
+            {event: "keydown", key: Event.KEY_ESC   , method: this.hide.bindAsEventListener(this), match: visibleHandlingMatcher},
+            {event: "keydown", key: Event.KEY_RETURN, method: this.selectRow.bindAsEventListener(this), match: visibleHandlingMatcher}
+        ]);
+        for(var i = 0; i < suggestives.length; i++) {
+            Event.observe($(suggestives[i]), "blur", this.hide.bindAsEventListener(this) , false);
+            if (this.options.toggleOnDblClick) 
+                Event.observe($(suggestives[i]), "dblclick", this.toggle.bindAsEventListener(this) , false);
+        }
+    },
+    matchWhenVisible: function(action, event, keyCode, keyHandler) {
+        return (this.visible && keyHandler.matchAction(action, event, keyCode));
+    },
+    appendSearchingDiv: function(dest) {
+    	if (!this.options.searchingHTML || this.searchingDiv)
+    	   return;
+        this.searchingDiv = document.createElement("DIV");
+        this.searchingDiv.innerHTML = this.options.searchingHTML;
+        dest.appendChild(this.searchingDiv);
+    },
+	createPane: function() {
+		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
+		this.appendSearchingDiv(result);
+		this.table = document.createElement("TABLE");
+		if (this.tableOptions.style)
+		  delete this.tableOptions.style;
+		Object.extendProperties(this.table, this.tableOptions);
+		Element.setStyle(this.table, this.tableStyle);
+		result.appendChild(this.table);
+        this.rowGenerator = new ACFields.BasicTable(this.table, this.mappings);
+        this.selection = new HTMLTableElement.MouseOverRowSelection(this.table);
+        Event.observe(this.table, "click", this.selectRow.bindAsEventListener(this), false);
+		return result;
+	},
+    invokeQuery: function(parameters, sender) {
+        if (!this.queryMethod)
+            throw new Error("no queryMethod specified");
+        if (this.searchingDiv) {
+            Element.show(this.searchingDiv);
+            Element.hide(this.table);
+        }
+        this.queryCallbackBind = this.queryCallbackBind || this.queryCallback.bind(this); 
+        var result = this.queryMethod.apply(null, [parameters, this.queryCallbackBind]);
+        if (result && result.constructor == Array)
+            this.showQueryResult(result);
+    },
+    queryCallback: function(result) {
+        this.showQueryResult(result);
+    },
+    showQueryResult: function(result) {
+        if (this.searchingDiv)
+            Element.hide(this.searchingDiv);
+        if (!this.table)
+            this.createPane();
+        Element.show(this.table);
+        this.rowGenerator.execute(result);
+    },
+    rowUp: function(event) {
+        if (!this.selection)
+            return;
+        this.selection.prev(event);
+        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+    },
+    rowDown: function(event) {
+        if (!this.selection)
+            return;
+        this.selection.next(event);
+        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+    },
+    selectRow: function(event) {
+        var rowType = this.rowGenerator.getRowType(this.selection.row);
+        if (rowType == "noRecord") {
+            return;
+        } else if (rowType == "clearSelection") {
+            this.acFields.clear();
+        } else {
+            var values = this.rowGenerator.toValues(this.selection.row);
+            this.acFields.select(values);
+        }
+        if (this.options.closeOnSelect)
+            this.hide(event);
+    },
+    toggle: function(event) {
+        HTMLInputElement.PullDown.Methods.toggle.apply(this, arguments);
+    },
+    hide: function(event) {
+        HTMLInputElement.PullDown.Methods.hide.apply(this, arguments);
+    },
+    show: function(event) {
+        HTMLInputElement.PullDown.Methods.show.apply(this, arguments);
+        if (this.options.searchOnShow)
+            this.acFields.search(Event.element(event));
+    }
+});
+Object.extend(ACFields.PullDown.prototype, ACFields.PullDown.Methods);
+
+
+
+
+LogWindow.open();
+
+
+
+--></script>
+
+<script language="javascript"    type="text/javascript" ><!--
+
 
 var mappings = [
    { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f_id") },
@@ -110,14 +327,11 @@ var mappings = [
 ];
 var rowGenerator = new ACFields.BasicTable($("amazon_products"), mappings);
 
-var ignoreKeyRanges = ACFields.Mapping.DefaultIgnoreKeyRanges.clone();
-
 var acFields = new ACFields(mappings, {
     query: function(parameters, sender) {
         var result = selectProducts(parameters);
         rowGenerator.execute(result);
     }
-    
 });
 rowGenerator.execute(products.slice(0, 10));
 var selection = new HTMLTableElement.MouseOverRowSelection($("amazon_products"));
@@ -131,91 +345,63 @@ var selectRow = function(event) {
 };
 Event.observe($("amazon_products"), "click", selectRow, false);
 
-if (!window["HTMLInputElement"]) HTMLInputElement = {};
-
-HTMLInputElement.PullDown = Class.create();
-HTMLInputElement.PullDown.DefaultOptions = {
-};
-HTMLInputElement.PullDown.DefaultPaneStyle = {
-	"cursor": "default",
-	"border": "1px solid rgb(0, 0, 0)",
-	"backgroundColor": "#FFF0C0",
-	"width": "500px",
-	"height": "200px",
-	"overflow": "scroll"
-};
-HTMLInputElement.PullDown.DefaultPaneOptions = {
-    "zIndex": 10
-};
-HTMLInputElement.PullDown.Methods = {
-    initialize: function(options, paneStyle, paneOptions) {
-		this.options = Object.extend( $H(HTMLInputElement.PullDown.DefaultOptions), options || {} );
-		this.paneStyle = Object.extend( $H(HTMLInputElement.PullDown.DefaultPaneStyle), paneStyle || {} );
-		this.paneOptions = Object.extend( $H(HTMLInputElement.PullDown.DefaultPaneOptions), paneOptions || {} );
-        this.visible = false;
-        this.pane = this.options.pane || null;
-    },
-	createPane: function() {
-		var result = document.createElement("DIV");
-		result.style.position = "absolute";
-		result.style.display = "none";
-		Element.setStyle(result, this.paneStyle);
-        
-        LogWindow.open();
-        glogger.debugObj("this.paneOptions", this.paneOptions);
-        
-		Object.extendProperties(result, this.paneOptions);
-		document.body.appendChild(result);
-		return result;
-	},
-    toggle: function(event) {
-        if (this.visible)
-            this.hide(event);
-        else
-            this.show(event);
-    },
-    show: function(event) {
-        if (!this.pane)
-            this.pane = this.createPane();
-        var field = Event.element(event);
-		var fieldPosition = Position.positionedOffset(field);
-        this.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
-		this.pane.style.left = (fieldPosition[0]) + "px";
-        Element.show(this.pane);
-        this.visible = true;
-    },
-    hide: function(event) {
-        if (!this.pane)
-            return;
-        Element.hide(this.pane);
-        this.visible = false;
-    }
-};
-Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
-
-ACFields.PullDown = Class.create();
-Object.extend(ACFields.PullDown.prototype, HTMLInputElement.PullDown.Methods);
-Object.extend(ACFields.PullDown.prototype, {
-	createPane: function() {
-		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
-		this.table = document.createElement("TABLE");
-		result.appendChild(this.table);
-        this.rowGenerator = new ACFields.BasicTable(this.table, mappings);
-		return result;
-	}
-});
-
-var pullDown = new ACFields.PullDown();
-
 new Event.KeyHandler([$("f_name"), $("f_asin")], [
-    {event: "keydown", key: Event.KEY_UP    , stopEvent: true, method: selection.prev.bindAsEventListener(selection)},
-    {event: "keydown", key: Event.KEY_DOWN  , stopEvent: true, method: selection.next.bindAsEventListener(selection)},
-    {event: "keydown", key: Event.KEY_SPACE , ctrl: true, stopEvent: true, method: pullDown.toggle.bindAsEventListener(pullDown)},
-    {event: "keydown", key: Event.KEY_RETURN, stopEvent: true, method: selectRow}
+    {event: "keydown", key: Event.KEY_UP    , method: selection.prev.bindAsEventListener(selection) },
+    {event: "keydown", key: Event.KEY_DOWN  , method: selection.next.bindAsEventListener(selection) },
+    {event: "keydown", key: Event.KEY_RETURN, method: selectRow }
 ]);
-Event.observe($("f_name"), "blur", function(event) {
-    pullDown.hide();
-}, false);
+
+--></script>
+
+	<form name="f2">
+		<table><tr><td>
+    		<label for="f2_id">ID</label>
+    		<input type="text" id="f2_id" name="f_id" size="10" autocomplete="off" class="number"/>
+		</td></tr>
+		<tr><td>
+			<label for="f2_name">名前</label>
+			<input type="text" id="f2_name" name="f_name" autocomplete="off"/>
+		</td></tr>
+		<tr><td>
+			<label for="f2_asin">ASIN</label>
+			<input type="text" id="f2_asin" name="f_asin" autocomplete="off"/>
+		</td></tr>
+		<table><tr><td>
+			<select id="f2_category" name="f_category">
+				<option value="1">書籍</option>
+				<option value="2">DVD</option>
+				<option value="3">CD</option>
+			</select>
+		</td></tr>
+		<tr><td>
+			<label for="f2_price">価格</label>
+			<input type="text" id="f2_price" name="f_price" autocomplete="off" class="currency"
+			     onclick='glogger.debugObj("event", event)'/>
+		</td></tr>
+		</table>
+	</form>
+	
+<script language="javascript"    type="text/javascript" ><!--
+
+var mappings2 = [
+   { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f2_id") },
+   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f2_category"), defaultValue:1, htmlOptions:{"align":"center"} },
+   { suggestive:true , visible:true , type:"String"  , property: "name", field: $("f2_name") },
+   { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f2_asin") },
+   { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f2_price") }
+];
+var pullDown = new ACFields.PullDown(mappings2, 
+    function(parameters, callback) {
+        var result = selectProducts(parameters);
+        setTimeout(function(){ callback(result); }, 500);
+        //return result; 
+    },
+    {
+        searchingHTML: '<img src="./spinner.gif">検索中・・・',
+        noRecordHTML: "( -- 該当無し -- )",
+        clearSelectionHTML: "[クリア]"
+    }
+);
 
 --></script>
 
