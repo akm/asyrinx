@@ -640,10 +640,13 @@ HTMLInputElement.PullDown.Methods = {
             this.show(event);
     },
     show: function(event) {
-        if (!this.pane)
+        if (!this.pane) {
             this.pane = this.createPane();
+            this.shim = new HTMLIFrameElement.Shim(this.pane);
+        }
 		this.updatePaneRect(event);
         Element.show(this.pane);
+        this.shim.enableShim();
         this.visible = true;
         try{
             Element.scrollYIfInvisible(this.pane);
@@ -664,6 +667,7 @@ HTMLInputElement.PullDown.Methods = {
         if (!this.pane)
             return;
         Element.hide(this.pane);
+        this.shim.disableShim();
         this.visible = false;
     },
     updatePaneRect: function(event) {
@@ -675,6 +679,59 @@ HTMLInputElement.PullDown.Methods = {
 };
 Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
 
+
+if (!window["HTMLIFrameElement"]) HTMLIFrameElement = {};
+HTMLIFrameElement.Shim = Class.create();
+HTMLIFrameElement.Shim.DefaultOptions = {
+	"scrolling": "no",
+	"frameborder": "1"
+};
+HTMLIFrameElement.Shim.DefaultStyle = {
+	"position": "absolute",
+	"top": "0px",
+	"left": "0px",
+	"display": "none",
+	"z-index": 10
+};
+HTMLIFrameElement.Shim.prototype = {
+    initialize: function(pane, options, style) {
+        this.pane = pane;
+		if (navigator.appVersion.indexOf("MSIE") < 0)
+		    return;
+		if (navigator.appVersion.indexOf("MSIE 7") > -1)
+		    return;
+		this.frame = document.createElement("IFRAME");
+		document.body.appendChild(this.frame);
+		Object.extend(this.frame, Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions));
+		Element.setStyle(this.frame, Object.fill(style || {}, HTMLIFrameElement.Shim.DefaultStyle));
+		this.pane.style.zIndex = this.frame.style.zIndex + 1;
+		Event.observe(this.pane, "move", this.paneMoved.bindAsEventListener(this), true);
+		Event.observe(this.pane, "resize", this.paneResized.bindAsEventListener(this), true);
+    },
+	fit: function() {
+	    if (!this.frame)
+	       return;
+		this.frame.style.width = this.pane.offsetWidth + "px";
+		this.frame.style.height = this.pane.offsetHeight + "px";
+		this.frame.style.top = this.pane.style.top;
+		this.frame.style.left = this.pane.style.left;
+		this.frame.style.zIndex = this.pane.style.zIndex - 1;
+		this.frame.style.position = "absolute";
+	},
+	enableShim: function() {
+		this.fit();
+		Element.show(this.frame);
+	},
+	disableShim: function() {
+		Element.hide(this.frame);
+	},
+	paneResized: function( e ) {
+		this.fit();
+	},
+	paneMoved: function( e ) {
+		this.fit();
+	}    
+}
 
 Rotation = Class.create();
 Rotation.Methods = {
