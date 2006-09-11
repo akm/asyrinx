@@ -720,10 +720,12 @@ HTMLIFrameElement.Shim.prototype = {
 	},
 	enableShim: function() {
 		this.fit();
-		Element.show(this.frame);
+	    if (this.frame)
+    		Element.show(this.frame);
 	},
 	disableShim: function() {
-		Element.hide(this.frame);
+	    if (this.frame)
+    		Element.hide(this.frame);
 	},
 	paneResized: function( e ) {
 		this.fit();
