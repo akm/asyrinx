@@ -6,6 +6,7 @@
 <script language="JavaScript" type="text/javascript" src="../../lib/jsUnitCore.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../lib/test_helper.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
 </head>
 <body>
@@ -328,6 +329,22 @@ function test_String_toNumeric() {
     assertEquals("-01.5", "-0abc1.5".toNumeric());
     assertEquals("-01.5.8", "-0abc1.5_[.8]".toNumeric());
 }
+function test_String_abbreviate() {
+    assertEquals("", "".abbreviate(1));
+    assertEquals("", "".abbreviate(1));
+    assertEquals("", "".abbreviate(2));
+    assertEquals("", "".abbreviate(3));
+    assertEquals("a", "a".abbreviate(1));
+    assertEquals("a", "a".abbreviate(2));
+    assertEquals("a", "a".abbreviate(3));
+    assertEquals("a", "a".abbreviate(4));
+    assertEquals("...", "abcdefg".abbreviate(3));
+    assertEquals("a...", "abcdefg".abbreviate(4));
+    assertEquals("ab...", "abcdefg".abbreviate(5));
+    assertEquals("abc...", "abcdefg".abbreviate(6));
+    assertEquals("abcdefg", "abcdefg".abbreviate(7));
+}
+
 function test_Number_commify() {
     assertEquals("0", (0).commify());
     assertEquals("1", (1).commify());
@@ -373,49 +390,9 @@ function test_Object_Predicate_join() {
 function test_Element_Finder() {
     assertElement($("div1"), Element.Finder.first($("span0"), Element.Iteration.nextSibling));
     assertElement($("span1"), Element.Finder.first($("div1"), Element.Iteration.firstChild));
-
 }
 
 --></script>
 
-line00
-line01<span id="span0">span0</span>
-line02<div id="div1">
-line03    <span id="span1">span1</span>
-line04    <div id="div1_1">
-line05        <span id="span1">span2</span>
-line06        <div id="div1_1_1">
-line07            <span id="span1">span3</span>
-line08        </div>
-line09        <span id="span4">span4</span>
-line10        <div id="div1_1_2">
-line11            <span id="span5">span5</span>
-line12            <div id="div1_1_2_1">
-line13                <span id="span6">span6</span>
-line14            </div>
-line15            <span id="span7">span7</span>
-line16            <div id="div1_1_2_2">
-line17                <span id="span8">span8</span>
-line18            </div>
-line19            <span id="span9">span9</span>
-line20        </div>
-line21        <span id="span10">span10</span>
-line22    </div>
-line23    <span id="span11">span11</span>
-line24    <div id="div1_2">
-line25        <span id="span12">span12</span>
-line26        <div id="div1_2_1">
-line27            <span id="span13">span13</span>
-line28        </div>
-line29        <span id="span14">span14</span>
-line20        <div id="div1_2_2">
-line31            <span id="span15">span15</span>
-line32        </div>
-line33        <span id="span16">span16</span>
-line34    </div>
-line35    <span id="span17">span17</span>
-line36</div>
-line37<span id="span18">span18</span>
-line38
 </body>
 </html>

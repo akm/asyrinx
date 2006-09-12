@@ -196,6 +196,15 @@ Object.extend(String.prototype, {
 	
 	toNumeric: function() {
 		return this.replace(/[^\d\.\-]/g,"");
+	},
+	abbreviate: function(size,mark){
+	   mark = mark||"...";
+	   if (this.length<=size)
+	       return String(this);
+	   if (size<1) return "";
+	   var actualSize = size - mark.length;
+	   if (actualSize<1) return mark;
+	   return (this.length<=actualSize)?this:(this.substring(0,actualSize)+mark);
 	}
 } );
 
@@ -253,17 +262,69 @@ Object.Predicate = {
     or: function(){return Object.Predicate._join("or",$(arguments));}
 };
 
+
+if (!window["Node"]) Node = {};
+
+Object.extend(Node, {
+    ELEMENT_NODE:1,
+    ATTRIBUTE_NODE:2,
+    TEXT_NODE:3,
+    CDATA_SECTION_NODE:4,
+    ENTITY_REFERENCE_NODE:5,
+    ENTITY_NODE:6,
+    PROCESSING_INSTRUCTION_NODE:7,
+    COMMENT_NODE:8,
+    DOCUMENT_NODE:9,
+    DOCUMENT_TYPE_NODE:10,
+    DOCUMENT_FRAGMENT_NODE:11,
+    NOTATION_NODE:12,
+    
+    NodeTypeNames:{
+        1:"ELEMENT_NODE",
+        2:"ATTRIBUTE_NODE",
+        3:"TEXT_NODE",
+        4:"CDATA_SECTION_NODE",
+        5:"ENTITY_REFERENCE_NODE",
+        6:"ENTITY_NODE",
+        7:"PROCESSING_INSTRUCTION_NODE",
+        8:"COMMENT_NODE",
+        9:"DOCUMENT_NODE",
+        10:"DOCUMENT_TYPE_NODE",
+        11:"DOCUMENT_FRAGMENT_NODE",
+        12:"NOTATION_NODE"
+    },
+    nodeTypeName: function(nodeType){return Node.NodeTypeNames[nodeType]},
+    identify_str: function(element){
+        if(!element)
+            return "null element";
+        return (element.nodeType==Node.ELEMENT_NODE)?
+            (element.tagName + 
+                ((element.id)?("["+element.id+"]"):"") + 
+                ((element.className)?("(" + element.className + ")"):"")):
+            (element.nodeType==Node.TEXT_NODE)?
+                ("TEXT_NODE:"+element.data.strip().abbreviate(20)):
+                Node.nodeTypeName(element.nodeType);
+    }
+})
+
+Object.extend(Element, {
+    identify_str: Node.identify_str
+});
+
 Element.Finder = {
     firstNode: function(node, iterate, predicate, options){
-        predicate = predicate || Element.Predicate.exclude(node);
+        if(!node) return null;
+        predicate = predicate||Element.Predicate.exclude(node);
 		for(var current=node;current!=null;current=iterate(current)){
-			if(predicate(current))
+			if(predicate(current)) 
 		        return current;
 		}
 		return null;
     },
     allNodes: function(node, iterate, predicate, options){
 		var result = [];
+        if(!node)
+            return result;
         predicate = predicate||Object.Predicate.acceptAll;
 		for(var current=node;current!=null;current=iterate(current)){
 			if(predicate(current))
@@ -274,7 +335,7 @@ Element.Finder = {
     firstElement: function(node, iterate, predicate, options){
         predicate = predicate||Element.Predicate.exclude(node);
         return this.firstNode(node,iterate,
-            Object.Predicate.and(Element.Predicate.nodeType(),predicate),options);
+            Object.Predicate.and(Element.Predicate.nodeType(Node.ELEMENT_NODE),predicate),options);
     },
     allElements: function(node, iterate, predicate, options){
         predicate = predicate||Object.Predicate.acceptAll;
@@ -285,33 +346,15 @@ Element.Finder = {
 Element.Finder.first = Element.Finder.firstElement;
 Element.Finder.all = Element.Finder.allElements;
 
-
-/*
-***nodeTypes***
-ELEMENT_NODE       = 1;
-ATTRIBUTE_NODE     = 2;
-TEXT_NODE          = 3;
-CDATA_SECTION_NODE = 4;
-ENTITY_REFERENCE_NODE = 5;
-ENTITY_NODE        = 6;
-PROCESSING_INSTRUCTION_NODE = 7;
-COMMENT_NODE       = 8;
-DOCUMENT_NODE      = 9;
-DOCUMENT_TYPE_NODE = 10;
-DOCUMENT_FRAGMENT_NODE = 11;
-NOTATION_NODE      = 12;
-*/
 Element.Predicate = {
     oneOf: function(value, returnIfContains){
-        value = (value.contains)?value:[value];
-        return function(){
-            if(value.contains(arguments[0]))
-                return returnIfContains;
-            return !returnIfContains;
+        return function(node){
+            return (value == node)?returnIfContains:!returnIfContains;
         };
     },
     include: function(value){return this.oneOf(value,true);},
     exclude: function(value){return this.oneOf(value,false);},
+        
     
     nodeType: function(nodeTypes){
         nodeTypes=(!nodeTypes)?[1]:(nodeTypes.contains)?nodeTypes:[nodeTypes];
@@ -330,29 +373,30 @@ Element.Predicate = {
     className: function(className) {
         return function(node){try{return Element.hasClassName(node,className);}catch(ex){return false;}};
     },
-    childNodes: function(node){return(node.childNodes&&node.childNodes.length>0);}
+    hasChild: function(node){return(node.childNodes&&node.childNodes.length>0);},
+    isElementNode: function(node){return node.nodeType==1;}
     
 };
 
 
 Element.Iteration = {
     parentNode: function(node){return node.parentNode;},
-    nextSibling: function(node){return node.nextSibling;},
-    previousSibling: function(node){return node.previousSibling;},
     firstChildNode: function(node){return node.firstChild;},
     lastChildNode: function(node){return node.lastChild;},
+    nextSiblingNode: function(node){return node.nextSibling;},
+    previousSiblingNode: function(node){return node.previousSibling;},
     
     firstChildElement: function(node){
-        if (!node || !node.firstChild)
-            return null;
-        return Element.Finder.first(node.firstChild, Element.Iteration.nextSibling, 
-            Object.Predicate.acceptAll);
+        return (!node)?null:Element.Finder.firstElement(node.firstChild,Element.Iteration.nextSiblingNode,Object.Predicate.acceptAll);
     },
     lastChildElement: function(node){
-        if (!node || !node.lastChild)
-            return null;
-        return Element.Finder.first(node.lastChild, Element.Iteration.previousSibling,
-            Object.Predicate.acceptAll);
+        return (!node)?null:Element.Finder.firstElement(node.lastChild,Element.Iteration.previousSiblingNode,Object.Predicate.acceptAll);
+    },
+    nextSiblingElement: function(node){
+        return (!node)?null:Element.Finder.firstElement(node.nextSibling,Element.Iteration.nextSiblingNode,Object.Predicate.acceptAll);
+    },
+    previousSiblingElement: function(node){
+        return (!node)?null:Element.Finder.firstElement(node.previousSibling,Element.Iteration.previousSiblingNode,Object.Predicate.acceptAll);
     },
     
     nextNode: function(node) {
@@ -381,11 +425,14 @@ Element.Iteration = {
     }
 }
 //別名
+Element.Iteration.firstChild = Element.Iteration.firstChildElement;
+Element.Iteration.lastChild = Element.Iteration.lastChildElement;
+Element.Iteration.nextSibling = Element.Iteration.nextSiblingElement;
+Element.Iteration.previousSibling = Element.Iteration.previousSiblingElement;
+
 Element.Iteration.ancestor = Element.Iteration.parentNode;
 Element.Iteration.prevSibling = Element.Iteration.previousSibling;
 Element.Iteration.prevNode = Element.Iteration.previousNode;
-Element.Iteration.firstChild = Element.Iteration.firstChildElement;
-Element.Iteration.lastChild = Element.Iteration.lastChildElement;
 
 //IterationはPredicateとしても使える・・・・でも、敢えてコピーするほどのものでもないか。
 //Object.fill(Element.Predicate, Element.Iteration);
@@ -832,12 +879,10 @@ HTMLInputElement.PullDown.Methods = {
         }
     },
     paneFocus: function(event) {
-        glogger.debug("paneFocus");
         if (!this.options.hideOnPaneFocus)
             this.waitHiding = false;
     },
     paneBlur: function(event) {
-        glogger.debug("paneBlur");
         this.hide();
     },
     hide: function(event) {
