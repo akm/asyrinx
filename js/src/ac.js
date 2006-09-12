@@ -4,6 +4,7 @@
  * require 
  *     prototype.js 
  *     prototype_ext.js
+ *     table_selection.js
  *
  * @copyright T.Akima
  * @license LGPL
@@ -162,7 +163,7 @@ ACFields.Mapping.InstanceMethods = {
     isQueryTrigger: function(event) {
         if (!this.options.ignoreTriggerKeyRanges)
             return true;
-        var keyCode = event.keyCode || event.charCode || event.which;
+        var keyCode = Event.getKeyCode(event);
         for(var i = 0; i < this.options.ignoreTriggerKeyRanges.length; i++) {
             var ignoreKeyRange = this.options.ignoreTriggerKeyRanges[i];
             if (ignoreKeyRange.include(keyCode))
@@ -546,13 +547,13 @@ Object.extend(ACFields.PullDown.Methods, {
         if (!this.selection)
             return;
         this.selection.prev(event);
-        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+        HTMLElement.scrollIfInvisible(this.selection.row, this.pane); 
     },
     rowDown: function(event) {
         if (!this.selection)
             return;
         this.selection.next(event);
-        Element.scrollYIfInvisible(this.selection.row, this.pane); 
+        HTMLElement.scrollIfInvisible(this.selection.row, this.pane); 
     },
     selectRow: function(event) {
         var rowType = this.rowGenerator.getRowType(this.selection.row);

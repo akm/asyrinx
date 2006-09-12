@@ -97,22 +97,22 @@ Event.observe(window, "load", function(event){
 	Object.extend(sortableTable, {
 			getDraggingRow: function(event) {
 				var t = Event.element(event);
-				var handle = Element.getAncestorByClassName(t, "drag_handle");
-				return (handle) ? Element.getAncestorByTagName(handle, "TR") : null;
+				var handle = Element.findAncestorByClassName(t, "drag_handle");
+				return (handle) ? Element.findAncestorByTagName(handle, "TR") : null;
 			},
 			getAcceptingRow: function(event) {
 				var t = Event.element(event);
-				if (Element.getAncestorByTagName(t, "TBODY"))
-					return Element.getAncestorByTagName(t, "TR");
-				else if (Element.getAncestorByTagName(t, "THEAD")) {
-					var table = Element.getAncestorByTagName(t, "TABLE");
+				if (Element.findAncestorByTagName(t, "TBODY"))
+					return Element.findAncestorByTagName(t, "TR");
+				else if (Element.findAncestorByTagName(t, "THEAD")) {
+					var table = Element.findAncestorByTagName(t, "TABLE");
 					if(table.tBodies.length < 1)
 						return null;
 					var tbody = table.tBodies[0];
 					if(tbody.rows.length > 0)
 						return tbody.rows[0];
 					else
-						return Element.getAncestorByTagName(t, "TR");
+						return Element.findAncestorByTagName(t, "TR");
 				} else
 					return null;
 			},
@@ -121,7 +121,7 @@ Event.observe(window, "load", function(event){
 				var rows = [];
 				for(var i = 0; i < item_no_cells.length; i++) {
 					var cell = item_no_cells[i];
-					var tr = Element.getAncestorByTagName(cell, "TR");
+					var tr = Element.findAncestorByTagName(cell, "TR");
 					rows.push(tr);
 					cell.innerHTML = this.seqRowIndex(tr);
 				}

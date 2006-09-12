@@ -116,13 +116,13 @@ HTMLTableElement.DnDSortable.prototype = {
 	
 	getDraggingRow: function(event) {
 		var t = Event.element(event);
-		var tr = Element.getAncestorByTagName(t, "TR");
+		var tr = Element.findAncestorByTagName(t, "TR");
 		return tr;
 	},
 	
 	getAcceptingRow: function(event, dragginRow) {
 		var t = Event.element(event);
-		var tr = Element.getAncestorByTagName(t, "TR");
+		var tr = Element.findAncestorByTagName(t, "TR");
 		return tr;
 	},
 	
@@ -130,7 +130,7 @@ HTMLTableElement.DnDSortable.prototype = {
 	   if (!tr)
 	       return null;
 	   var result = 0;
-	   var table = Element.getAncestorByTagName(tr, "TABLE");
+	   var table = Element.findAncestorByTagName(tr, "TABLE");
 	   var tableIndex = this.tables.indexOf(table);
 	   for(var i = 0; i < tableIndex; i++) {
 	       var t = this.tables[i];
