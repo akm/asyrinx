@@ -390,6 +390,8 @@ function test_Object_Predicate_join() {
 function test_Element_Finder() {
     assertElement($("div1"), Element.Finder.first($("span0"), Element.Iteration.nextSibling));
     assertElement($("span1"), Element.Finder.first($("div1"), Element.Iteration.firstChild));
+    assertElement($("div1_1_2"), Element.Finder.first($("div1_1_1"), Element.Iteration.nextSibling, 
+        Element.Predicate.tagName("DIV")));
 }
 
 --></script>
