@@ -144,9 +144,12 @@ Object.extend(Array.prototype, {
 });
 Object.extend(String, {
 	PluralizePatterns: [
+	   //DOM操作などでよく使いそうな不規則名詞を登録しておく
+		{singular: "child", plural: "children"},
+		{singular: "leaf", plural: "leaves"},
 		{singular: "y", plural: "ies"},
-		{singular: "f", plural: "ves"},
 		{singular: "fe", plural: "ves"},
+		//{singular: "f", plural: "ves"},
 		{singular: "ss", plural: "sses"},
 		{singular: "s", plural: "ses"},
 		{singular: "ch", plural: "ches"},
@@ -217,85 +220,209 @@ Object.extend( Number.prototype, {
 	}
 } );
 
-Object.extend(Element, {
-	getAncestorByTagName: function( node, tagName ) {
-		for(var current = node; current != null; current = current.parentNode) {
-			if (current.tagName == tagName)
-				return current;
-		}
-		return null;
-	},
-	
-	getAncestorByClassName: function( node, className ) {
-		for(var current = node; current != null; current = current.parentNode) {
-			try{
-				if (Element.hasClassName(current, className))
-					return current;
-			} catch(e) { 
-			}
-		}
-		return null;
-	},
-	
-    scrollXIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
-        } else {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
-        }
+Object.Predicate = {
+    acceptAll: function(){return true;},
+    denyAll: function(){return false;},
+    not: function(predicate) {
+        return function(){return !(predicate.apply(null, arguments)) };
     },
-    
-    scrollYIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
-        } else  {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
-        }
+    oneOf: function(value, returnIfContains){
+        value = (value.contains)?value:[value];
+        return function(){
+            for(var i=0;i<argument.length;i++)
+                if(value.contains(arguments[i]))
+                    return returnIfContains;
+            return !returnIfContains;
+        };
     },
+    include: function(value){return this.oneOf(value,true);},
+    exclude: function(value){return this.oneOf(value,false);},
     
-    _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
-        element = $(element);
-        scrollable = $(scrollable) || window;
-        var pos = element[elementPos] ? element[elementPos] : element[elementOffsetPos];
-        if (scrollable == window) {
-            var diff = null;
-            if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize])
-                diff = pos - scrollable[scrollableClientSize] + element[elementOffsetSize] - scrollable[scrollableProp];
-            else if (scrollable[scrollableProp] > pos )
-                diff = scrollable[scrollableProp] - pos;
-            if (diff == null)
-                return;
-            if (elementPos == "x")
-                scrollable.scrollBy(diff, 0)
-            else
-                scrollable.scrollBy(0, diff);
-        } else {
-            if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize]) {
-                scrollable[scrollableProp] = pos - scrollable[scrollableClientSize] + element[elementOffsetSize];
-            } else if (scrollable[scrollableProp] > pos ) {
-                scrollable[scrollableProp] = pos;
+    _join: function(joinType, predicates) {
+        var predicates = $A(predicates);
+        var __match_value = (joinType == "or") ? true : false;
+        return function() {
+            for(var i=0;i<predicates.length;i++) {
+                if ((predicates[i].apply(null,arguments)?true:false) == __match_value)
+                    return __match_value;
             }
+            return !__match_value;
         }
+    },
+    and: function(){return Object.Predicate._join("and",$(arguments));},
+    or: function(){return Object.Predicate._join("or",$(arguments));}
+};
+
+Element.Finder = {
+    firstNode: function(node, iterate, predicate, options){
+        predicate = predicate || Element.Predicate.exclude(node);
+		for(var current=node;current!=null;current=iterate(current)){
+			if(predicate(current))
+		        return current;
+		}
+		return null;
+    },
+    allNodes: function(node, iterate, predicate, options){
+		var result = [];
+        predicate = predicate||Object.Predicate.acceptAll;
+		for(var current=node;current!=null;current=iterate(current)){
+			if(predicate(current))
+		        result.push(current);
+		}
+		return result;
+    },
+    firstElement: function(node, iterate, predicate, options){
+        predicate = predicate||Element.Predicate.exclude(node);
+        return this.firstNode(node,iterate,
+            Object.Predicate.and(Element.Predicate.nodeType(),predicate),options);
+    },
+    allElements: function(node, iterate, predicate, options){
+        predicate = predicate||Object.Predicate.acceptAll;
+        return this.allNodes(node,iterate,
+            Object.Predicate.and(Element.Predicate.nodeType(),predicate),options);
+    }
+};
+Element.Finder.first = Element.Finder.firstElement;
+Element.Finder.all = Element.Finder.allElements;
+
+
+/*
+***nodeTypes***
+ELEMENT_NODE       = 1;
+ATTRIBUTE_NODE     = 2;
+TEXT_NODE          = 3;
+CDATA_SECTION_NODE = 4;
+ENTITY_REFERENCE_NODE = 5;
+ENTITY_NODE        = 6;
+PROCESSING_INSTRUCTION_NODE = 7;
+COMMENT_NODE       = 8;
+DOCUMENT_NODE      = 9;
+DOCUMENT_TYPE_NODE = 10;
+DOCUMENT_FRAGMENT_NODE = 11;
+NOTATION_NODE      = 12;
+*/
+Element.Predicate = {
+    oneOf: function(value, returnIfContains){
+        value = (value.contains)?value:[value];
+        return function(){
+            if(value.contains(arguments[0]))
+                return returnIfContains;
+            return !returnIfContains;
+        };
+    },
+    include: function(value){return this.oneOf(value,true);},
+    exclude: function(value){return this.oneOf(value,false);},
+    
+    nodeType: function(nodeTypes){
+        nodeTypes=(!nodeTypes)?[1]:(nodeTypes.contains)?nodeTypes:[nodeTypes];
+        return function(node){return nodeTypes.contains(node.nodeType);};
     },
     
-    hide: function() {
-        for (var i = 0; i < arguments.length; i++) {
-            var element = $(arguments[i]);
-            element.style.display = 'none';
-        }
+    tagName: function(tagName) {
+        tagName = tagName.toUpperCase();
+        return function(node){return (node.tagName)&&(node.tagName.toUpperCase()==tagName);};
     },
-    show: function() {
-        for (var i = 0; i < arguments.length; i++) {
-            var element = $(arguments[i]);
-            element.style.display = '';
-        }
+    tagNames: function(tagNames) {
+        tagNames = (tagNames.constructor == Array) ? tagNames : [tagNames];
+        tagNames = tagNames.collect(function(tagName){return tagName.toUpperCase();});
+        return function(node){return (node.tagName)&&(tagNames.indexOf(node.tagName.toUpperCase())>-1);};
+    },
+    className: function(className) {
+        return function(node){try{return Element.hasClassName(node,className);}catch(ex){return false;}};
+    },
+    childNodes: function(node){return(node.childNodes&&node.childNodes.length>0);}
+    
+};
+
+
+Element.Iteration = {
+    parentNode: function(node){return node.parentNode;},
+    nextSibling: function(node){return node.nextSibling;},
+    previousSibling: function(node){return node.previousSibling;},
+    firstChildNode: function(node){return node.firstChild;},
+    lastChildNode: function(node){return node.lastChild;},
+    
+    firstChildElement: function(node){
+        if (!node || !node.firstChild)
+            return null;
+        return Element.Finder.first(node.firstChild, Element.Iteration.nextSibling, 
+            Object.Predicate.acceptAll);
+    },
+    lastChildElement: function(node){
+        if (!node || !node.lastChild)
+            return null;
+        return Element.Finder.first(node.lastChild, Element.Iteration.previousSibling,
+            Object.Predicate.acceptAll);
+    },
+    
+    nextNode: function(node) {
+        if (node.firstChild)
+            return node.firstChild;
+        var ancestorWhoHasNextSibling = Element.Finder.first(node, 
+            Element.Iteration.parentNode, Element.Iteration.nextSibling);
+        return (ancestorWhoHasNextSibling) ? ancestorWhoHasNextSibling.nextSibling : null;
+    },
+    previousNode: function(node) {
+        if (!node.previousSibling)
+            return node.parentNode;
+        return Element.Finder.first(
+            node.previousSibling, 
+            Element.Iteration.lastChild,
+            Object.Predicate.not(Element.Iteration.lastChild));
+    },
+    
+    shiftArray: function(array) {
+        array = $A(array);
+        return function(node){return array.shift();};
+    },
+    popArray: function(array) {
+        array = $A(array);
+        return function(node){return array.pop();};
     }
+}
+//別名
+Element.Iteration.ancestor = Element.Iteration.parentNode;
+Element.Iteration.prevSibling = Element.Iteration.previousSibling;
+Element.Iteration.prevNode = Element.Iteration.previousNode;
+Element.Iteration.firstChild = Element.Iteration.firstChildElement;
+Element.Iteration.lastChild = Element.Iteration.lastChildElement;
+
+//IterationはPredicateとしても使える・・・・でも、敢えてコピーするほどのものでもないか。
+//Object.fill(Element.Predicate, Element.Iteration);
+
+
+Object.extend(Element, {
+    findNode: function(node, iteration, predicate){
+		Element.Finder.first(node, iteration, predicate);
+    },
+    findDescendant: function(node, predicate) {
+		return this.findNode(node, 
+		    function(current){return current.firstChild || current.nextSibling;}, predicate);
+    },
+    findNextNode: function(node, predicate) {
+		return this.findNode(node, Element.Iteration.nextNode, predicate);
+    },
+    findPreviousNode: function(node, predicate) {
+		return this.findNode(node, Element.Iteration.previousNode, predicate);
+    },
+	findNextSibling: function(node, predicate) {
+		return this.findNode(node, Element.Iteration.nextSibling, predicate);
+	},
+	findPreviousSibling: function(node, predicate) {
+		return this.findNode(node, Element.Iteration.previousSibling, predicate);
+	},
+	
+	findAncestorByTagName: function(node,tagName) {
+	   return Element.Finder.first(node, 
+	       Element.Iteration.ancestor, 
+	       Element.Predicate.tagName(tagName));
+	},
+	findAncestorByClassName: function(node,className) {
+	   return Element.Finder.first(node, 
+	       Element.Iteration.ancestor, 
+	       Element.Predicate.className(className));
+	}
+	
 });
 
 
@@ -435,6 +562,10 @@ Object.extend(Event, {
 				options["after_setTimeout"](event);
 		};
 		Event.observe(element, name, actual_observer, useCapture);
+	},
+	
+	getKeyCode: function(event) {
+	   return event.keyCode || event.charCode || event.which;
 	}
 });
 
@@ -492,7 +623,7 @@ Event.KeyHandler.prototype = {
         return (this.options.handleOnMatch) ? result : !result;
     },
     handle: function(event) {
-        var keyCode = event.keyCode || event.charCode || event.which;
+        var keyCode = Event.getKeyCode(event);
         for(var i = 0; i < this.actions.length; i++) {
             var action = this.actions[i];
             if (this.isHandlingAction(action, event, keyCode)) {
@@ -588,7 +719,57 @@ Object.extend(HTMLElement, {
         } else {
             element.innerHTML = value;
         }
+    },
+    
+    scrollIfInvisible: function(element, scrollable) {
+        this.scrollYIfInvisible(element, scrollable);
+        this.scrollXIfInvisible(element, scrollable);
+    },
+    scrollXIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            Element._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
+        } else {
+            Element._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
+        }
+    },
+    scrollYIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            Element._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
+        } else  {
+            Element._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
+        }
+    },
+    _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
+        element = $(element);
+        scrollable = $(scrollable) || window;
+        var pos = element[elementPos] ? element[elementPos] : element[elementOffsetPos];
+        if (scrollable == window) {
+            var diff = null;
+            if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize])
+                diff = pos - scrollable[scrollableClientSize] + element[elementOffsetSize] - scrollable[scrollableProp];
+            else if (scrollable[scrollableProp] > pos )
+                diff = scrollable[scrollableProp] - pos;
+            if (diff == null)
+                return;
+            if (elementPos == "x")
+                scrollable.scrollBy(diff, 0)
+            else
+                scrollable.scrollBy(0, diff);
+        } else {
+            if (scrollable[scrollableProp] < pos - scrollable[scrollableClientSize] + element[elementOffsetSize]) {
+                scrollable[scrollableProp] = pos - scrollable[scrollableClientSize] + element[elementOffsetSize];
+            } else if (scrollable[scrollableProp] > pos ) {
+                scrollable[scrollableProp] = pos;
+            }
+        }
     }
+    
 });
 
 
@@ -646,7 +827,7 @@ HTMLInputElement.PullDown.Methods = {
         this.shim.enableShim();
         this.visible = true;
         try{
-            Element.scrollYIfInvisible(this.pane);
+            HTMLElement.scrollIfInvisible(this.pane);
         }catch(ex){
         }
     },

@@ -1,5 +1,5 @@
 /**
- * table_sort.js
+ * table_selection.js
  * 
  * require prototype.js only
  *
@@ -126,7 +126,7 @@ HTMLTableElement.ClickRowSelection.prototype = {
            Event.stopObserving(this.targets[i], "click", this.tableClickHandler, false);
     },
     tableClick: function(event) {
-        var row = Element.getAncestorByTagName(Event.element(event), "TR");
+        var row = Element.findAncestorByTagName(Event.element(event), "TR");
         if (this.options.mode == "single") {
             if (this.row == row) {
                 this.deselectRow(this.row, event);
@@ -184,7 +184,7 @@ HTMLTableElement.MouseOverRowSelection.prototype = {
         }
     },
     tableMouseOver: function(event) {
-        var row = Element.getAncestorByTagName(Event.element(event), "TR");
+        var row = Element.findAncestorByTagName(Event.element(event), "TR");
         if (this.row == row) {
             this.deselectRow(this.row, event);
             this.row = null;

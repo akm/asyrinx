@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>inplace editor</title>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+	.drag_handle{ background-color: #89756A; padding: 0px; margin: 2px; width:20px; height:16px; cursor: pointer; }
+	.even{ background-color: #AAA; }
+	.odd{ background-color: #EEE; }
+--></style>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../lib/prototype.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/logger.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/prototype_ext.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/tree_process.js" ></script>
+<script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/inplace_editor.js" ></script>
+</head>
+<body>
+<table id="table0" class="editable" border="1" cellspacing="0" cellpadding="0" bordercolor="black">
+	<thead>
+		<tr>
+			<td>ID</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr><td>1</td><td>The Serverside.com</td><td>http://www.theserverside.com/</td></tr>
+		<tr><td>2</td><td>Eclipse.org</td><td>http://www.eclipse.org/</td></tr>
+		<tr><td>3</td><td>MSDN</td><td>http://msdn.microsoft.com/</td></tr>
+		<tr><td>4</td><td>IBM developerWorks</td><td>http://www-06.ibm.com/jp/developerworks/</td></tr>
+		<tr><td>5</td><td>codehaus</td><td>http://codehaus.org/</td></tr>
+	</tbody>
+</table>
+
+<br/><br/><br/>
+<div class="editable">divのサンプル</div>
+<span class="editable">spanのサンプル</span>
+<ol class="editable">
+    <li>o1 item 1</li>
+    <li>o1 item 2</li>
+    <li>o1 item 3</li>
+    <li>o1 item 4</li>
+    <li>o1 item 5</li>
+</ol>
+<ul class="editable">
+    <li>u1 item 1</li>
+    <li>u1 item 2</li>
+    <li>u1 item 3</li>
+    <li>u1 item 4</li>
+    <li>u1 item 5</li>
+</ul>
+
+<br/>
+<table id="table1" class="editable" border="1" cellspacing="0" cellpadding="0" bordercolor="black">
+	<thead>
+		<tr>
+			<td>ID</td>
+			<td>No.</td>
+			<td>名前</td>
+			<td>URL</td>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="even"><td>1</td><td class="item_no">1</td><td class="name">prototype.js</td><td class="url">http://prototype.conio.net/</td></tr>
+		<tr class="odd"><td>2</td><td class="item_no">2</td><td class="name">script.aculo.us</td><td class="url">http://script.aculo.us/</td></tr>
+		<tr class="even"><td>3</td><td class="item_no">3</td><td class="name">Rico</td><td class="url">http://openrico.org/</td></tr>
+		<tr class="odd"><td>4</td><td class="item_no">4</td><td class="name">Ruby</td><td class="url">http://www.ruby-lang.org/</td></tr>
+		<tr class="even"><td>5</td><td class="item_no">5</td><td class="name">Ruby on Rails</td><td class="url">http://www.rubyonrails.org/</td></tr>
+	</tbody>
+</table>
+<script language="javascript" type="text/javascript" ><!--
+
+LogWindow.open();
+
+HTMLElement.InplaceEditor.registerByClass("editable");
+
+--></script>
+</body>
+</html>
