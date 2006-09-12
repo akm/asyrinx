@@ -29,12 +29,12 @@ var products = [
     {id: 9, category:1, name: "RubyonRails入門 優しいRailsの育て方", asin:"4798013951", price: 2940},
     {id:10, category:1, name: "プログラミングRuby 第2版 言語編", asin:"4274066428", price: 3990 },
     {id:11, category:1, name: "プログラミングRuby 第2版 ライブラリ編", asin:"4274066436", price: 4410},
-    {id:12, category:1, name:"Ship It! ソフトウェアプロジェクト 成功のための達人式ガイドブック", asin:"4274066568", price: 2730},
-    {id:13, category:2, name:"オースティン・パワーズ", asin:"B000FI9P12", price: 2052},
-    {id:14, category:2, name:"ラブ・アクチュアリー", asin:"B000E6GB9E", price: 1406 },
-    {id:15, category:2, name:"ライフ・イズ・ビューティフル", asin:"B00005V2NG", price: 2980},
-    {id:16, category:2, name:"CUBE", asin:"B0000DJWJE", price: 2963 },
-    {id:17, category:2, name:"となりのトトロ", asin:"B00005NJLP", price: 3664 }
+    {id:12, category:1, name: "Ship It! ソフトウェアプロジェクト 成功のための達人式ガイドブック", asin:"4274066568", price: 2730},
+    {id:13, category:2, name: "オースティン・パワーズ", asin:"B000FI9P12", price: 2052},
+    {id:14, category:2, name: "ラブ・アクチュアリー", asin:"B000E6GB9E", price: 1406 },
+    {id:15, category:2, name: "ライフ・イズ・ビューティフル", asin:"B00005V2NG", price: 2980},
+    {id:16, category:2, name: "CUBE", asin:"B0000DJWJE", price: 2963 },
+    {id:17, category:2, name: "となりのトトロ", asin:"B00005NJLP", price: 3664 }
 ];
 function selectProducts(params) {
     var result = [];
@@ -99,8 +99,6 @@ function selectProducts(params) {
 
 <script language="javascript"    type="text/javascript" ><!--
 
-LogWindow.open();
-
 var mappings = [
    { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f_id") },
    { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category"), defaultValue:1, htmlOptions:{"align":"center"} },
@@ -164,9 +162,7 @@ new Event.KeyHandler([$("f_name"), $("f_asin")], [
 		</table>
 	</form>
 	
-<script language="javascript"    type="text/javascript" ><!--
-
-LogWindow.open();
+<script language="javascript" type="text/javascript" ><!--
 
 var mappings2 = [
    { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f2_id") },
@@ -194,8 +190,8 @@ var pullDown = new ACFields.PullDown(mappings2,
         }
     }
 );
+LogWindow.open();
 
 --></script>
-
 
 </html>
