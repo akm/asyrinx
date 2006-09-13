@@ -74,7 +74,7 @@ function selectProducts(params) {
 		<tr><td>
 			<label for="f_price">価格</label>
 			<input type="text" id="f_price" name="f_price" autocomplete="off" class="currency"
-			     onclick='glogger.debugObj("event", event)'/>
+			     onclick='logger.debugObj("event", event)'/>
 		</td></tr>
 		<tr><td>
 			<a href="javascript:void(0)" id="btn_clear">クリア</a>
@@ -157,7 +157,7 @@ new Event.KeyHandler([$("f_name"), $("f_asin")], [
 		<tr><td>
 			<label for="f2_price">価格</label>
 			<input type="text" id="f2_price" name="f_price" autocomplete="off" class="currency"
-			     onclick='glogger.debugObj("event", event)'/>
+			     onclick='logger.debugObj("event", event)'/>
 		</td></tr>
 		</table>
 	</form>

@@ -235,20 +235,23 @@ Object.Predicate = {
     not: function(predicate) {
         return function(){return !(predicate.apply(null, arguments)) };
     },
-    oneOf: function(value, returnIfContains){
-        value = (value.contains)?value:[value];
+    oneOf: function(args, returnIfContains){
+        value = (args.length>0&&args[0].contains)?args[0]:$A(args);
         return function(){
-            for(var i=0;i<argument.length;i++)
+            for(var i=0;i<arguments.length;i++)
                 if(value.contains(arguments[i]))
                     return returnIfContains;
             return !returnIfContains;
         };
     },
-    include: function(value){return this.oneOf(value,true);},
-    exclude: function(value){return this.oneOf(value,false);},
+    include: function(value){return this.oneOf(arguments,true);},
+    exclude: function(value){return this.oneOf(arguments,false);},
     
     _join: function(joinType, predicates) {
         var predicates = $A(predicates);
+        for(var i=0;i<predicates.length;i++){
+            if (!predicates[i])throw new Error("undefined or null predicate. "+i+"/"+predicates.length);
+        }
         var __match_value = (joinType == "or") ? true : false;
         return function() {
             for(var i=0;i<predicates.length;i++) {
@@ -307,114 +310,71 @@ Object.extend(Node, {
     }
 })
 
-Object.extend(Element, {
-    identify_str: Node.identify_str
-});
-
-Element.Finder = {
-    firstNode: function(node, iterate, predicate, options){
-        if(!node) return null;
-        predicate = predicate||Object.Predicate.acceptAll;
-		for(var current=iterate(node);current!=null;current=iterate(current)){
-			if(predicate(current)) 
-		        return current;
-		}
-		return null;
-    },
-    allNodes: function(node, iterate, predicate, options){
-		var result = [];
-        if(!node)
-            return result;
-        predicate = predicate||Object.Predicate.acceptAll;
-		for(var current=node;current!=null;current=iterate(current)){
-			if(predicate(current))
-		        result.push(current);
-		}
-		return result;
-    },
-    firstElement: function(node, iterate, predicate, options){
-        predicate = predicate||Element.Predicate.exclude(node);
-        return this.firstNode(node,iterate,
-            Object.Predicate.and(Element.Predicate.nodeType(Node.ELEMENT_NODE),predicate),options);
-    },
-    allElements: function(node, iterate, predicate, options){
-        predicate = predicate||Object.Predicate.acceptAll;
-        return this.allNodes(node,iterate,
-            Object.Predicate.and(Element.Predicate.nodeType(),predicate),options);
-    }
-};
-Element.Finder.first = Element.Finder.firstElement;
-Element.Finder.all = Element.Finder.allElements;
-
-Element.Predicate = {
-    oneOf: function(value,returnOnMatch){
+Node.Predicate={};
+Object.extend(Node.Predicate,Object.Predicate);
+Object.extend(Node.Predicate,{
+    oneOf: function(args,returnIfContains){
+        value = ((args.length>0)&&(args[0].constructor==Array))?args[0]:$A(args);
+        
+        logger.debug("Node.Predicate oneOf: value", value);
+        
         return function(node){
-            return (value==node)?returnOnMatch:!returnOnMatch;
+            if(value.contains(node))
+                return returnIfContains;
+            return !returnIfContains;
         };
     },
-    include: function(value){return this.oneOf(value,true);},
-    exclude: function(value){return this.oneOf(value,false);},
-        
-    
     nodeType: function(nodeTypes){
-        nodeTypes=(!nodeTypes)?[1]:(nodeTypes.contains)?nodeTypes:[nodeTypes];
+        nodeTypes=(!nodeTypes)?[Node.ELEMENT_NODE]:(nodeTypes.contains)?nodeTypes:[nodeTypes];
         return function(node){return nodeTypes.contains(node.nodeType);};
     },
+    isElementNode: function(node){return node.nodeType==Node.ELEMENT_NODE;},
     
-    tagName: function(tagName) {
-        tagName = tagName.toUpperCase();
-        return function(node){return (node.tagName)&&(node.tagName.toUpperCase()==tagName);};
-    },
-    tagNames: function(tagNames) {
-        tagNames = (tagNames.constructor == Array) ? tagNames : [tagNames];
-        tagNames = tagNames.collect(function(tagName){return tagName.toUpperCase();});
-        return function(node){return (node.tagName)&&(tagNames.indexOf(node.tagName.toUpperCase())>-1);};
-    },
-    className: function(className) {
-        return function(node){try{return Element.hasClassName(node,className);}catch(ex){return false;}};
-    },
     hasChild: function(node){return(node.childNodes&&node.childNodes.length>0);},
-    isElementNode: function(node){return node.nodeType==1;}
+    childOf: function(ancestor){
+        return function(node){return Element.childOf(node,ancestor);};
+    }
+});
+
+Node.Iteration = {};
+Object.extend(Node.Iteration, {
+    log: function(iteration){
+        if(Node.Iteration.loggerIndex==undefined)Node.Iteration.loggerIndex=0;
+        var loggerIndex = Node.Iteration.loggerIndex++;
+        return function(node){
+            var result = iteration(node);
+            if(window["logger"])
+                logger.debug("iteration["+loggerIndex+"] "+
+                    "from{"+Node.identify_str(node)+
+                    "} to {"+Node.identify_str(result)+"}");
+            return result;
+        };
+    },
+    predicated: function(predicate, iteration){
+        return function(node){return predicate(node)?iteration(node):null;};
+    },
     
-};
-
-
-Element.Iteration = {
     parentNode: function(node){return node.parentNode;},
     firstChildNode: function(node){return node.firstChild;},
     lastChildNode: function(node){return node.lastChild;},
     nextSiblingNode: function(node){return node.nextSibling;},
     previousSiblingNode: function(node){return node.previousSibling;},
     
-    firstChildElement: function(node){
-        return (!node)?null:Element.Finder.firstElement(node.firstChild,Element.Iteration.nextSiblingNode,Object.Predicate.acceptAll);
-    },
-    lastChildElement: function(node){
-        return (!node)?null:Element.Finder.firstElement(node.lastChild,Element.Iteration.previousSiblingNode,Object.Predicate.acceptAll);
-    },
-    nextSiblingElement: function(node){
-        return (!node)?null:Element.Finder.firstElement(node.nextSibling,Element.Iteration.nextSiblingNode,Object.Predicate.acceptAll);
-    },
-    previousSiblingElement: function(node){
-        return (!node)?null:Element.Finder.firstElement(node.previousSibling,Element.Iteration.previousSiblingNode,Object.Predicate.acceptAll);
-    },
-    
     nextNode: function(node) {
         if (node.firstChild)
             return node.firstChild;
-        var ancestorWhoHasNextSibling = Element.Finder.first(node, 
-            Element.Iteration.parentNode, Element.Iteration.nextSibling);
+        var ancestorWhoHasNextSibling = Node.Finder.firstNode(node, 
+            Node.Iteration.parentNode, Node.Iteration.nextSiblingNode);
         return (ancestorWhoHasNextSibling) ? ancestorWhoHasNextSibling.nextSibling : null;
     },
     previousNode: function(node) {
         if (!node.previousSibling)
             return node.parentNode;
-        return Element.Finder.first(
+        return Node.Finder.firstNode(
             node.previousSibling, 
-            Element.Iteration.lastChild,
-            Object.Predicate.not(Element.Iteration.lastChild));
+            Node.Iteration.lastChild,
+            Object.Predicate.not(Node.Iteration.lastChild));
     },
-    
     shiftArray: function(array) {
         array = $A(array);
         return function(node){return array.shift();};
@@ -423,16 +383,135 @@ Element.Iteration = {
         array = $A(array);
         return function(node){return array.pop();};
     }
-}
-//別名
+});
+Node.Iteration.ancestor = Node.Iteration.parentNode;
+Node.Iteration.firstChild = Node.Iteration.firstChildNode;
+Node.Iteration.lastChild = Node.Iteration.lastChildNode;
+Node.Iteration.nextSibling = Node.Iteration.nextSiblingNode;
+Node.Iteration.previousSibling = Node.Iteration.previousSiblingNode;
+Node.Iteration.prevSibling = Node.Iteration.previousSibling;
+Node.Iteration.prevNode = Node.Iteration.previousNode;
+
+Node.Finder = {
+    logger: (window["logger"])?logger:null,
+    
+    process: function(iterator, node, iterate, predicate, includeNode){
+		if (Node.Finder.logger)
+		    Node.Finder.logger.debug("Node.Finder.process - node: "+ Node.identify_str(node));
+        if(!node)return;
+        predicate = predicate||Object.Predicate.acceptAll;
+		for(var current=(includeNode)?node:iterate(node);current;current=iterate(current)){
+    	    var predResult = predicate(current);
+			if (Node.Finder.logger)
+			    Node.Finder.logger.debug("Node.Finder.process - current: "+ 
+			        Node.identify_str(current) +" ==> " + predResult);
+    	    var ir=iterator(current, predResult);
+	        if(ir){
+    	        if (ir.command=="return") return ir.result;
+    	        if (ir.command=="break") break;
+	        }
+		}
+    },
+
+    firstNode: function(node, iterate, predicate, includeNode){
+        return this.process(function(current, predResult){
+            if (predResult)
+                return {command:"return", "result":current};
+        }, node, iterate, predicate, includeNode) || null;
+    },
+    allNodes: function(node, iterate, predicate, includeNode){
+		var result = [];
+		this.process(function(current, predResult){
+            if (predResult)
+                result.push(current);
+        }, node, iterate, predicate, includeNode);
+		return result;
+    },
+    firstElement: function(node, iterate, predicate, includeNode){
+        predicate = predicate||Element.Predicate.acceptAll;
+        return this.firstNode(node,iterate,
+            Object.Predicate.and(Element.Predicate.isElementNode,predicate),includeNode);
+    },
+    allElements: function(node, iterate, predicate, includeNode){
+        predicate = predicate||Object.Predicate.acceptAll;
+        return this.allNodes(node,iterate,
+            Object.Predicate.and(Element.Predicate.isElementNode,predicate),includeNode);
+    }
+};
+//Node.Finder.first = Node.Finder.firstElement;
+//Node.Finder.all = Node.Finder.allElements;
+Node.Finder.first = Node.Finder.firstNode;
+Node.Finder.all = Node.Finder.allNodes;
+
+Element.Predicate = {};
+Object.extend(Element.Predicate,Node.Predicate);
+Object.extend(Element.Predicate,{
+    tagName: function(tagName) {
+        tagName = tagName.toUpperCase();
+        return function(node){return (node.tagName)&&(node.tagName.toUpperCase()==tagName);};
+    },
+    tagNames: function(tagNames) {
+        tagNames = (tagNames.contains)?tagNames:[tagNames];
+        tagNames = tagNames.collect(function(tagName){return tagName.toUpperCase();});
+        return function(node){return (node.tagName)&&(tagNames.contains(node.tagName.toUpperCase()));};
+    },
+    className: function(className) {
+        return function(node){try{return Element.hasClassName(node,className);}catch(ex){return false;}};
+    }
+});
+
+Element.Iteration = {};
+Object.extend(Element.Iteration,Node.Iteration);
+Object.extend(Element.Iteration,{
+    firstChildElement: function(node){
+        return (!node)?null:Node.Finder.firstNode(node.firstChild,
+            Element.Iteration.nextSiblingNode,
+            Element.Predicate.isElementNode,true);
+    },
+    lastChildElement: function(node){
+        return (!node)?null:Node.Finder.firstNode(node.lastChild,
+            Element.Iteration.previousSiblingNode,
+            Element.Predicate.isElementNode,true);
+    },
+    nextSiblingElement: function(node){
+        return (!node)?null:Node.Finder.firstNode(node.nextSibling,
+            Element.Iteration.nextSiblingNode,
+            Element.Predicate.isElementNode,true);
+    },
+    previousSiblingElement: function(node){
+        return (!node)?null:Node.Finder.firstNode(node.previousSibling,
+            Element.Iteration.previousSiblingNode,
+            Element.Predicate.isElementNode,true);
+    },
+    nextElement: function(node) {
+        var firstChildElement = Element.Iteration.firstChild(node);
+        if (firstChildElement)
+            return firstChildElement;
+        var ancestorWhoHasNextSibling = Node.Finder.firstNode(node, 
+            Node.Iteration.parentNode, Element.Iteration.nextSibling,true);
+        return (ancestorWhoHasNextSibling) ? ancestorWhoHasNextSibling.nextSibling : null;
+    },
+    previousElement: function(node) {
+        if (!node.previousSibling)
+            return node.parentNode;
+        return Node.Finder.firstNode(
+            node.previousSibling, 
+            Node.Iteration.lastChild,
+            Object.Predicate.not(Node.Iteration.lastChild));
+    }
+});
+Element.Iteration.ancestor = Element.Iteration.parentNode;
 Element.Iteration.firstChild = Element.Iteration.firstChildElement;
 Element.Iteration.lastChild = Element.Iteration.lastChildElement;
 Element.Iteration.nextSibling = Element.Iteration.nextSiblingElement;
 Element.Iteration.previousSibling = Element.Iteration.previousSiblingElement;
+Element.Iteration.next = Element.Iteration.nextElement;
+Element.Iteration.previous = Element.Iteration.previousElement;
+Element.Iteration.prevElement = Element.Iteration.previousElement;
 
-Element.Iteration.ancestor = Element.Iteration.parentNode;
 Element.Iteration.prevSibling = Element.Iteration.previousSibling;
 Element.Iteration.prevNode = Element.Iteration.previousNode;
+Element.Iteration.prev = Element.Iteration.previousElement;
 
 //IterationはPredicateとしても使える・・・・でも、敢えてコピーするほどのものでもないか。
 //Object.fill(Element.Predicate, Element.Iteration);
@@ -440,7 +519,7 @@ Element.Iteration.prevNode = Element.Iteration.previousNode;
 
 Object.extend(Element, {
     findNode: function(node, iteration, predicate){
-		Element.Finder.first(node, iteration, predicate);
+		Node.Finder.first(node, iteration, predicate);
     },
     findDescendant: function(node, predicate) {
 		return this.findNode(node, 
@@ -460,12 +539,12 @@ Object.extend(Element, {
 	},
 	
 	findAncestorByTagName: function(node,tagName) {
-	   return Element.Finder.first(node, 
+	   return Node.Finder.first(node, 
 	       Element.Iteration.ancestor, 
 	       Element.Predicate.tagName(tagName));
 	},
 	findAncestorByClassName: function(node,className) {
-	   return Element.Finder.first(node, 
+	   return Node.Finder.first(node, 
 	       Element.Iteration.ancestor, 
 	       Element.Predicate.className(className));
 	}
