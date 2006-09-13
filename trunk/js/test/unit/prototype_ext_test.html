@@ -53,44 +53,65 @@
 </div>
 
 line00
-line01<span id="span0">span0</span>
-line02<div id="div1">
-line03    <span id="span1">span1</span>
-line04    <div id="div1_1">
-line05        <span id="span1">span2</span>
-line06        <div id="div1_1_1">
-line07            <span id="span1">span3</span>
+line01<span id="span0" class="level0">span0</span>
+line02<div id="div1" class="level0">
+line03    <span id="span1" class="level1">span1</span>
+line04    <div id="div1_1" class="level1">
+line05        <span id="span1" class="level2">span2</span>
+line06        <div id="div1_1_1" class="level2">
+line07            <span id="span1" class="level3">span3</span>
 line08        </div>
-line09        <span id="span4">span4</span>
-line10        <div id="div1_1_2">
-line11            <span id="span5">span5</span>
-line12            <div id="div1_1_2_1">
-line13                <span id="span6">span6</span>
+line09        <span id="span4" class="level2">span4</span>
+line10        <div id="div1_1_2" class="level2">
+line11            <span id="span5" class="level3">span5</span>
+line12            <div id="div1_1_2_1" class="level3">
+line13                <span id="span6" class="level4">span6</span>
 line14            </div>
-line15            <span id="span7">span7</span>
-line16            <div id="div1_1_2_2">
-line17                <span id="span8">span8</span>
+line15            <span id="span7" class="level3">span7</span>
+line16            <div id="div1_1_2_2" class="level3">
+line17                <span id="span8" class="level4">span8</span>
 line18            </div>
-line19            <span id="span9">span9</span>
+line19            <span id="span9" class="level3">span9</span>
 line20        </div>
-line21        <span id="span10">span10</span>
+line21        <span id="span10" class="level2">span10</span>
 line22    </div>
-line23    <span id="span11">span11</span>
-line24    <div id="div1_2">
-line25        <span id="span12">span12</span>
-line26        <div id="div1_2_1">
-line27            <span id="span13">span13</span>
+line23    <span id="span11" class="level1">span11</span>
+line24    <div id="div1_2" class="level1">
+line25        <span id="span12" class="level2">span12</span>
+line26        <div id="div1_2_1" class="level2">
+line27            <span id="span13" class="level3">span13</span>
 line28        </div>
-line29        <span id="span14">span14</span>
-line20        <div id="div1_2_2">
-line31            <span id="span15">span15</span>
+line29        <span id="span14" class="level2">span14</span>
+line20        <div id="div1_2_2" class="level2">
+line31            <span id="span15" class="level3">span15</span>
 line32        </div>
-line33        <span id="span16">span16</span>
+line33        <span id="span16" class="level2">span16</span>
 line34    </div>
-line35    <span id="span17">span17</span>
+line35    <span id="span17" class="level1">span17</span>
 line36</div>
-line37<span id="span18">span18</span>
+line37<span id="span18" class="level0">span18</span>
 line38
+<div id="div2" class="level0">
+    <div id="div2_1" class="level1">
+        <div id="div2_1_1" class="level2">
+            <div id="div2_1_1_1" class="level3">
+            </div>
+        </div>
+    </div>
+    <div id="div2_2" class="level1">
+        <div id="div2_2_1" class="level2">
+            <div id="div2_2_1_1" class="level3">
+            </div>
+            <div id="div2_2_1_2" class="level3">
+            </div>
+        </div>
+        <div id="div2_2_2" class="level2">
+        </div>
+        <div id="div2_2_3" class="level2">
+        </div>
+    </div>
+</div>
+            
 
 <script language="JavaScript" type="text/javascript"><!--
 function test_document_getFirstElementByClassName() {
@@ -392,6 +413,24 @@ function test_Element_Finder() {
     assertElement($("span1"), Element.Finder.first($("div1"), Element.Iteration.firstChild));
     assertElement($("div1_1_2"), Element.Finder.first($("div1_1_1"), Element.Iteration.nextSibling, 
         Element.Predicate.tagName("DIV")));
+    //firstChild
+    assertElement($("div2_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Element.Predicate.className("level1")));
+    assertElement($("div2_1_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Element.Predicate.className("level2")));
+    assertElement($("div2_1_1_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Element.Predicate.className("level3")));
+    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Element.Predicate.className("level4")));
+    //lastChild
+    assertElement($("div2_2"), Element.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Element.Predicate.className("level1")));
+    assertElement($("div2_2_3"), Element.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Element.Predicate.className("level2")));
+    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Element.Predicate.className("level3")));
+    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Element.Predicate.className("level4")));
 }
 
 --></script>

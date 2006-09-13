@@ -314,8 +314,8 @@ Object.extend(Element, {
 Element.Finder = {
     firstNode: function(node, iterate, predicate, options){
         if(!node) return null;
-        predicate = predicate||Element.Predicate.exclude(node);
-		for(var current=node;current!=null;current=iterate(current)){
+        predicate = predicate||Object.Predicate.acceptAll;
+		for(var current=iterate(node);current!=null;current=iterate(current)){
 			if(predicate(current)) 
 		        return current;
 		}
@@ -347,9 +347,9 @@ Element.Finder.first = Element.Finder.firstElement;
 Element.Finder.all = Element.Finder.allElements;
 
 Element.Predicate = {
-    oneOf: function(value, returnIfContains){
+    oneOf: function(value,returnOnMatch){
         return function(node){
-            return (value == node)?returnIfContains:!returnIfContains;
+            return (value==node)?returnOnMatch:!returnOnMatch;
         };
     },
     include: function(value){return this.oneOf(value,true);},
