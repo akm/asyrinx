@@ -57,9 +57,9 @@ line01<span id="span0" class="level0">span0</span>
 line02<div id="div1" class="level0">
 line03    <span id="span1" class="level1">span1</span>
 line04    <div id="div1_1" class="level1">
-line05        <span id="span1" class="level2">span2</span>
+line05        <span id="span2" class="level2">span2</span>
 line06        <div id="div1_1_1" class="level2">
-line07            <span id="span1" class="level3">span3</span>
+line07            <span id="span3" class="level3">span3</span>
 line08        </div>
 line09        <span id="span4" class="level2">span4</span>
 line10        <div id="div1_1_2" class="level2">
@@ -395,7 +395,7 @@ function test_Number_commify() {
     assertEquals("-12,345.12345", (-12345.12345).commify());
 }
 
-function test_Object_Predicate_join() {
+function test_Object_Predicate() {
     assertEquals(true, Object.Predicate.acceptAll(null));
     assertEquals(false, Object.Predicate.denyAll(null));
     var f = Object.Predicate.not(Object.Predicate.acceptAll);
@@ -406,31 +406,130 @@ function test_Object_Predicate_join() {
     assertEquals(false, f(null));
     f = Object.Predicate.or(Object.Predicate.acceptAll, Object.Predicate.denyAll);
     assertEquals(true, f(null));
+    //
+    f = Object.Predicate.include([1,2,3]);
+    assertEquals("1,2,3 include null", false, f(null));
+    assertEquals("1,2,3 include null string", false, f(''));
+    assertEquals("1,2,3 include 0", false, f(0));
+    assertEquals("1,2,3 include 1", true, f(1));
+    assertEquals("1,2,3 include 2", true, f(2));
+    assertEquals("1,2,3 include 3", true, f(3));
+    assertEquals("1,2,3 include 4", false, f(4));
+    f = Object.Predicate.include(1,2,3);
+    assertEquals("1,2,3 include null", false, f(null));
+    assertEquals("1,2,3 include null string", false, f(''));
+    assertEquals("1,2,3 include 0", false, f(0));
+    assertEquals("1,2,3 include 1", true, f(1));
+    assertEquals("1,2,3 include 2", true, f(2));
+    assertEquals("1,2,3 include 3", true, f(3));
+    assertEquals("1,2,3 include 4", false, f(4));
+    f = Object.Predicate.exclude([1,2,3]);
+    assertEquals("1,2,3 exclude null", true, f(null));
+    assertEquals("1,2,3 exclude null string", true, f(''));
+    assertEquals("1,2,3 exclude 0", true, f(0));
+    assertEquals("1,2,3 exclude 1", false, f(1));
+    assertEquals("1,2,3 exclude 2", false, f(2));
+    assertEquals("1,2,3 exclude 3", false, f(3));
+    assertEquals("1,2,3 exclude 4", true, f(4));
+}
+
+
+function test_Node_identify_str() {
+    assertEquals("SPAN[span0](level0)", Node.identify_str($("span0")));
+    assertEquals("DIV[div1_2](level1)", Node.identify_str($("div1_2")));
+    assertEquals("THEAD[table1_head]", Node.identify_str($("table1_head")));
+    assertEquals("TD[table1_row1_name](col_name)", Node.identify_str($("table1_row1_name")));
+    assertEquals("TEXT_NODE:The Serverside.com", Node.identify_str($("table1_row1_name").firstChild));
+    assertEquals("TEXT_NODE:http://www-06.ibm...", Node.identify_str($("table1_row4_url").firstChild));
+}
+
+
+function test_Node_Predicate() {
+    var f = Node.Predicate.include($("div1"),$("div2"));
+    assertEquals( "div1,div2 include div1", true, f($("div1")) );
+    assertEquals( "div1,div2 include div2", true, f($("div2")) );
+    assertEquals( "div1,div2 include div2_2", false, f($("div2_2")) );
+    assertEquals( "div1,div2 include div2,div2_2", true, f($("div2"),$("div2_2")) );
+    assertEquals( "div1,div2 include div2_2,div2", false, f($("div2_2"),$("div2")) );
+}
+
+
+function assertTextNode() {
+    _validateArguments(1, arguments);
+    var actual=nonCommentArg(1, 1, arguments);
+    var msg = commentArg(1, arguments) || "";
+    assertNotNull(msg, actual);
+    assertEquals(msg, Node.TEXT_NODE, actual.nodeType);
 }
 
 function test_Element_Finder() {
-    assertElement($("div1"), Element.Finder.first($("span0"), Element.Iteration.nextSibling));
-    assertElement($("span1"), Element.Finder.first($("div1"), Element.Iteration.firstChild));
-    assertElement($("div1_1_2"), Element.Finder.first($("div1_1_1"), Element.Iteration.nextSibling, 
-        Element.Predicate.tagName("DIV")));
+}
+
+
+
+function test_Element_Finder() {
+    //Element.Iteration and Node.Iteration
+    assertTextNode("find nextSibling Node of span3 ==> TEXT_NODE",
+        Node.Finder.first($("span3"), Node.Iteration.nextSiblingNode));
+    assertNull("find nextSibling Element of span3 ==> null",
+        Node.Finder.firstElement($("span3"), Element.Iteration.nextSiblingElement));
+    
+    
+    assertElement("find div1", $("div1"),
+        Node.Finder.first($("span0"), Element.Iteration.nextSibling));
+    assertElement("find span0", $("span0"),
+        Node.Finder.first($("div1"), Element.Iteration.previousSibling));
+    
+    assertElement("find span1", $("span1"),
+        Node.Finder.first($("div1"), Element.Iteration.firstChild));
+    assertElement("find div1_1_2", $("div1_1_2"), 
+        Node.Finder.first($("div1_1_1"), Element.Iteration.nextSibling,
+            Element.Predicate.tagName("DIV")));
+
     //firstChild
-    assertElement($("div2_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
-        Element.Predicate.className("level1")));
-    assertElement($("div2_1_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
-        Element.Predicate.className("level2")));
-    assertElement($("div2_1_1_1"), Element.Finder.first($("div2"), Element.Iteration.firstChild, 
-        Element.Predicate.className("level3")));
-    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.firstChild, 
-        Element.Predicate.className("level4")));
+    logger.debug();
+    assertElement("find div2_1", $("div2_1"),
+        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+            Element.Predicate.className("level1")));
+        
+    assertElement("find div2_1_1", $("div2_1_1"),
+        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+            Element.Predicate.className("level2")));
+    assertElement("find div2_1_1_1", $("div2_1_1_1"),
+        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+            Element.Predicate.className("level3")));
+    assertElement("no element of level4", null, 
+        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+            Element.Predicate.className("level4")));
     //lastChild
-    assertElement($("div2_2"), Element.Finder.first($("div2"), Element.Iteration.lastChild, 
-        Element.Predicate.className("level1")));
-    assertElement($("div2_2_3"), Element.Finder.first($("div2"), Element.Iteration.lastChild, 
-        Element.Predicate.className("level2")));
-    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.lastChild, 
-        Element.Predicate.className("level3")));
-    assertElement(null, Element.Finder.first($("div2"), Element.Iteration.lastChild, 
-        Element.Predicate.className("level4")));
+    assertElement("find div2_2", $("div2_2"), 
+        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+            Element.Predicate.className("level1")));
+    assertElement("find div2_2_3", $("div2_2_3"), 
+        Node.Finder.first($("div2_2"), Element.Iteration.lastChild, 
+            Element.Predicate.className("level2")));
+    assertElement("find no lastChild which is level3", null, 
+        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+            Element.Predicate.className("level3")));
+    assertElement("find no lastChild which is level4", null, 
+        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+            Element.Predicate.className("level4")));
+}
+
+function test_Element_Finder_next() {
+    var div2 = $("div2");
+    var elements_from_div2_1_1_to_div2_2_3 = 
+        Node.Finder.all($("div2_1"), 
+            Node.Iteration.predicated(
+                Node.Predicate.childOf(div2),
+                Element.Iteration.nextElement),
+            Node.Predicate.isElementNode);
+    assertArray("elements_from_div2_1_1_to_div2_2_3",
+        ["div2_1_1","div2_1_1_1","div2_2","div2_2_1",
+         "div2_2_1_1","div2_2_1_2","div2_2_2","div2_2_3"],
+        elements_from_div2_1_1_to_div2_2_3.collect(
+            function(element){return element.id;}
+        ));
 }
 
 --></script>
