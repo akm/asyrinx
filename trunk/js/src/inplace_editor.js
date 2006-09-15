@@ -27,6 +27,27 @@ Object.extend(HTMLElement.InplaceEditor, {
         this.elements.push(element);
     },
     
+    to_editable: function(element) {
+        var tagName = element.tagName.toLowerCase();
+        switch(tagName) {
+            case 'ol':
+            case 'ul':
+                return Node.Finder.first(element, Node.Walk.childNodes(element),
+                    Element.Predicate.tagName('li') );
+            case 'table':
+                return this.to_editable(Node.Finder.first(element,Node.Walk.childNodes(element), 
+                    Element.Predicate.tagNames(['thead','tbody','tfoot','tr'])));
+            case 'thead': 
+            case 'tfoot': 
+            case 'tbody': 
+                return this.to_editable(Node.Finder.first(element,Node.Walk.childNodes(element), 
+                    Element.Predicate.tagName('tr')));
+            case 'tr':
+                return (element.cells && element.cells.length > 0) ? element.cells[0] : null;
+            default:
+                return element;
+        }
+    },
     instance: null
 } );
 HTMLElement.InplaceEditor.nullFocus = {
@@ -76,17 +97,45 @@ HTMLElement.InplaceEditor.Focus.prototype = {
     },
     
     getNextEditable: function( element, skip ) {
-        skip = skip || 1
+        skip = skip || 1;
         if (HTMLElement.InplaceEditor.elements.length < 1)
             return null;
+        var firstElement = HTMLElement.InplaceEditor.to_editable(HTMLElement.InplaceEditor.elements[0]);
         if (!element)
-            return HTMLElement.InplaceEditor.elements[0];
-        var editableElement = (element.tagName == "INPUT") ? element.parentNode : element;
-        var index = HTMLElement.InplaceEditor.elements.indexOf(editableElement);
+            return firstElement;
+        var eventElement = element;
+        element = (element.tagName == "INPUT") ? element.parentNode : element;
+        var registered = Node.Walk.skipTo(
+                Element.Walk.parentNode,
+                function(node){ return HTMLElement.InplaceEditor.elements.indexOf(node) > -1; }, 
+                true)(element);
+        if (!registered)
+            return firstElement;
+        if (registered != element) {
+            var nextElement = Node.Finder.first(element,
+                (skip>0)?Element.Walk.nextElement:Element.Walk.previousElement, 
+                Node.Predicate.and(
+                    Node.Predicate.childOf(registered),
+                    Node.Predicate.exclude(eventElement),
+                    Object.Predicate.not(Element.Predicate.tagNames(['thead','tbody','tfoot','tr','ol','ul'])) 
+                ));
+            if (nextElement)
+                return HTMLElement.InplaceEditor.to_editable(nextElement);
+        }
+        var index = HTMLElement.InplaceEditor.elements.indexOf(registered);
         index += skip;
-        if (index > HTMLElement.InplaceEditor.elements.length -1)
-            index = 0;
-        return HTMLElement.InplaceEditor.elements[index];
+        if (index < 0) index = HTMLElement.InplaceEditor.elements.length -1;
+        if (index > HTMLElement.InplaceEditor.elements.length -1) index = 0;
+        var result;
+        try{
+            result = HTMLElement.InplaceEditor.elements[index];
+            result = HTMLElement.InplaceEditor.to_editable( result );
+        }catch(ex){
+            logger.debug("getNextEditable error occurred", ex, 2);
+            throw ex;
+        }
+        return result;
+
     },
     
     isEditableNode: function(node){
@@ -179,9 +228,17 @@ HTMLElement.InplaceEditor.prototype = {
 	        textField.style.height = elementSize.height + "px";
         element.appendChild(textField);
         this.observeEditor(textField);
-        textField.focus();
-        textField.select();
+        if (navigator.appVersion.indexOf("MSIE") < 0) {
+            setTimeout(this.focusEditor.bind(this), 300);
+        } else {
+            this.focusEditor();
+        }
         this.setup_input(element, textField);
+    },
+    
+    focusEditor: function(){
+        try{this.editor.focus();}catch(ex){}
+        try{this.editor.select();}catch(ex){}
     },
     
     cancelEdit: function( input ) {

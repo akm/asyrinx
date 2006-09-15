@@ -325,9 +325,6 @@ Object.extend(Node.Predicate,Object.Predicate);
 Object.extend(Node.Predicate,{
     oneOf: function(args,returnIfContains){
         value = ((args.length>0)&&(args[0].constructor==Array))?args[0]:$A(args);
-        
-        logger.debug("Node.Predicate oneOf: value", value, 3);
-        
         return function(node){
             if(value.contains(node))
                 return returnIfContains;
@@ -390,14 +387,14 @@ Object.extend(Node.Walk, {
             return result;
         };
     },
-    predicated: function(predicate, walk){
+    predicated: function(walk,predicate){
         return function(node){
             var result=walk(node);
             return predicate(result)?result:null;
         };
     },
     
-    until: function(predicate, walk){
+    until: function(walk,predicate){
         var match=false;
         return function(node){
             if(match)return null;
@@ -405,6 +402,12 @@ Object.extend(Node.Walk, {
             if (predicate(result))
                 match=true;
             return result;
+        };
+    },
+    
+    skipTo: function(walk,predicate,includeNode){
+        return function(node){
+            return Node.Finder.firstNode(node,walk,predicate,includeNode);
         };
     },
     
@@ -490,18 +493,18 @@ Node.Walk.prevSibling = Node.Walk.previousSibling;
 Node.Walk.prevNode = Node.Walk.previousNode;
 
 Node.Finder = {
-    logger: (window["logger"])?logger:null,
+    //logger: (window["logger"])?logger:null,
     
     process: function(iterator, node, walk, predicate, includeNode){
-		if (Node.Finder.logger)
-		    Node.Finder.logger.debug("Node.Finder.process - node: "+ Node.identify_str(node));
+		//if (Node.Finder.logger)
+		//    Node.Finder.logger.debug("Node.Finder.process - node: "+ Node.identify_str(node));
         if(!node)return;
         predicate = predicate||Object.Predicate.acceptAll;
 		for(var current=(includeNode)?node:walk(node);current;current=walk(current)){
     	    var predResult = predicate(current);
-			if (Node.Finder.logger)
-			    Node.Finder.logger.debug("Node.Finder.process - current: "+ 
-			        Node.identify_str(current) +" ==> " + predResult);
+			//if (Node.Finder.logger)
+			//    Node.Finder.logger.debug("Node.Finder.process - current: "+ 
+			//        Node.identify_str(current) +" ==> " + predResult);
     	    var ir=iterator(current, predResult);
 	        if(ir){
     	        if (ir.command=="return") return ir.result;
@@ -524,14 +527,28 @@ Node.Finder = {
         }, node, walk, predicate, includeNode);
 		return result;
     },
+    lastNode: function(node, walk, predicate, includeNode){
+		var result = null;
+		this.process(function(current, predResult){
+            if (predResult)
+                result = current;
+        }, node, walk, predicate, includeNode);
+		return result;
+    },
+    
     firstElement: function(node, walk, predicate, includeNode){
-        predicate = predicate||Node.Predicate.acceptAll;
+        predicate = predicate||Object.Predicate.acceptAll;
         return this.firstNode(node,walk,
             Object.Predicate.and(Node.Predicate.isElementNode,predicate),includeNode);
     },
     allElements: function(node, walk, predicate, includeNode){
-        predicate = predicate||Node.Predicate.acceptAll;
+        predicate = predicate||Object.Predicate.acceptAll;
         return this.allNodes(node,walk,
+            Object.Predicate.and(Node.Predicate.isElementNode,predicate),includeNode);
+    },
+    lastElement: function(node, walk, predicate, includeNode){
+        predicate = predicate||Object.Predicate.acceptAll;
+        return this.lastNode(node,walk,
             Object.Predicate.and(Node.Predicate.isElementNode,predicate),includeNode);
     }
 };
@@ -539,6 +556,7 @@ Node.Finder = {
 //Node.Finder.all = Node.Finder.allElements;
 Node.Finder.first = Node.Finder.firstNode;
 Node.Finder.all = Node.Finder.allNodes;
+Node.Finder.last = Node.Finder.lastNode;
 
 Element.Predicate = {};
 Object.extend(Element.Predicate,Node.Predicate);

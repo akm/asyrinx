@@ -12,6 +12,10 @@
 <textarea id="script_area" cols="80" rows="10">
 logger.showWindow();
 logger.debug("aaaaaaaaaaaaa");
+logger.debug("window", window, 2);
+logger.debug("document properties", document, "properties", 2);
+logger.debug("document methods"   , document, "methods"   , 2);
+logger.debug("document.documentElement", document.documentElement, "full", 2);
 
 </textarea>
 <br/>
@@ -21,6 +25,13 @@ logger.debug("aaaaaaaaaaaaa");
 <a href="javascript:void(0)" onclick="Logger.setActiveOnLoad(true); return false;">自動的にログウィンドウを開くようにCookieに記録</a>
 <br/>
 <a href="javascript:void(0)" onclick="Logger.setActiveOnLoad(false); return false;">自動的にログウィンドウを開かないようにCookieに記録</a>
+
+<div style="margin:30px 0px 0px 20px;">
+手動でログウィンドウを開くには、javascript:logger.showWindow();<br/>
+手動でCookieに登録するには、javascript:Logger.setActiveOnLoad(true);<br/>
+手動でCookieに解除するには、javascript:Logger.setActiveOnLoad(false);<br/>
+と URLとして入力してください。
+</div>
 
 </body>
 </html>
