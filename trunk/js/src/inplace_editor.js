@@ -141,13 +141,13 @@ HTMLElement.InplaceEditor.prototype = {
                 return Element.findNextSibling(element.firstChild, 
                     Element.predicateByTagName('li'));
             case 'table':
-                return this.to_editable(Element.findNextSibling(element.firstChild, 
-                    Element.predicateByTagNames(['thead','tbody','tfoot','tr'])));
+                return this.to_editable(Node.Finder.first(element,Node.Walk.childNodes(element), 
+                    Element.Predicate.tagNames(['thead','tbody','tfoot','tr'])));
             case 'thead': 
             case 'tfoot': 
             case 'tbody': 
-                return this.to_editable(Element.findNextSibling(element.firstChild, 
-                    Element.predicateByTagName('tr')));
+                return this.to_editable(Node.Finder.first(element,Node.Walk.childNodes(element), 
+                    Element.Predicate.tagName('tr')));
             case 'tr':
                 return (element.cells && element.cells.length > 0) ? element.cells[0] : null;
             default:

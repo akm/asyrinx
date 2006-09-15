@@ -697,6 +697,24 @@ function test_Node_Walk_previousNode() {
     assertElement("div2_2_3 <- div3", $("div2_2_3"), f($("div3")));
 }
 
+function test_Node_Walk_childNodes() {
+    var f = Node.Walk.childNodes($("div2"));
+    assertElement("div2 child[1] div2_1", $("div2_1"), f());
+    assertElement("div2 child[2] div2_2", $("div2_2"), f());
+    assertElement("div2 child[3] null  ", null, f());
+
+    var f = Node.Walk.childNodes($("div3"));
+    assertElement("div3 child[1] div3_1", $("div3_1"), f());
+    assertElement("div3 child[2] div3_2", $("div3_2"), f());
+    assertElement("div3 child[3] div3_3", $("div3_3"), f());
+    assertElement("div3 child[4] div3_4", $("div3_4"), f());
+    assertElement("div3 child[5] div3_5", $("div3_5"), f());
+    assertElement("div3 child[6] null  ", null, f());
+}
+
+
+
+
 
 function test_Node_Walk_predicated() {
     assertElement("div2_1 nextSibling with denyAll", $("div2_2"), Node.Walk.nextSiblingNode($("div2_1")));
