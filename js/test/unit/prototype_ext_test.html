@@ -715,23 +715,37 @@ function test_Node_Walk_childNodes() {
 
 function test_Node_Walk_predicated() {
     assertElement("div2_1 nextSibling with denyAll", $("div2_2"), Node.Walk.nextSiblingNode($("div2_1")));
-    var f = Node.Walk.predicated(Object.Predicate.denyAll,Node.Walk.nextSiblingNode);
+    var f = Node.Walk.predicated(Node.Walk.nextSiblingNode, Object.Predicate.denyAll);
     assertElement("div2_1 nextSibling with denyAll", null, f($("div2_1")));
     
-    f=Node.Walk.predicated(Node.Predicate.childOf($("div2_2")),Node.Walk.nextNode);
+    f=Node.Walk.predicated(Node.Walk.nextNode, Node.Predicate.childOf($("div2_2")));
     assertElement("div2_2_1 nextSibling with denyAll", null, f($("div2_1")));
 }
 
 function test_Node_Walk_until() {
-    f = Node.Walk.until(Element.Predicate.className("level2"), Element.Walk.firstChild);
+    f = Node.Walk.until(Element.Walk.firstChild, Element.Predicate.className("level2"));
     assertElement("div2 -> div2_1", $("div2_1"), f($("div2")) );
     assertElement("div2_1 -> div2_1_1", $("div2_1_1"), f($("div2_1")) );
     assertElement("div2_1_1 -> div2_1_1_1", null, f($("div2_1")) );
-    f = Node.Walk.until(Element.Predicate.className("level1"), Element.Walk.parentNode);
+    f = Node.Walk.until(Element.Walk.firstChild, Element.Predicate.className("level2"));
+    assertElement("div2 -> div2_1_1", $("div2_1_1"), Node.Finder.last( $("div2_1"), f) );
+    
+    f = Node.Walk.until(Element.Walk.parentNode, Element.Predicate.className("level1"));
     assertElement("div2_1_1_1 -> div2_1_1", $("div2_1_1"), f($("div2_1_1_1")) );
     assertElement("div2_1_1 -> div2_1", $("div2_1"), f($("div2_1_1")) );
     assertElement("div2_1 -> div2", null, f($("div2_1_1")) );
+    f = Node.Walk.until(Element.Walk.parentNode, Element.Predicate.className("level1"));
+    assertElement("div2_1_1_1 -> div2_1", $("div2_1"), Node.Finder.last( $("div2_1_1_1"), f) );
 }
+
+function test_Node_Walk_skipTo() {
+    var f = Node.Walk.skipTo(Element.Walk.firstChild, Element.Predicate.className("level2"));
+    assertElement("div2 -> div2_1_1", $("div2_1_1"), f($("div2_1")) );
+    
+    f = Node.Walk.skipTo(Element.Walk.parentNode, Element.Predicate.className("level1"));
+    assertElement("div2_1_1_1 -> div2_1", $("div2_1"), f($("div2_1_1_1")) );
+}
+
 
 
 function test_Node_Finder() {
@@ -788,8 +802,8 @@ function test_Element_Finder_next() {
     var elements_from_div2_1_1_to_div2_2_3 = 
         Node.Finder.all($("div2_1"), 
             Node.Walk.predicated(
-                Node.Predicate.childOf(div2),
-                Element.Walk.nextElement),
+                Element.Walk.nextElement,
+                Node.Predicate.childOf(div2)),
             Node.Predicate.isElementNode);
             
     assertEquals("div3 is not a child of div2", false, Node.Predicate.childOf($("div2"))($("div3")) );
@@ -799,7 +813,7 @@ function test_Element_Finder_next() {
     logger.debug("no next element of div2_2_3 in div2 begin trace");
     
     assertElement("no next element of div2_2_3 in div2 ", null, 
-        Node.Walk.predicated(Node.Predicate.childOf(div2),Element.Walk.nextElement)($("div2_2_3")) );
+        Node.Walk.predicated(Element.Walk.nextElement,Node.Predicate.childOf(div2))($("div2_2_3")) );
     
     logger.debug("no next element of div2_2_3 in div2 end trace");
 
