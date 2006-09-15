@@ -12,7 +12,7 @@ Logger = Class.create();
 Object.extend(Logger, {
 	formatDate: function(d){
 	    if (!d)return "";
-		return d.getYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+
+		return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+
 			d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+":"+d.getMilliseconds();
 	},
 	includeAll:function(){return true;},
@@ -32,6 +32,8 @@ Object.extend(Logger, {
 	},
 	
 	uninspectClasses: [String,Number,Boolean,Date,RegExp,Array],
+	knownClasses    : [ String , Number , Boolean , Date , RegExp , Array , Function ],
+	knownClassNames : ["String","Number","Boolean","Date","RegExp","Array","Function"],
 	
 	repeatStr:function(s,count){
 	   var result="";
@@ -39,47 +41,79 @@ Object.extend(Logger, {
 	   return result;
 	},
 	
-	DefaultMaxDepth:1,
-	
-	inspect: function(obj,predicate,level,max_depth){
-	   predicate=predicate||Logger.excludeFunction;
-	   level=(level==undefined)?1:level;
-	   max_depth=(max_depth==undefined)?Logger.DefaultMaxDepth:max_depth;
+    identify_str: function(node){
+        if(!node)
+            return "null node";
+        return (node.nodeType==1)? //Node.ELEMENT_NODE
+            (node.tagName + 
+                ((node.id)?("["+node.id+"]"):"") + 
+                ((node.className)?("(" + node.className + ")"):"")):
+            (node.nodeType==3)? //Node.TEXT_NODE
+                ("TEXT_NODE:"+node.data.strip().truncate(20)):
+                ("nodeType:"+node.nodeType);
+    },
+    
+	inspectCaption: function(obj){
 	   if (obj==undefined)return "undefined";
 	   if (obj==null)return "null";
-	   var t=typeof(obj);
-       var spacing=this.repeatStr("  ",level+1);
-	   if (level>=max_depth){
-	       return ("["+t+"]"+obj).truncate(100).gsub(/\n/,"\\n");
+	   var idx = this.knownClasses.indexOf(obj.constructor);
+	   var className = (idx>-1)?this.knownClassNames[idx]:(obj.nodeType)?this.identify_str(obj):null;
+	   var typeName=typeof(obj);
+	   return ("["+(className||typeName)+"]"+obj).truncate(100).gsub(/\n/,"\\n");
+	},
+	
+	likeArray: function(obj){
+	   if(!obj)return false;
+	   return (!obj.nodeType)&&(obj.constructor!=String)&&(obj.length!=null)&&(obj.length!=undefined)&&(obj.length.constructor==Number);
+	},
+	
+	DefaultLevel:1,
+	DefaultMaxLevel:1,
+	
+	inspect_array: function(obj,predicate,level,max_level){
+       var s="[\n";
+       for(var i=0;i<obj.length;i++)
+           s+=(spacing+i+":"+Logger.inspect(obj[i],Logger.excludeFunction,level,max_level)+"\n");
+       s+="]";
+       return this.inspectCaption(obj)+s;
+	},
+	
+	inspect_hash: function(obj,predicate,level,max_level){
+       var s="";
+       var attrs = this.sortedAttributes(obj,predicate);
+       attrs.each(function(attr){
+           if (!s.endWith("\n"))
+               s+="\n";
+	           var value = Logger.inspect(obj[attr],Logger.excludeFunction,level+1,max_level);
+  	           s+=(spacing+attr+":"+value+"\n");
+       });
+       return this.inspectCaption(obj) +"\n"+ s;
+	},
+	
+	inspect: function(obj,predicate,level,max_level){
+	   predicate=predicate||Logger.excludeFunction;
+	   level=(level==undefined||level==null)?Logger.DefaultLevel:level;
+	   max_level=(max_level==undefined||max_level==null)?Logger.DefaultMaxLevel:max_level;
+	   if (obj==undefined)return "undefined";
+	   if (obj==null)return "null";
+       var spacing=this.repeatStr("  ",level);
+	   if (level>=max_level){
+	       return (this.likeArray(obj)) ? this.inspect_array(obj,predicate,level,max_level) : this.inspectCaption(obj);
 	   } else if (level>0 && Logger.uninspectClasses.indexOf(obj.constructor)>-1){
-	       return (""+obj).truncate(100).gsub(/\n/,"\\n");
+	       return this.inspectCaption(obj);
 	   } else if (obj.constructor==Function){
 	       return "[function]";
-	   } else if (obj.constructor != String && obj.length && obj.length.constructor == Number) {
-	       if (level==0)
-	           max_depth++;
-	       var s="[\n";
-	       for(var i=0;i<obj.length;i++)
-	           s+=(spacing+i+":"+Logger.inspect(obj[i],Logger.excludeFunction,level+1,max_depth)+"\n");
-	       s+="]";
-	       return "["+t+"]"+s;
+	   } else if (this.likeArray(obj)) {
+	       return this.inspect_array(obj,predicate,level,max_level);
 	   } else {
-	       var s="";
-	       var attrs = this.sortedAttributes(obj,predicate);
-	       attrs.each(function(attr){
-	           if (!s.endWith("\n"))
-	               s+="\n";
-	           var value = Logger.inspect(obj[attr],Logger.excludeFunction,level+1,max_depth);
-  	           s+=(spacing+attr+":"+value+"\n");
-	       });
-	       return "["+t+"]\n"+s;
+	       return this.inspect_hash(obj,predicate,level+1,max_level);
 	   }
 	},
 	isActiveOnLoad: function(){
-	   return document.cookie.indexOf("loggerActive=true");
+	   return (document.cookie.indexOf("loggerActive=true") > -1);
 	},
 	setActiveOnLoad:function(value){
-	   document.cookie = ("loggerActive="+(value?"true":"false"));
+	   document.cookie = ("loggerActive="+(value?"true":"false"))+";Fri, 31-Dec-2030 23:59:59;";
 	}
 });
 Logger.prototype = {
@@ -89,7 +123,7 @@ Logger.prototype = {
     },
     append:function(logs) {
         if (!this.appendingType){
-        }else if (this.appendingType=="dom"){
+        }else if (this.appendingType=="textNode"){
             this.element.appendChild(document.createTextNode(logs));
         }else if (this.appendingType=="value"){
             this.element.value=this.element.value+"\n"+logs;
@@ -106,7 +140,7 @@ Logger.prototype = {
             this.element.innerHTML.unescaptHTML();
         this.element=element;
         this.appendingType = (!this.element)?null:
-            ((/body|div/i).test(this.element.tagName))?"textNode":
+            ((/div/i).test(this.element.tagName))?"textNode":
             ((/input|textarea/i).test(this.element.tagName))?"value":"innerHTML";
         this.append(logs);
     },
@@ -114,19 +148,25 @@ Logger.prototype = {
         t=t||new Date();
         return Logger.formatDate(t)+"["+level+"] "+msg;
     },
-    showWindow:function(windowName){
+    showWindow:function(windowName, focus){
         if (this.window)
             return;
         windowName=windowName||"loggerWindow";
         this.window = window.open('',windowName,"resizable=yes,scrollbars=yes,top=0,left=0");
-        this.setElement(this.window.document.documentElement||this.window.document.body);
+        if (focus)
+            this.window.focus();
+        this.window.document.write("<html><head><title>Log Window</title></head><body></body></html>");
+        //this.window.document.close();
+        this.setElement(this.window.document.body||this.window.document.documentElement);
     },
     toLogStr: function(level,args){
         var s="";
+        args=$A(args);
+        var max_level = ((args.last())&&(args.last().constructor==Number))?args.pop():Logger.DefaultMaxLevel;
         if (args.length>0) 
             s = this.formatMsg(level,args[0]);
         for(var i=1;i<args.length;i++)
-            s += ("\n arguments["+i+"] \n"+ Logger.inspect(args[i]));
+            s += ("\n inspect["+i+"] \n"+ Logger.inspect(args[i],null,null,max_level));
         return s;
     },
     log: function(level,args){
@@ -139,7 +179,8 @@ Logger.prototype = {
     fatal: function(){this.log("fatal",arguments);}
 };
 var logger = new Logger(null,"");
-if (top && top.tracer) {
+if (window["top"] && top.tracer) {
+    
     Object.extend(logger, {
         log: function(level,args){
             var s = this.toLogStr(level,args).gsub(/\n/,"___LF___").escapeHTML().gsub(/___LF___/,"<br/>").gsub(/ /,"&nbsp;");
@@ -156,8 +197,8 @@ if (top && top.tracer) {
         }
     });
 }else{
-    if(Logger.isActiveOnLoad())
+    if(Logger.isActiveOnLoad()) {
         logger.showWindow();
+        logger.info("auto log window open by cookie. Logger.setActiveOnLoad(false) if you want it disable. ");
+    }
 }
-
-

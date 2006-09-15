@@ -1,0 +1,26 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Logger Sample</title>
+<script language="javascript" type="text/javascript" src="../../lib/prototype.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/logger.js" ></script>
+
+</head>
+<body>
+
+<textarea id="script_area" cols="80" rows="10">
+logger.showWindow();
+logger.debug("aaaaaaaaaaaaa");
+
+</textarea>
+<br/>
+<input type="button" onclick='eval($("script_area").value);return false;' value="eval script"/>
+
+<br/>
+<a href="javascript:void(0)" onclick="Logger.setActiveOnLoad(true); return false;">自動的にログウィンドウを開くようにCookieに記録</a>
+<br/>
+<a href="javascript:void(0)" onclick="Logger.setActiveOnLoad(false); return false;">自動的にログウィンドウを開かないようにCookieに記録</a>
+
+</body>
+</html>
