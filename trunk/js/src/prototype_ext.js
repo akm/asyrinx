@@ -296,19 +296,29 @@ Object.extend(Node, {
         11:"DOCUMENT_FRAGMENT_NODE",
         12:"NOTATION_NODE"
     },
-    nodeTypeName: function(nodeType){return Node.NodeTypeNames[nodeType]},
-    identify_str: function(element){
-        if(!element)
-            return "null element";
-        return (element.nodeType==Node.ELEMENT_NODE)?
-            (element.tagName + 
-                ((element.id)?("["+element.id+"]"):"") + 
-                ((element.className)?("(" + element.className + ")"):"")):
-            (element.nodeType==Node.TEXT_NODE)?
-                ("TEXT_NODE:"+element.data.strip().abbreviate(20)):
-                Node.nodeTypeName(element.nodeType);
+    nodeTypeName: function(nodeType){
+        if(!nodeType)return null;
+        nodeType=(nodeType.nodeType)?nodeType.nodeType:nodeType;
+        return Node.NodeTypeNames[nodeType]
+     },
+    identify_str: function(node){
+        if(!node)
+            return "null node";
+        return (node.nodeType==Node.ELEMENT_NODE)?
+            (node.tagName + 
+                ((node.id)?("["+node.id+"]"):"") + 
+                ((node.className)?("(" + node.className + ")"):"")):
+            (node.nodeType==Node.TEXT_NODE)?
+                ("TEXT_NODE:"+node.data.strip().truncate(20)):
+                Node.nodeTypeName(node.nodeType);
+    },
+    blankTextNodeIgnored: function(){
+        var div = document.createElement("DIV");
+        div.innerHTML = "<div>  \n  </div>";
+        var child=div.firstChild;
+        return (child && child.firstChild &&  child.firstChild.nodeType==Node.TEXT_NODE)?false:true;
     }
-})
+});
 
 Node.Predicate={};
 Object.extend(Node.Predicate,Object.Predicate);
@@ -316,7 +326,7 @@ Object.extend(Node.Predicate,{
     oneOf: function(args,returnIfContains){
         value = ((args.length>0)&&(args[0].constructor==Array))?args[0]:$A(args);
         
-        logger.debug("Node.Predicate oneOf: value", value);
+        logger.debug("Node.Predicate oneOf: value", value, 3);
         
         return function(node){
             if(value.contains(node))
@@ -330,50 +340,109 @@ Object.extend(Node.Predicate,{
     },
     isElementNode: function(node){return node.nodeType==Node.ELEMENT_NODE;},
     
-    hasChild: function(node){return(node.childNodes&&node.childNodes.length>0);},
-    childOf: function(ancestor){
-        return function(node){return Element.childOf(node,ancestor);};
+    childOf: function(ancestor){return function(node){return Element.childOf(node,ancestor);};},
+
+    Native:{
+        hasChild: function(node){return(node["childNodes"]&&node.childNodes.length>0);}
+    },
+    Common:{
+        hasChild: function(node){
+            var childNodes=node["childNodes"];
+            if(!childNodes)
+                return false;
+            for(var i=0;i<childNodes.length;i++)
+                if (Node.Predicate.denyBlankText(childNodes[i]))
+                    return true;
+            return false;
+        }
+    },
+    
+    denyBlankText: function(node){
+        if (!node)return true;
+        if (node.nodeType!=Node.TEXT_NODE)return true;
+        if (!node.data)return false;
+        var s=node.data.strip().gsub(/\n/,"");
+        return (s!="");
+    },
+    
+    filterCommon: function(node){
+        if (!node)return true;
+        if (!Node.Predicate.denyBlankText(node))return false;
+        if (node.nodeType!=Node.TEXT_NODE)return true;
+        return node.parentNode.tagName!="SCRIPT";
     }
 });
+Object.extend(Node.Predicate, 
+    (Node.blankTextNodeIgnored()) ? Node.Predicate.Native : Node.Predicate.Common);
 
-Node.Iteration = {};
-Object.extend(Node.Iteration, {
-    log: function(iteration){
-        if(Node.Iteration.loggerIndex==undefined)Node.Iteration.loggerIndex=0;
-        var loggerIndex = Node.Iteration.loggerIndex++;
+
+Node.Walk = {};
+Object.extend(Node.Walk, {
+    log: function(walk){
+        if(Node.Walk.loggerIndex==undefined)Node.Walk.loggerIndex=0;
+        var loggerIndex = Node.Walk.loggerIndex++;
         return function(node){
-            var result = iteration(node);
+            var result = walk(node);
             if(window["logger"])
-                logger.debug("iteration["+loggerIndex+"] "+
+                logger.debug("walk["+loggerIndex+"] "+
                     "from{"+Node.identify_str(node)+
                     "} to {"+Node.identify_str(result)+"}");
             return result;
         };
     },
-    predicated: function(predicate, iteration){
-        return function(node){return predicate(node)?iteration(node):null;};
+    predicated: function(predicate, walk){
+        return function(node){
+            var result=walk(node);
+            return predicate(result)?result:null;
+        };
     },
     
     parentNode: function(node){return node.parentNode;},
-    firstChildNode: function(node){return node.firstChild;},
-    lastChildNode: function(node){return node.lastChild;},
-    nextSiblingNode: function(node){return node.nextSibling;},
-    previousSiblingNode: function(node){return node.previousSibling;},
+    
+    Native:{
+        firstChildNode: function(node){return node.firstChild;},
+        lastChildNode: function(node){return node.lastChild;},
+        nextSiblingNode: function(node){return node.nextSibling;},
+        previousSiblingNode: function(node){return node.previousSibling;}
+    },
+    
+    Common:{
+        firstChildNode: function(node){
+            if (!node)return null;
+            return Node.Finder.firstNode(node.firstChild, 
+                Node.Walk.Native.nextSiblingNode, Node.Predicate.filterCommon,true);
+        },
+        lastChildNode: function(node){
+            if (!node)return null;
+            return Node.Finder.firstNode(node.lastChild, 
+                Node.Walk.Native.previousSiblingNode, Node.Predicate.filterCommon,true);
+        },
+        nextSiblingNode: function(node){
+            return Node.Finder.firstNode(node, 
+                Node.Walk.Native.nextSiblingNode, Node.Predicate.filterCommon,false);
+        },
+        previousSiblingNode: function(node){
+            return Node.Finder.firstNode(node, 
+                Node.Walk.Native.previousSiblingNode, Node.Predicate.filterCommon,false);
+        }
+    },
     
     nextNode: function(node) {
-        if (node.firstChild)
-            return node.firstChild;
+        var firstChild = Node.Walk.firstChildNode(node);
+        if (firstChild)
+            return firstChild;
         var ancestorWhoHasNextSibling = Node.Finder.firstNode(node, 
-            Node.Iteration.parentNode, Node.Iteration.nextSiblingNode);
-        return (ancestorWhoHasNextSibling) ? ancestorWhoHasNextSibling.nextSibling : null;
+            Node.Walk.parentNode, Node.Walk.nextSiblingNode,true);
+        return (ancestorWhoHasNextSibling) ? Node.Walk.nextSiblingNode(ancestorWhoHasNextSibling) : null;
     },
     previousNode: function(node) {
-        if (!node.previousSibling)
+        var previousSibling = Node.Walk.previousSiblingNode(node);
+        if (!previousSibling)
             return node.parentNode;
         return Node.Finder.firstNode(
-            node.previousSibling, 
-            Node.Iteration.lastChild,
-            Object.Predicate.not(Node.Iteration.lastChild));
+            previousSibling, 
+            Node.Walk.lastChild,
+            Object.Predicate.not(Node.Walk.lastChild),true);
     },
     shiftArray: function(array) {
         array = $A(array);
@@ -384,23 +453,26 @@ Object.extend(Node.Iteration, {
         return function(node){return array.pop();};
     }
 });
-Node.Iteration.ancestor = Node.Iteration.parentNode;
-Node.Iteration.firstChild = Node.Iteration.firstChildNode;
-Node.Iteration.lastChild = Node.Iteration.lastChildNode;
-Node.Iteration.nextSibling = Node.Iteration.nextSiblingNode;
-Node.Iteration.previousSibling = Node.Iteration.previousSiblingNode;
-Node.Iteration.prevSibling = Node.Iteration.previousSibling;
-Node.Iteration.prevNode = Node.Iteration.previousNode;
+Node.Walk.ancestor = Node.Walk.parentNode;
+Object.extend(Node.Walk, 
+    (Node.blankTextNodeIgnored()) ? Node.Walk.Native : Node.Walk.Common);
+Node.Walk.firstChild = Node.Walk.firstChildNode;
+Node.Walk.lastChild = Node.Walk.lastChildNode;
+Node.Walk.nextSibling = Node.Walk.nextSiblingNode;
+Node.Walk.previousSibling = Node.Walk.previousSiblingNode;
+
+Node.Walk.prevSibling = Node.Walk.previousSibling;
+Node.Walk.prevNode = Node.Walk.previousNode;
 
 Node.Finder = {
     logger: (window["logger"])?logger:null,
     
-    process: function(iterator, node, iterate, predicate, includeNode){
+    process: function(iterator, node, walk, predicate, includeNode){
 		if (Node.Finder.logger)
 		    Node.Finder.logger.debug("Node.Finder.process - node: "+ Node.identify_str(node));
         if(!node)return;
         predicate = predicate||Object.Predicate.acceptAll;
-		for(var current=(includeNode)?node:iterate(node);current;current=iterate(current)){
+		for(var current=(includeNode)?node:walk(node);current;current=walk(current)){
     	    var predResult = predicate(current);
 			if (Node.Finder.logger)
 			    Node.Finder.logger.debug("Node.Finder.process - current: "+ 
@@ -413,29 +485,29 @@ Node.Finder = {
 		}
     },
 
-    firstNode: function(node, iterate, predicate, includeNode){
+    firstNode: function(node, walk, predicate, includeNode){
         return this.process(function(current, predResult){
             if (predResult)
                 return {command:"return", "result":current};
-        }, node, iterate, predicate, includeNode) || null;
+        }, node, walk, predicate, includeNode) || null;
     },
-    allNodes: function(node, iterate, predicate, includeNode){
+    allNodes: function(node, walk, predicate, includeNode){
 		var result = [];
 		this.process(function(current, predResult){
             if (predResult)
                 result.push(current);
-        }, node, iterate, predicate, includeNode);
+        }, node, walk, predicate, includeNode);
 		return result;
     },
-    firstElement: function(node, iterate, predicate, includeNode){
-        predicate = predicate||Element.Predicate.acceptAll;
-        return this.firstNode(node,iterate,
-            Object.Predicate.and(Element.Predicate.isElementNode,predicate),includeNode);
+    firstElement: function(node, walk, predicate, includeNode){
+        predicate = predicate||Node.Predicate.acceptAll;
+        return this.firstNode(node,walk,
+            Object.Predicate.and(Node.Predicate.isElementNode,predicate),includeNode);
     },
-    allElements: function(node, iterate, predicate, includeNode){
-        predicate = predicate||Object.Predicate.acceptAll;
-        return this.allNodes(node,iterate,
-            Object.Predicate.and(Element.Predicate.isElementNode,predicate),includeNode);
+    allElements: function(node, walk, predicate, includeNode){
+        predicate = predicate||Node.Predicate.acceptAll;
+        return this.allNodes(node,walk,
+            Object.Predicate.and(Node.Predicate.isElementNode,predicate),includeNode);
     }
 };
 //Node.Finder.first = Node.Finder.firstElement;
@@ -460,92 +532,93 @@ Object.extend(Element.Predicate,{
     }
 });
 
-Element.Iteration = {};
-Object.extend(Element.Iteration,Node.Iteration);
-Object.extend(Element.Iteration,{
+Element.Walk = {};
+Object.extend(Element.Walk,Node.Walk);
+Object.extend(Element.Walk,{
     firstChildElement: function(node){
         return (!node)?null:Node.Finder.firstNode(node.firstChild,
-            Element.Iteration.nextSiblingNode,
+            Element.Walk.nextSiblingNode,
             Element.Predicate.isElementNode,true);
     },
     lastChildElement: function(node){
         return (!node)?null:Node.Finder.firstNode(node.lastChild,
-            Element.Iteration.previousSiblingNode,
+            Element.Walk.previousSiblingNode,
             Element.Predicate.isElementNode,true);
     },
     nextSiblingElement: function(node){
         return (!node)?null:Node.Finder.firstNode(node.nextSibling,
-            Element.Iteration.nextSiblingNode,
+            Element.Walk.nextSiblingNode,
             Element.Predicate.isElementNode,true);
     },
     previousSiblingElement: function(node){
         return (!node)?null:Node.Finder.firstNode(node.previousSibling,
-            Element.Iteration.previousSiblingNode,
+            Element.Walk.previousSiblingNode,
             Element.Predicate.isElementNode,true);
     },
     nextElement: function(node) {
-        var firstChildElement = Element.Iteration.firstChild(node);
+        var firstChildElement = Element.Walk.firstChild(node);
         if (firstChildElement)
             return firstChildElement;
         var ancestorWhoHasNextSibling = Node.Finder.firstNode(node, 
-            Node.Iteration.parentNode, Element.Iteration.nextSibling,true);
-        return (ancestorWhoHasNextSibling) ? ancestorWhoHasNextSibling.nextSibling : null;
+            Node.Walk.parentNode, Element.Walk.nextSiblingElement,true);
+        return (ancestorWhoHasNextSibling) ? Element.Walk.nextSiblingElement(ancestorWhoHasNextSibling): null;
     },
     previousElement: function(node) {
-        if (!node.previousSibling)
+        var previousSibling = Element.Walk.previousSibling(node);
+        if (!previousSibling)
             return node.parentNode;
         return Node.Finder.firstNode(
-            node.previousSibling, 
-            Node.Iteration.lastChild,
-            Object.Predicate.not(Node.Iteration.lastChild));
+            previousSibling, 
+            Element.Walk.lastChild,
+            Object.Predicate.not(Element.Walk.lastChild),true);
     }
 });
-Element.Iteration.ancestor = Element.Iteration.parentNode;
-Element.Iteration.firstChild = Element.Iteration.firstChildElement;
-Element.Iteration.lastChild = Element.Iteration.lastChildElement;
-Element.Iteration.nextSibling = Element.Iteration.nextSiblingElement;
-Element.Iteration.previousSibling = Element.Iteration.previousSiblingElement;
-Element.Iteration.next = Element.Iteration.nextElement;
-Element.Iteration.previous = Element.Iteration.previousElement;
-Element.Iteration.prevElement = Element.Iteration.previousElement;
+Element.Walk.ancestor = Element.Walk.parentNode;
+Element.Walk.firstChild = Element.Walk.firstChildElement;
+Element.Walk.lastChild = Element.Walk.lastChildElement;
+Element.Walk.nextSibling = Element.Walk.nextSiblingElement;
+Element.Walk.previousSibling = Element.Walk.previousSiblingElement;
+Element.Walk.next = Element.Walk.nextElement;
+Element.Walk.previous = Element.Walk.previousElement;
+Element.Walk.prevElement = Element.Walk.previousElement;
 
-Element.Iteration.prevSibling = Element.Iteration.previousSibling;
-Element.Iteration.prevNode = Element.Iteration.previousNode;
-Element.Iteration.prev = Element.Iteration.previousElement;
+Element.Walk.prevSibling = Element.Walk.previousSibling;
+Element.Walk.prevNode = Element.Walk.previousNode;
+Element.Walk.prev = Element.Walk.previousElement;
 
-//IterationはPredicateとしても使える・・・・でも、敢えてコピーするほどのものでもないか。
-//Object.fill(Element.Predicate, Element.Iteration);
+//WalkはPredicateとしても使える・・・・でも、敢えてコピーするほどのものでもないか。
+//Object.fill(Element.Predicate, Element.Walk);
 
 
 Object.extend(Element, {
-    findNode: function(node, iteration, predicate){
-		Node.Finder.first(node, iteration, predicate);
+    findNode: function(node, walk, predicate){
+		Node.Finder.first(node, walk, predicate);
     },
     findDescendant: function(node, predicate) {
 		return this.findNode(node, 
 		    function(current){return current.firstChild || current.nextSibling;}, predicate);
     },
     findNextNode: function(node, predicate) {
-		return this.findNode(node, Element.Iteration.nextNode, predicate);
+		return this.findNode(node, Element.Walk.nextNode, predicate);
     },
     findPreviousNode: function(node, predicate) {
-		return this.findNode(node, Element.Iteration.previousNode, predicate);
+		return this.findNode(node, Element.Walk.previousNode, predicate);
     },
 	findNextSibling: function(node, predicate) {
-		return this.findNode(node, Element.Iteration.nextSibling, predicate);
+		return this.findNode(node, Element.Walk.nextSibling, predicate);
 	},
 	findPreviousSibling: function(node, predicate) {
-		return this.findNode(node, Element.Iteration.previousSibling, predicate);
+		return this.findNode(node, Element.Walk.previousSibling, predicate);
 	},
 	
 	findAncestorByTagName: function(node,tagName) {
 	   return Node.Finder.first(node, 
-	       Element.Iteration.ancestor, 
+	       Element.Walk.ancestor, 
 	       Element.Predicate.tagName(tagName));
 	},
 	findAncestorByClassName: function(node,className) {
 	   return Node.Finder.first(node, 
-	       Element.Iteration.ancestor, 
+	       Element.Walk.ancestor, 
 	       Element.Predicate.className(className));
 	}
 	

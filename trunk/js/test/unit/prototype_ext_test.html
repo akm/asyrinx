@@ -111,6 +111,13 @@ line38
         </div>
     </div>
 </div>
+<div id="div3" class="level0">
+    <div id="div3_1" class="level1"><!-- comment node --></div>
+	<div id="div3_2" class="level1"><script><!-- IE6:not exists, Fx1.5:TEXT_NODE --></script></div>
+    <div id="div3_3" class="level1">TEXT_NODE</div>
+    <div id="div3_4" class="level1"><![CDATA[ IE6:not exists, Fx1.5:COMMENT_NODE ]]></div>
+    <div id="div3_5" class="level1"></div>
+</div>
             
 
 <script language="JavaScript" type="text/javascript"><!--
@@ -444,7 +451,7 @@ function test_Node_identify_str() {
 }
 
 
-function test_Node_Predicate() {
+function test_Node_Predicate_include() {
     var f = Node.Predicate.include($("div1"),$("div2"));
     assertEquals( "div1,div2 include div1", true, f($("div1")) );
     assertEquals( "div1,div2 include div2", true, f($("div2")) );
@@ -453,66 +460,300 @@ function test_Node_Predicate() {
     assertEquals( "div1,div2 include div2_2,div2", false, f($("div2_2"),$("div2")) );
 }
 
-
-function assertTextNode() {
-    _validateArguments(1, arguments);
-    var actual=nonCommentArg(1, 1, arguments);
-    var msg = commentArg(1, arguments) || "";
-    assertNotNull(msg, actual);
-    assertEquals(msg, Node.TEXT_NODE, actual.nodeType);
+function test_Node_Predicate_exclude() {
+    var f = Node.Predicate.exclude($("div1"),$("div2"));
+    assertEquals( "div1,div2 include div1", false, f($("div1")) );
+    assertEquals( "div1,div2 include div2", false, f($("div2")) );
+    assertEquals( "div1,div2 include div2_2", true, f($("div2_2")) );
+    assertEquals( "div1,div2 include div2,div2_2", false, f($("div2"),$("div2_2")) );
+    assertEquals( "div1,div2 include div2_2,div2", true, f($("div2_2"),$("div2")) );
 }
 
-function test_Element_Finder() {
+function test_Node_nodeType() {
+    assertEquals("f(div3)", Node.ELEMENT_NODE, $("div3").nodeType);
+    assertEquals("f(div3_1)", Node.ELEMENT_NODE, $("div3_1").nodeType);
+    assertEquals("f(div3_1)c", Node.COMMENT_NODE, $("div3_1").firstChild.nodeType); //comment
+    assertEquals("f(div3_2)c", Node.ELEMENT_NODE, $("div3_2").firstChild.nodeType); //script
+    assertEquals("f(div3_3)c", Node.TEXT_NODE, $("div3_3").firstChild.nodeType); //text
+
+    if (navigator.appVersion.indexOf("MSIE")>-1){
+        assertEquals("f(div3_2)cc", null, $("div3_2").firstChild.firstChild); //not comment but node doesn't exists
+        assertEquals("f(div3_4)c", null, $("div3_4").firstChild); //not CDATA but node doesn't exists
+    } else if (navigator.userAgent.indexOf("Firefox")>-1){
+        //assertEquals("f(div3_2)cc", Node.COMMENT_NODE, $("div3_2").firstChild.firstChild.nodeType); //comment
+        assertEquals("f(div3_2)cc", Node.TEXT_NODE, $("div3_2").firstChild.firstChild.nodeType); //not comment but text
+        assertEquals("f(div3_4)c", Node.COMMENT_NODE, $("div3_4").firstChild.nodeType); //not CDATA but comment
+    } else {
+        fail("no test code for " + navigator.userAgent + ":" + navigator.appVersion);
+    }
+}
+
+function test_Node_Predicate_nodeType() {
+    var f = Node.Predicate.nodeType(Node.ELEMENT_NODE);
+    assertAsTrue("f(div3) of ELEMENT_NODE", f($("div3")));
+    assertAsTrue("f(div3_1) of ELEMENT_NODE", f($("div3_1")));
+    assertAsFalse("f(div3_1)c of ELEMENT_NODE", f($("div3_1").firstChild)); //comment
+    assertAsTrue("f(div3_2)c of ELEMENT_NODE", f($("div3_2").firstChild)); //script
+    //assertAsFalse("f(div3_2)cc of ELEMENT_NODE", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsFalse("f(div3_3)c of ELEMENT_NODE", f($("div3_3").firstChild)); //text
+    //assertAsFalse("f(div3_4)c of ELEMENT_NODE", f($("div3_4").firstChild)); //CDATA
+    f = Node.Predicate.nodeType(Node.TEXT_NODE);
+    assertAsFalse("f(div3) of TEXT_NODE", f($("div3")));
+    assertAsFalse("f(div3_1) of TEXT_NODE", f($("div3_1")));
+    assertAsFalse("f(div3_1)c of TEXT_NODE", f($("div3_1").firstChild)); //comment
+    assertAsFalse("f(div3_2)c of TEXT_NODE", f($("div3_2").firstChild)); //script
+    //assertAsFalse("f(div3_2)cc of TEXT_NODE", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsTrue("f(div3_3)c of TEXT_NODE", f($("div3_3").firstChild)); //text
+    //assertAsFalse("f(div3_4)c of TEXT_NODE", f($("div3_4").firstChild)); //CDATA
+    f = Node.Predicate.nodeType(Node.CDATA_SECTION_NODE);
+    assertAsFalse("f(div3) of CDATA_SECTION_NODE", f($("div3")));
+    assertAsFalse("f(div3_1) of CDATA_SECTION_NODE", f($("div3_1")));
+    assertAsFalse("f(div3_1)c of CDATA_SECTION_NODE", f($("div3_1").firstChild)); //comment
+    assertAsFalse("f(div3_2)c of CDATA_SECTION_NODE", f($("div3_2").firstChild)); //script
+    //assertAsFalse("f(div3_2)cc of CDATA_SECTION_NODE", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsFalse("f(div3_3)c of CDATA_SECTION_NODE", f($("div3_3").firstChild)); //text
+    //assertAsTrue("f(div3_4)c of CDATA_SECTION_NODE", f($("div3_4").firstChild)); //CDATA
+    f = Node.Predicate.nodeType(Node.COMMENT_NODE);
+    assertAsFalse("f(div3) of COMMENT_NODE", f($("div3")) );
+    assertAsFalse("f(div3_1) of COMMENT_NODE", f($("div3_1")));
+    assertAsTrue("f(div3_1)c of COMMENT_NODE", f($("div3_1").firstChild)); //comment
+    assertAsFalse("f(div3_2)c of COMMENT_NODE", f($("div3_2").firstChild)); //script
+    //assertAsTrue("f(div3_2)cc of COMMENT_NODE", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsFalse("f(div3_3)c of COMMENT_NODE", f($("div3_3").firstChild)); //text
+    //assertAsFalse("f(div3_4)c of COMMENT_NODE", f($("div3_4").firstChild)); //CDATA
+    f = Node.Predicate.isElementNode;
+    assertAsTrue("f(div3) isElementNode", f($("div3")));
+    assertAsTrue("f(div3_1) isElementNode", f($("div3_1")));
+    assertAsFalse("f(div3_1)c isElementNode", f($("div3_1").firstChild)); //comment
+    assertAsTrue("f(div3_2)c isElementNode", f($("div3_2").firstChild)); //script
+    //assertAsFalse("f(div3_2)cc isElementNode", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsFalse("f(div3_3)c isElementNode", f($("div3_3").firstChild)); //text
+    //assertAsFalse("f(div3_4)c isElementNode", f($("div3_4").firstChild)); //CDATA
+}
+
+function test_Node_Predicate_hasChild() {
+    var f = Node.Predicate.hasChild;
+    assertAsTrue("f(div3) of hasChild", f($("div3")));
+    assertAsTrue("f(div3_1) of hasChild", f($("div3_1")));
+    assertAsFalse("f(div3_1)c of hasChild", f($("div3_1").firstChild)); //comment
+    //assertAsFalse("f(div3_2)c of hasChild", f($("div3_2").firstChild)); //script
+    //assertAsFalse("f(div3_2)cc of hasChild", f($("div3_2").firstChild.firstChild)); //comment
+    assertAsFalse("f(div3_3)c of hasChild", f($("div3_3").firstChild)); //text
+    //assertAsFalse("f(div3_4)c of hasChild", f($("div3_4").firstChild)); //CDATA
+    assertAsFalse("f(div3_5) of hasChild", f($("div3_5"))); //no child
+}
+
+function test_Node_Predicate_childOf() {
+    var f = Node.Predicate.childOf($("div2"));
+    assertAsFalse("div2 f(div2)", f($("div2")));
+    assertAsTrue("div2 f(div2_1)", f($("div2_1")));
+    assertAsTrue("div2 f(div2_1_1)", f($("div2_1_1")));
+    assertAsTrue("div2 f(div2_1_1_1)", f($("div2_1_1_1")));
+    assertAsTrue("div2 f(div2_2)", f($("div2_2")));
+    assertAsTrue("div2 f(div2_2_1)", f($("div2_2_1")));
+    assertAsTrue("div2 f(div2_2_1_1)", f($("div2_2_1_1")));
+    assertAsTrue("div2 f(div2_2_1_2)", f($("div2_2_1_2")));
+    assertAsTrue("div2 f(div2_2_2)", f($("div2_2_2")));
+    assertAsTrue("div2 f(div2_2_3)", f($("div2_2_3")));
+    f = Node.Predicate.childOf($("div2_1"));
+    assertAsFalse("div2_1 f(div2)", f($("div2")));
+    assertAsFalse("div2_1 f(div2_1)", f($("div2_1")));
+    assertAsTrue("div2_1 f(div2_1_1)", f($("div2_1_1")));
+    assertAsTrue("div2_1 f(div2_1_1_1)", f($("div2_1_1_1")));
+    assertAsFalse("div2_1 f(div2_2)", f($("div2_2")));
+    assertAsFalse("div2_1 f(div2_2_1)", f($("div2_2_1")));
+    assertAsFalse("div2_1 f(div2_2_1_1)", f($("div2_2_1_1")));
+    assertAsFalse("div2_1 f(div2_2_1_2)", f($("div2_2_1_2")));
+    assertAsFalse("div2_1 f(div2_2_2)", f($("div2_2_2")));
+    assertAsFalse("div2_1 f(div2_2_3)", f($("div2_2_3")));
+    f = Node.Predicate.childOf($("div2_1_1"));
+    assertAsFalse("div2_1_1 f(div2)", f($("div2")));
+    assertAsFalse("div2_1_1 f(div2_1)", f($("div2_1")));
+    assertAsFalse("div2_1_1 f(div2_1_1)", f($("div2_1_1")));
+    assertAsTrue("div2_1_1 f(div2_1_1_1)", f($("div2_1_1_1")));
+    assertAsFalse("div2_1_1 f(div2_2)", f($("div2_2")));
+    assertAsFalse("div2_1_1 f(div2_2_1)", f($("div2_2_1")));
+    assertAsFalse("div2_1_1 f(div2_2_1_1)", f($("div2_2_1_1")));
+    assertAsFalse("div2_1_1 f(div2_2_1_2)", f($("div2_2_1_2")));
+    assertAsFalse("div2_1_1 f(div2_2_2)", f($("div2_2_2")));
+    assertAsFalse("div2_1_1 f(div2_2_3)", f($("div2_2_3")));
+}
+
+function test_Node_Predicate_childOf2() {
+    f = Node.Predicate.childOf($("div3"));
+    assertAsFalse("div3 f(div3)", f($("div3")));
+    assertAsTrue("div3 f(div3_1)", f($("div3_1")));
+    assertAsTrue("div3 f(div3_1)c", f($("div3_1").firstChild)); //comment
+    assertAsTrue("div3 f(div3_2)c", f($("div3_2").firstChild)); //script
+    //assertAsTrue("div3 f(div3_2)cc", f($("div3_2").firstChild.firstChild)); //comment
+    //assertAsTrue("div3 f(div3_3)c", f($("div3_3").firstChild)); //text
+    //assertAsTrue("div3 f(div3_4)c", f($("div3_4").firstChild)); //CDATA
+    assertAsTrue("div3 f(div3_5)", f($("div3_4"))); //no child
+    f = Node.Predicate.childOf($("div3_1"));
+    assertAsFalse("div3 f(div3)", f($("div3")));
+    assertAsFalse("div3 f(div3_1)", f($("div3_1")));
+    assertAsTrue("div3 f(div3_1)c", f($("div3_1").firstChild)); //comment
+    assertAsFalse("div3 f(div3_2)c", f($("div3_2").firstChild)); //script
+    //assertAsFalse("div3 f(div3_2)cc", f($("div3_2").firstChild.firstChild)); //comment
+    //assertAsFalse("div3 f(div3_3)c", f($("div3_3").firstChild)); //text
+    //assertAsFalse("div3 f(div3_4)c", f($("div3_4").firstChild)); //CDATA
+    assertAsFalse("div3 f(div3_5)", f($("div3_4"))); //no child
+}
+
+function test_Node_Predicate_denyBlankText() {
+    //logger.debug("div3_3.firstChild", $("div3_3").firstChild, 2);
+    if ($("div3").firstChild.nodeType==Node.TEXT_NODE) {
+        var f = Node.Predicate.denyBlankText;
+        assertAsTrue("div3", f($("div3")));
+        assertAsFalse("div3.firstChild", f($("div3").firstChild));
+        assertAsTrue("div3_3.firstChild", f($("div3_3").firstChild));
+    } else {
+        logger.debug("div3.firstChild.nodeTyle!=Node.TEXT_NODE => " + $("div3").firstChild.nodeType);
+    }
 }
 
 
+function test_Node_Walk_nextSibling() {
+    var f = Node.Walk.nextSibling;
+    assertElement("div2 -> div3", $("div3"), f($("div2")));
+    assertElement("div2_1 -> div2_2", $("div2_2"), f($("div2_1")));
+    assertElement("div2_1_1 -> null", null, f($("div2_1_1")));
+    assertElement("div2_1_1_1 -> null", null, f($("div2_1_1_1")));
+    assertElement("div2_2 -> null", null, f($("div2_2")));
+    assertElement("div2_2_1 -> div2_2_2", $("div2_2_2"), f($("div2_2_1")));
+    assertElement("div2_2_2 -> div2_2_3", $("div2_2_3"), f($("div2_2_2")));
+    assertElement("div2_2_3 -> null", null, f($("div2_2_3")));
+    assertElement("div2_2_1_1 -> div2_2_1_2", $("div2_2_1_2"), f($("div2_2_1_1")));
+    assertElement("div2_2_1_2 -> null", null, f($("div2_2_1_2")));
+}
 
-function test_Element_Finder() {
-    //Element.Iteration and Node.Iteration
+function test_Node_Walk_previousSibling() {
+    var f = Node.Walk.previousSibling;
+    assertElement("div2 <- div3", $("div2"), f($("div3")));
+    assertElement("null <- div2_1", null, f($("div2_1")));
+    assertElement("div2_1 <- div2_2", $("div2_1"), f($("div2_2")));
+    assertElement("null <- div2_1_1", null, f($("div2_1_1")));
+    assertElement("null <- div2_1_1_1", null, f($("div2_1_1_1")));
+    assertElement("null <- div2_2_1", null, f($("div2_2_1")));
+    assertElement("div2_2_1 <- div2_2_2", $("div2_2_1"), f($("div2_2_2")));
+    assertElement("div2_2_2 <- div2_2_3", $("div2_2_2"), f($("div2_2_3")));
+    assertElement("null <- div2_2_1_1", null, f($("div2_2_1_1")));
+    assertElement("div2_2_1_1 <- div2_2_1_2", $("div2_2_1_1"), f($("div2_2_1_2")));
+}
+
+function test_Node_Walk_firstChild() {
+    var f = Node.Walk.firstChild;
+    assertElement("div2 -> div2_1", $("div2_1"), f($("div2")));
+    assertElement("div2_1 -> div2_1_1", $("div2_1_1"), f($("div2_1")));
+    assertElement("div2_1_1 -> div2_1_1_1", $("div2_1_1_1"), f($("div2_1_1")));
+    assertElement("div2_1_1_1 -> null", null, f($("div2_1_1_1")));
+    assertElement("div2_2 -> div2_2_1", $("div2_2_1"), f($("div2_2")));
+    assertElement("div2_2_1 -> div2_2_1_1", $("div2_2_1_1"), f($("div2_2_1")));
+    assertElement("div2_2_1_1 -> null", null, f($("div2_1_1_1")));
+    assertElement("div3 -> div3_1", $("div3_1"), f($("div3")));
+}
+
+function test_Node_Walk_lastChild() {
+    var f = Node.Walk.lastChild;
+    assertElement("div2 -> div2_2", $("div2_2"), f($("div2")));
+    assertElement("div2_1 -> div2_1_1", $("div2_1_1"), f($("div2_1")));
+    assertElement("div2_1_1 -> div2_1_1_1", $("div2_1_1_1"), f($("div2_1_1")));
+    assertElement("div2_1_1_1 -> null", null, f($("div2_1_1_1")));
+    assertElement("div2_2 -> div2_2_3", $("div2_2_3"), f($("div2_2")));
+    assertElement("div2_2_1 -> div2_2_1_2", $("div2_2_1_2"), f($("div2_2_1")));
+    assertElement("div2_2_1_2 -> null", null, f($("div2_2_1_2")));
+    assertElement("div3 -> div3_5", $("div3_5"), f($("div3")));
+}
+
+function test_Node_Walk_nextNode() {
+    var f=Node.Walk.nextNode;
+    if(Node.blankTextNodeIgnored()){
+        assertElement("div3.firstChild = div3_1", $("div3_1"), $("div3").firstChild);
+    } else {
+        assertEquals("div3.firstChild.nodeType", Node.TEXT_NODE, $("div3").firstChild.nodeType);
+    }
+    assertElement("div3 -> div3_1", $("div3_1"), f($("div3")));
+    assertEquals("div3_1.firstChild -> comment", Node.COMMENT_NODE, $("div3_1").firstChild.nodeType);
+    assertEquals("div3_1 -> comment", Node.COMMENT_NODE, f($("div3_1")).nodeType);
+    assertElement("div3_1 -> comment -> div3_2", $("div3_2"), f(f($("div3_1"))));
+    assertAsTrue("denyBlankText(div3_1 -> comment -> div3_2)", Node.Predicate.denyBlankText( f(f($("div3_1"))) ) );
+    
+    assertEquals("div3_2.tagName -> script", "SCRIPT", f($("div3_2")).tagName);
+    assertEquals("div3_2 -> script -> div3_3",$("div3_3"), f(f($("div3_2"))));
+    assertElement("div2_2_2 -> div2_2_3", $("div2_2_3"), f($("div2_2_2")));
+    assertElement("div2_2_3 -> div3", $("div3"), f($("div2_2_3")));
+}
+
+function test_Node_Walk_previousNode() {
+    var f=Node.Walk.previousNode;
+    //assertEquals("div3.firstChild.nodeType", Node.TEXT_NODE, $("div3").nodeType);
+    assertElement("div3 <- div3_1", $("div3"), $("div3_1").parentNode);
+    assertElement("div3 <- div3_1", $("div3"), f($("div3_1")));
+    assertEquals("comment <- div3_2", Node.COMMENT_NODE, f($("div3_2")).nodeType);
+    assertElement("div3_1 <- comment <- div3_2", $("div3_1"), f(f($("div3_2"))));
+    assertEquals("script <- div3_3", "SCRIPT", f($("div3_3")).tagName);
+    assertEquals("div3_2 <- script <- div3_3",$("div3_2"), f(f($("div3_3"))));
+    assertElement("div2_2_2 <- div2_2_3", $("div2_2_2"), f($("div2_2_3")));
+    assertElement("div2_2_3 <- div3", $("div2_2_3"), f($("div3")));
+}
+
+
+function test_Node_Walk_predicated() {
+    assertElement("div2_1 nextSibling with denyAll", $("div2_2"), Node.Walk.nextSiblingNode($("div2_1")));
+    var f = Node.Walk.predicated(Object.Predicate.denyAll,Node.Walk.nextSiblingNode);
+    assertElement("div2_1 nextSibling with denyAll", null, f($("div2_1")));
+    
+    f=Node.Walk.predicated(Node.Predicate.childOf($("div2_2")),Node.Walk.nextNode);
+    assertElement("div2_2_1 nextSibling with denyAll", null, f($("div2_1")));
+}
+
+
+function test_Node_Finder() {
+    //Element.Walk and Node.Walk
     assertTextNode("find nextSibling Node of span3 ==> TEXT_NODE",
-        Node.Finder.first($("span3"), Node.Iteration.nextSiblingNode));
+        Node.Finder.first($("span3"), Node.Walk.nextSiblingNode));
     assertNull("find nextSibling Element of span3 ==> null",
-        Node.Finder.firstElement($("span3"), Element.Iteration.nextSiblingElement));
+        Node.Finder.firstElement($("span3"), Element.Walk.nextSiblingElement));
     
     
     assertElement("find div1", $("div1"),
-        Node.Finder.first($("span0"), Element.Iteration.nextSibling));
+        Node.Finder.first($("span0"), Element.Walk.nextSibling));
     assertElement("find span0", $("span0"),
-        Node.Finder.first($("div1"), Element.Iteration.previousSibling));
+        Node.Finder.first($("div1"), Element.Walk.previousSibling));
     
     assertElement("find span1", $("span1"),
-        Node.Finder.first($("div1"), Element.Iteration.firstChild));
+        Node.Finder.first($("div1"), Element.Walk.firstChild));
     assertElement("find div1_1_2", $("div1_1_2"), 
-        Node.Finder.first($("div1_1_1"), Element.Iteration.nextSibling,
+        Node.Finder.first($("div1_1_1"), Element.Walk.nextSibling,
             Element.Predicate.tagName("DIV")));
 
     //firstChild
     logger.debug();
     assertElement("find div2_1", $("div2_1"),
-        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Node.Finder.first($("div2"), Element.Walk.firstChild, 
             Element.Predicate.className("level1")));
         
     assertElement("find div2_1_1", $("div2_1_1"),
-        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Node.Finder.first($("div2"), Element.Walk.firstChild, 
             Element.Predicate.className("level2")));
     assertElement("find div2_1_1_1", $("div2_1_1_1"),
-        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Node.Finder.first($("div2"), Element.Walk.firstChild, 
             Element.Predicate.className("level3")));
     assertElement("no element of level4", null, 
-        Node.Finder.first($("div2"), Element.Iteration.firstChild, 
+        Node.Finder.first($("div2"), Element.Walk.firstChild, 
             Element.Predicate.className("level4")));
     //lastChild
     assertElement("find div2_2", $("div2_2"), 
-        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Node.Finder.first($("div2"), Element.Walk.lastChild, 
             Element.Predicate.className("level1")));
     assertElement("find div2_2_3", $("div2_2_3"), 
-        Node.Finder.first($("div2_2"), Element.Iteration.lastChild, 
+        Node.Finder.first($("div2_2"), Element.Walk.lastChild, 
             Element.Predicate.className("level2")));
     assertElement("find no lastChild which is level3", null, 
-        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Node.Finder.first($("div2"), Element.Walk.lastChild, 
             Element.Predicate.className("level3")));
     assertElement("find no lastChild which is level4", null, 
-        Node.Finder.first($("div2"), Element.Iteration.lastChild, 
+        Node.Finder.first($("div2"), Element.Walk.lastChild, 
             Element.Predicate.className("level4")));
 }
 
@@ -520,10 +761,24 @@ function test_Element_Finder_next() {
     var div2 = $("div2");
     var elements_from_div2_1_1_to_div2_2_3 = 
         Node.Finder.all($("div2_1"), 
-            Node.Iteration.predicated(
+            Node.Walk.predicated(
                 Node.Predicate.childOf(div2),
-                Element.Iteration.nextElement),
+                Element.Walk.nextElement),
             Node.Predicate.isElementNode);
+            
+    assertEquals("div3 is not a child of div2", false, Node.Predicate.childOf($("div2"))($("div3")) );
+    assertElement("div3 is next element of div2_2_3", $("div3"), Element.Walk.nextElement($("div2_2_3")) );
+    
+    
+    logger.debug("no next element of div2_2_3 in div2 begin trace");
+    
+    assertElement("no next element of div2_2_3 in div2 ", null, 
+        Node.Walk.predicated(Node.Predicate.childOf(div2),Element.Walk.nextElement)($("div2_2_3")) );
+    
+    logger.debug("no next element of div2_2_3 in div2 end trace");
+
+
+    
     assertArray("elements_from_div2_1_1_to_div2_2_3",
         ["div2_1_1","div2_1_1_1","div2_2","div2_2_1",
          "div2_2_1_1","div2_2_1_2","div2_2_2","div2_2_3"],
