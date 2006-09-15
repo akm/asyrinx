@@ -397,6 +397,17 @@ Object.extend(Node.Walk, {
         };
     },
     
+    until: function(predicate, walk){
+        var match=false;
+        return function(node){
+            if(match)return null;
+            var result=walk(node);
+            if (predicate(result))
+                match=true;
+            return result;
+        };
+    },
+    
     parentNode: function(node){return node.parentNode;},
     
     empty: function(){return null;},
