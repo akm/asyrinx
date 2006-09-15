@@ -399,11 +399,17 @@ Object.extend(Node.Walk, {
     
     parentNode: function(node){return node.parentNode;},
     
+    empty: function(){return null;},
+    
     Native:{
         firstChildNode: function(node){return node.firstChild;},
         lastChildNode: function(node){return node.lastChild;},
         nextSiblingNode: function(node){return node.nextSibling;},
-        previousSiblingNode: function(node){return node.previousSibling;}
+        previousSiblingNode: function(node){return node.previousSibling;},
+        childNodes: function(node,desc){
+            if(!node || !node.childNodes)return Node.Walk.empty;
+            return (desc)?Node.Walk.popArray(node.childNodes):Node.Walk.shiftArray(node.childNodes);
+        }
     },
     
     Common:{
@@ -424,6 +430,12 @@ Object.extend(Node.Walk, {
         previousSiblingNode: function(node){
             return Node.Finder.firstNode(node, 
                 Node.Walk.Native.previousSiblingNode, Node.Predicate.filterCommon,false);
+        },
+        childNodes: function(node, desc){
+            var firstChild = Node.Walk.firstChildNode(node);
+            if(!firstChild)return Node.Walk.empty;
+            var children = Node.Finder.all(firstChild,Node.Walk.nextSiblingNode,Node.Predicate.acceptAll,true);
+            return (desc)?Node.Walk.popArray(children):Node.Walk.shiftArray(children);
         }
     },
     
@@ -445,10 +457,12 @@ Object.extend(Node.Walk, {
             Object.Predicate.not(Node.Walk.lastChild),true);
     },
     shiftArray: function(array) {
+        if (!array) return Node.Walk.empty;
         array = $A(array);
         return function(node){return array.shift();};
     },
     popArray: function(array) {
+        if (!array) return Node.Walk.empty;
         array = $A(array);
         return function(node){return array.pop();};
     }
