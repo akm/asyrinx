@@ -167,6 +167,112 @@ function test_Object_extendProperties() {
     assertAttributes({"a":1, "b":2}, obj2);
 }
 
+function test_Object_delegate() {
+    var date1 = new Date();
+    var wrapper1 = {};
+    Object.delegate(wrapper1, "toString", date1);
+    assertEquals(date1.toString(), wrapper1.toString());
+    Object.delegate(wrapper1, "year", date1, "getFullYear");
+    assertEquals(date1.getFullYear(), wrapper1.year());
+    var y1 = date1.getFullYear();
+    Object.delegate(wrapper1, "changeYear", date1, "setFullYear");
+    wrapper1.changeYear(y1+10);
+    assertEquals(y1+10, date1.getFullYear());
+    assertEquals(y1+10, wrapper1.year());
+}
+
+function test_Object_alias() {
+    var date1 = new Date();
+    if (!date1.formatDateTime){
+        Object.alias(date1, "formatDateTime", "toString");
+        assertEquals(date1.toString(), date1.formatDateTime());
+    } else {
+        fail("Date object has formatDateTime");
+    }
+}
+
+function test_Object_Aspect_around() {
+    var d1 = new Date("2006/09/16");
+    var status = null;
+    var aspect = function(invocation){
+        var oldValue = invocation.target.getFullYear();
+        var result = invocation.proceed();
+        status = (oldValue == invocation.target.getFullYear())?"nochange":"changed";
+        return result;
+    };
+    Object.Aspect.around(d1, "setFullYear", aspect);
+    d1.setFullYear(2006);
+    assertEquals("nochange", status);
+    assertEquals(2006, d1.getFullYear());
+    d1.setFullYear(2007);
+    assertEquals("changed", status);
+    assertEquals(2007, d1.getFullYear());
+}
+
+function test_Object_Aspect_after() {
+    var d1 = new Date("2006/09/16");
+    var log = null;
+    var aspect = function(invocation){
+        log = invocation.methodName+"("+ $A(invocation.arguments).join(",") +")";
+    };
+    Object.Aspect.after(d1, ["setFullYear","setMonth"], aspect);
+    d1.setFullYear(2006);
+    assertEquals("setFullYear(2006)", log);
+    assertEquals(2006, d1.getFullYear());
+    log = null;
+    d1.setMonth(3);
+    assertEquals("setMonth(3)", log);
+    assertEquals(3, d1.getMonth());
+}
+
+function test_Object_Aspect_before() {
+    var d1 = new Date("2006/09/16");
+    var log = null;
+    var aspect = function(invocation){
+        log = invocation.methodName+"("+ $A(invocation.arguments).join(",") +")";
+        if (invocation.methodName == "setMonth"){
+            log += " cancelled";
+            invocation.cancelled = true;
+            return;
+        }
+    };
+    Object.Aspect.before(d1, ["setFullYear","setMonth"], aspect);
+    d1.setFullYear(2006);
+    assertEquals("setFullYear(2006)", log);
+    assertEquals(2006, d1.getFullYear());
+    log = null;
+    d1.setMonth(3);
+    assertEquals("setMonth(3) cancelled", log);
+    assertEquals(8, d1.getMonth());
+}
+
+//Object.Aspectをprototypeに適用するのはダメでした
+function skip_test_Object_Aspect_around_for_prototype() {
+    var status = null;
+    var aspect = function(invocation){
+        var oldValue = invocation.target.getFullYear();
+        var result = invocation.proceed();
+        status = (oldValue == invocation.target.getFullYear())?"nochange":"changed";
+        return result;
+    };
+    var testClass1 = Class.create();
+    testClass1.prototype = {
+        initialize: function(value){this.fullyear=value;},
+        getFullYear: function(){return this.fullyear;},
+        setFullYear: function(value){this.fullyear=value;}
+    };
+    Object.Aspect.around(testClass1.prototype, "setFullYear", aspect);
+    var d2 = new testClass1(2006);
+    d2.setFullYear(2006);
+    assertEquals("nochange", status);
+    assertEquals(2006, d2.getFullYear());
+    d2.setFullYear(2007);
+    assertEquals("changed", status);
+    assertEquals(2007, d2.getFullYear());
+    
+}
+
+
 function test_Enumerable_to_object() {
     var array = [
         {"id": 1, name: "foo", "switch":true},
