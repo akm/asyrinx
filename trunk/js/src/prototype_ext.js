@@ -64,8 +64,114 @@ Object.extend(Object, {
             destination[property] = value;
         }
         return destination;
+    },
+    delegate: function(client, clientMethodName, server, serverMethodName) {
+        serverMethodName = serverMethodName||clientMethodName;
+        client[clientMethodName] = server[serverMethodName].bind(server);
+    },
+    
+    alias: function(object, aliasMethodName, methodName) {
+        object[aliasMethodName] = object[methodName];
     }
 });
+
+Object.Aspect = {
+    _around: function(target, methodName, aspect){
+        var method = target[methodName];
+        target[methodName] = function() {
+            var invocation = {
+                "target":this, 
+                "method":method,
+                "methodName":methodName,
+                "arguments":arguments,
+                "proceed": function(){
+                    return method.apply(target, this.arguments);
+                }
+            };
+            return aspect.apply(null, [invocation]);
+        };
+    },
+    _before: function(target, methodName, aspect){
+        var method = target[methodName];
+        target[methodName] = function() {
+            var invocation = {
+                "target":this, 
+                "method":method,
+                "methodName":methodName,
+                "arguments":arguments,
+                "cancelled": false
+            };
+            aspect.apply(null, [invocation]);
+            return (invocation["cancelled"]) ?
+                invocation["result"] : method.apply(target, arguments);
+        };
+    },
+    _after: function(target, methodName, aspect){
+        var method = target[methodName];
+        target[methodName] = function() {
+            var invocation = {
+                "target":this, 
+                "method":method,
+                "methodName":methodName,
+                "arguments":arguments
+            };
+            invocation["result"] = method.apply(target, arguments);
+            return aspect.apply(null, [invocation]);
+        };
+    },
+    
+    _apply: function(func, target, methodNames, aspect){
+        methodNames = methodNames||this.getMethodNames(target);
+        methodNames = (methodNames.each)?methodNames:[methodNames];
+        methodNames.each(function(methodName){
+            func(target, methodName, aspect);
+        });
+    },
+    
+    getMethodNames: function(target){
+        var result = [];
+        for(var attr in target) {
+            try{
+                var value = target[attr];
+                if (value.constructor == Function)
+                    result.push(attr);
+            }catch(ex){
+            }
+        }
+        return result;
+    },
+    
+    around: function(target, methodNames, aspect){
+        this._apply(this._around, target, methodNames, aspect);
+    },
+    before: function(target, methodNames, aspect){
+        this._apply(this._before, target, methodNames, aspect);
+    },
+    after: function(target, methodNames, aspect){
+        this._apply(this._after, target, methodNames, aspect);
+    }
+}
+Object.Aspect.Logger = Class.create();
+Object.Aspect.Logger.prototype = {
+    initialize: function(target, methodNames, logger){
+        this.logger = window["logger"] || {
+            debug: function(msg){ alert(msg) },
+            warn: function(msg){ alert("[warn]" + msg) }
+        };
+        Object.Aspect.around(target, methodNames, this.invokeMethod);
+    },
+    invokeMethod: function(invocation){
+        var s = invocation.methodName+"("+ $A(invocation.arguments).join(",") +")";
+        try{
+            var result = invocation.proceed();
+            this.logger.debug("[debug]" + s + " ==> " + result);
+            return result;
+        }catch(ex){
+            this.logger.debug("[warn]" + s + " >>>> " + ex);
+            throw ex;
+        }
+    }
+};
 
 
 EnumerableExt = {
@@ -93,12 +199,6 @@ Object.extend(Array.prototype, EnumerableExt);
 Object.extend(Array.prototype, {
 	clone: function() {
 		return Array.apply(null, this);
-		/*
-		var result = new Array(this.length);
-		for(var i = 0; i < this.length; i++)
-			result[i] = this[i];
-		return result;
-		*/
 	},
 	remove: function( value ) {
 		var idx = this.indexOf( value );
@@ -860,7 +960,8 @@ Event.KeyHandler.prototype = {
                this.matchFunctionKey(action, "shift", event, "shiftKey")
     },
     isHandlingAction: function(action, event, keyCode) {
-        var result = (action.match && action.match(action, event, keyCode, this)) ||
+        var result = (action.matchAll) ||
+            (action.match && action.match(action, event, keyCode, this)) ||
             this.matchAction(action, event, keyCode);
         return (this.options.handleOnMatch) ? result : !result;
     },
@@ -872,9 +973,10 @@ Event.KeyHandler.prototype = {
                 if (action.event.indexOf(event.type) > -1) {
                     action.method(event);
                 }
-                if (action.stopEvent == undefined || action.stopEvent == null || action.stopEvent == true)
+                if (action.stopEvent == undefined || action.stopEvent == null || action.stopEvent) {
                     Event.stop(event);
-                break;
+                    return;
+                }
             }
         }
     }

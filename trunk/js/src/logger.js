@@ -148,7 +148,7 @@ Object.extend(Logger, {
 	   document.cookie = ("loggerActive="+(value?"true":"false"))+";Fri, 31-Dec-2030 23:59:59;";
 	}
 });
-Logger.DefaultLogInterval = 500; //msec
+Logger.DefaultLogInterval = 100; //msec
 Logger.prototype = {
     initialize: function(element,logs){
         this.logInterval = Logger.DefaultLogInterval;

@@ -1,3 +1,12 @@
+/**
+ * url.js
+ * 
+ * require prototype.js
+ *
+ * @copyright T.Akima
+ * @license LGPL
+ */
+
 String.FilePath = Class.create();
 String.FilePath.Methods = {
 	initialize: function( path ) {
