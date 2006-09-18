@@ -798,55 +798,49 @@ Element.Builder.prototype = {
 			this.ignoreProperties.push( "extend");
 		}
 	},
-	execute: function( obj ) {
-		return this.dispatchBuild(obj);
+	execute: function(obj,parentNode) {
+		return this.dispatchBuild(obj,parentNode);
 	},
-	dispatchBuild: function( obj ) {
+	dispatchBuild: function(obj,parentNode) {
 		if (obj.constructor == Array) {
-			return this.buildNodes( obj );
+			return this.buildNodes(obj,parentNode);
 		} else if (obj.tagName) {
-			return this.buildNode( obj );
+			return this.buildNode(obj,parentNode);
 		} else if (obj.constructor == String) {
-			return this.buildText( obj );
-		} else if (obj.constructor == Number) {
-			return this.buildText( obj.toString() );
-		} else if (obj.constructor == Date) {
-			return this.buildText( obj.toString() );
+			return this.buildText(obj,parentNode);
 		} else {
-			throw new Error("obj  have no tagName ");
+			return this.buildText(String(obj),parentNode);
 		}
 	},
-	buildText: function( string ) {
-		return this.baseDocument.createTextNode( string );
-	},
-	buildNode: function( obj ) {
-		var result = this.baseDocument.createElement( obj.tagName );
-		this.applyAttributes( result, obj, this.ignoreProperties );
-		var body = obj[ this.bodyPropertyName ];
-		if ((body != null) && (body != undefined) ) {
-			var children = this.dispatchBuild( body );
-			if (children) {
-				if (children.constructor != Array) 
-					children = [ children ];
-				for( var i = 0; i < children.length; i++ ) {
-					result.appendChild( children[i] );
-				}
-			}
-		}
-		if ((obj.afterBuild) && (obj.afterBuild.constructor == Function)) {
-			obj.afterBuild( result, this, obj );
-		}
+	buildText: function(string,parentNode) {
+		var result = this.baseDocument.createTextNode(string);
+		if (parentNode) parentNode.appendChild(result);
 		return result;
 	},
-	buildNodes: function( arrayObj ) {
+	buildNode: function(obj,parentNode) {
+		var result = this.baseDocument.createElement(obj.tagName);
+		this.applyAttributes(result, obj, this.ignoreProperties);
+		if (parentNode) 
+		    parentNode.appendChild(result);
+		var body = obj[this.bodyPropertyName];
+		if ((body != null) && (body != undefined))
+			this.dispatchBuild(body,result);
+		if ((obj.afterBuild) && (obj.afterBuild.constructor == Function))
+			obj.afterBuild(result, this, obj);
+		return result;
+	},
+	buildNodes: function(arrayObj,parentNode){
 		var result = new Array();
 		for(var i = 0; i < arrayObj.length; i++) {
-			if (arrayObj[i])
-				result.push( this.dispatchBuild( arrayObj[i] ) );
+			if (arrayObj[i]){
+			    var node = this.dispatchBuild(arrayObj[i],parentNode);
+				result.push(node);
+        		if (parentNode) parentNode.appendChild(node);
+			}
 		}
 		return result;
 	},
-	applyAttributes: function( node, attributeObj, ignoreProperties ) {
+	applyAttributes: function(node, attributeObj, ignoreProperties){
 		if (!attributeObj)
 			return;
 		for(var prop in attributeObj) {
@@ -895,25 +889,6 @@ Object.extend(Element, {
             Element.Builder.instance = new Element.Builder();
         return Element.Builder.instance.execute(elementObj);
     }
-});
-
-
-if (!StyleSheet)
-  StyleSheet = {};
-Object.extend(StyleSheet, {
-  find_rules: function( regExp ) {
-    var result = [];
-    for(var i = 0; i < document.styleSheets.length; i++) {
-        var styleSheet = document.styleSheets[i];
-        var rules = styleSheet.cssRules || styleSheet.rurles;
-        for(var j = 0; j < rules.length; j++) {
-            var rule = rules[j];
-            if (rule.selectorText.match(regExp))
-                result.push(rule);
-        }
-    }
-    return result;
-  }
 });
 
 
