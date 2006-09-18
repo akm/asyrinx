@@ -227,7 +227,8 @@ Object.extend(DateEraGroup, {
 		}
 	}
 });
-DateEraGroup.prototype = {
+Object.extend(DateEraGroup.prototype, Enumerable);
+Object.extend(DateEraGroup.prototype, {
 	initialize: function() {this.eras = [];},
 	add: function(dateEra) {this.eras.push(dateEra);},
 	remove: function(dateEra) {this.eras.remove(dateEra);},
@@ -236,6 +237,11 @@ DateEraGroup.prototype = {
 	size: function() {return this.eras.length;},
 	last: function() {return this.eras[this.eras.length-1];},
 	
+    _each: function(iterator) {
+        for (var i = 0; i < this.eras.length; i++)
+            iterator(this.eras[i]);
+    },
+    
 	getEra: function(name) {
 		for(var i = 0; i < DateEra.captionProperties.length; i++) {
 			var captionProperty = DateEra.captionProperties[i];
@@ -295,7 +301,7 @@ DateEraGroup.prototype = {
 		}
 		return new Date(eraDateStr);
 	}
-};
+});
 
 DateEraGroup._createDefault();
 

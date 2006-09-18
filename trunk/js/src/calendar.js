@@ -119,68 +119,104 @@ Date.Calendar.Model.prototype = {
 	}
 }
 
-Date.Calendar.MonthlyController = Class.create();
-Object.extend(Date.Calendar.MonthlyController, {
-	_createDefaultSetting: function() {
-		var userLanguage = navigator.language || navigator.userLanguage || navigator.systemLanguage;
-		if (userLanguage && (userLanguage.indexOf("ja") > -1)) {
-			return {
-				_includeWeek: false,
-				_firstDayOfWeek: 0, //Monday
-				_minimalDaysInFirstWeek: 1,
-				_monthNames: [
-					"1月",	"2月",	"3月",	"4月",
-					"5月",	"6月",	"7月",	"8月",
-					"9月",	"10月",	"11月",	"12月"
-				],
-				_shortMonthNames: [ 
-					"1", "2", "3", "4", "5", "6", 
-					"7", "8", "9", "10", "11", "12"
-				],
-				// Week days start with Sunday=0, ... Saturday=6
-				_weekDayNames: [ "日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"  ],
-				_shortWeekDayNames: ["日", "月", "火", "水", "木", "金", "土" ],
-				_defaultFormat: "yyyy/MM/dd",
-				_format: "yyyy/MM/dd"
-			};
-		} else {
-			return {
-				_includeWeek: false,
-				_firstDayOfWeek: 1, //Monday
-				_minimalDaysInFirstWeek: 4,
-				_monthNames: [
-					"January",		"February",		"March",	"April",
-					"May",			"June",			"July",		"August",
-					"September",	"October",		"November",	"December"
-				],
-				_shortMonthNames: [ 
-					"jan", "feb", "mar", "apr", "may", "jun", 
-					"jul", "aug", "sep", "oct", "nov", "dec"
-				],
-				// Week days start with Sunday=0, ... Saturday=6
-				_weekDayNames: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"  ],
-				_shortWeekDayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
-				_defaultFormat: "yyyy-MM-dd",
-				_format: "yyyy-MM-dd"
-			};
-		}
-	},
-	
-	// Accumulated days per month, for normal and for leap years.
-	// Used in week number calculations.	
-	NUM_DAYS: [0,31,59,90,120,151,181,212,243,273,304,334], 
-	
-	LEAP_NUM_DAYS: [0,31,60,91,121,152,182,213,244,274,305,335],
-	
-	setCursor: function (obj) {
-		if (navigator.appName == "Microsoft Internet Explorer") {
-			obj.style.cursor = "hand";
-		} else { // is mozilla/netscape
-			obj.style.cursor = "pointer";
-		}
-	},
-	
-	weekNumber: function(cal, date) {
+Date.Calendar.KeyController = Class.create();
+Date.Calendar.KeyController.prototype = {
+    initialize: function(field, model) {
+        this.field = $(field);
+        this.model = model;
+        this.model.attachEvent(this.modelChanged.bind(this));
+        this.activate();
+    },
+    
+    prevDate : function(event){ this.model.prevDate(); }, 
+    nextDate : function(event){ this.model.nextDate(); }, 
+    prevWeek : function(event){ this.model.prevWeek(); }, 
+    nextWeek : function(event){ this.model.nextWeek(); }, 
+    prevMonth: function(event){ this.model.prevMonth(); }, 
+    nextMonth: function(event){ this.model.nextMonth(); }, 
+    prevYear : function(event){ this.model.prevYear(); }, 
+    nextYear : function(event){ this.model.nextYear(); },
+    
+    activate: function() {
+        var actions = [
+            {ctrl: true , key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_PAGE_UP  , method: this.prevMonth.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_PAGE_DOWN, method: this.nextMonth.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_PAGE_UP  , method: this.prevYear.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_PAGE_DOWN, method: this.nextYear.bindAsEventListener(this) },
+            {matchAll: true, method: this.keyup.bindAsEventListener(this), stopEvent: false }
+        ];
+        actions.each(function(action){ 
+            action.event = "keydown";
+            action.shift = false;
+            action.alt = false;
+        });
+        new Event.KeyHandler(this.field, actions);
+    },
+    
+    keyup: function(){
+        if (this.lastUpdateModelId){
+            clearTimeout(this.lastUpdateModelId);
+            this.lastUpdateModelId = null;
+        }
+        this.lastUpdateModelId = setTimeout(this.updateModel.bind(this), 500);
+    },
+    
+    updateModel: function() {
+        this.lastUpdateModelId = null;
+        var str = this.field.value;
+        if (this.model.isValid(str))
+            this.model.setAsString(str);
+    },
+    
+    modelChanged: function() {
+        var s = this.model.getAsString();
+        if (this.field.value != s)
+            this.field.value = s;
+    }
+}
+
+Date.Calendar.DefaultOptions = {};
+Date.Calendar.DefaultOptions.ja = {
+    MonthNames: [
+        "1月","2月","3月","4月","5月","6月",
+        "7月","8月","9月","10月","11月","12月"],
+    shortMonthNames: [
+        "1","2","3","4","5","6","7","8","9","10","11","12"],
+	WeekDayNames: [ "日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"  ],
+	ShortWeekDayNames: ["日", "月", "火", "水", "木", "金", "土" ],
+    firstDayOfWeek: 0, //Sunday
+	minimalDaysInFirstWeek: 1,
+	clearButtonCaption:"クリア"
+}
+Date.Calendar.DefaultOptions.en = {
+    MonthNames: [
+		"January", "February", "March",     "April"  , "May"     , "June",
+		"July",	   "August",   "September",	"October", "November",	"December"],
+    shortMonthNames: [
+    	"jan", "feb", "mar", "apr", "may", "jun", 
+    	"jul", "aug", "sep", "oct", "nov", "dec"],
+	WeekDayNames: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ],
+	ShortWeekDayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    firstDayOfWeek: 0, //Monday
+	minimalDaysInFirstWeek: 4,
+	clearButtonCaption:"clear"
+}
+
+Date.Calendar.View = Class.create();
+Date.Calendar.View.DefaultOptions = {
+    weekColVisible: false
+};
+Object.extend(Date.Calendar.View.DefaultOptions,
+    (/ja/.test(navigator.language||navigator.userLanguage||navigator.systemLanguage||"en"))?
+        Date.Calendar.DefaultOptions.ja : Date.Calendar.DefaultOptions.en
+);
+
+Object.extend(Date.Calendar.View, {
+	weekNumber: function(view, date) {
 		var dow = date.getDay();
 		var doy = Calendar.dayOfYear(date);
 		var year = date.getFullYear();
@@ -190,10 +226,10 @@ Object.extend(Date.Calendar.MonthlyController, {
 		// minimal days in the first week. Days at the start of the year may
 		// fall into the last week of the previous year; days at the end of
 		// the year may fall into the first week of the next year.
-		var relDow = (dow + 7 - cal.getFirstDayOfWeek()) % 7; // 0..6
-		var relDowJan1 = (dow - doy + 701 - cal.getFirstDayOfWeek()) % 7; // 0..6
+		var relDow = (dow + 7 - view.options.firstDayOfWeek) % 7; // 0..6
+		var relDowJan1 = (dow - doy + 701 - view.options.firstDayOfWeek) % 7; // 0..6
 		var week = Math.floor((doy - 1 + relDowJan1) / 7); // 0..53
-		if ((7 - relDowJan1) >= cal.getMinimalDaysInFirstWeek()) {
+		if ((7 - relDowJan1) >= view.options.minimalDaysInFirstWeek) {
 			++week;
 		}
 	
@@ -206,25 +242,24 @@ Object.extend(Date.Calendar.MonthlyController, {
 			if (lastRelDow < 0) {
 				lastRelDow += 7;
 			}
-			if (((6 - lastRelDow) >= cal.getMinimalDaysInFirstWeek())
+			if (((6 - lastRelDow) >= view.minimalDaysInFirstWeek)
 				&& ((doy + 7 - relDow) > lastDoy)) {
 				week = 1;
 			}
 		} else if (week == 0) {
 			// We are the last week of the previous year.
 			var prevDoy = doy + Date.getDaysOfYear(year - 1);
-			week = Calendar.weekOfPeriod(cal, prevDoy, dow);
+			week = Calendar.weekOfPeriod(view, prevDoy, dow);
 		}
-	
 		return week;
 	},
 	
-	weekOfPeriod: function (cal, dayOfPeriod, dayOfWeek) {
+	weekOfPeriod: function (view, dayOfPeriod, dayOfWeek) {
 		// Determine the day of the week of the first day of the period
 		// in question (either a year or a month). Zero represents the
 		// first day of the week on this calendar.
 		var periodStartDayOfWeek =
-			(dayOfWeek - cal.getFirstDayOfWeek() - dayOfPeriod + 1) % 7;
+			(dayOfWeek - view.firstDayOfWeek - dayOfPeriod + 1) % 7;
 		if (periodStartDayOfWeek < 0) {
 			periodStartDayOfWeek += 7;
 		}
@@ -236,97 +271,172 @@ Object.extend(Date.Calendar.MonthlyController, {
 		// If the first week is long enough, then count it. If
 		// the minimal days in the first week is one, or if the period start
 		// is zero, we always increment weekNo.
-		if ((7 - periodStartDayOfWeek) >= cal.getMinimalDaysInFirstWeek()) {
+		if ((7 - periodStartDayOfWeek) >= view.minimalDaysInFirstWeek) {
 			++weekNo;
 		}
 		return weekNo;
 	}
 });
-Date.Calendar.MonthlyController.Setting = Date.Calendar.MonthlyController._createDefaultSetting();
-Date.Calendar.MonthlyController.prototype = {
-	initialize: function( model, calDiv ) {
-		this._showing = false;
-		this.controlShowing = false;
-		this.closeOnClick = false;
-		this.closeOnDblClick = true;
-		this.closeOnEnterKey = true;
-		this.selectedModel = model;
-		this.selectedModel.attachEvent( this._selectedModelOnChange.bindAsEventListener(this) );
-		//this.eraGroup = this.selectedModel.eraGroup || DateEraGroup.DEFAULT;
-		this._currentModel = new Date.Calendar.Model( this.selectedModel.getValue() || new Date(), model.eraGroup || DateEraGroup.DEFAULT );
-		this._currentModel.attachEvent( this._currentModelOnChange.bindAsEventListener(this) );
-		for(var prop in Date.Calendar.MonthlyController.Setting) {
-			this[prop] = Date.Calendar.MonthlyController.Setting[prop];
-		}
-		this._dateSlot = new Array(42);
-		this._weekSlot = new Array(6);
+
+
+Date.Calendar.View.prototype = {
+    initialize: function(element, options){
+        this.element = element;
+        this.options = Object.fill(options||{}, Date.Calendar.View.DefaultOptions);
+        this.currentModel = this.options["currentModel"]||new Date.Calendar.Model();
+        this.selectedModel = this.options["selectedModel"]||new Date.Calendar.Model();
+        this.eraGroup = this.options["eraGroup"]||DateEraGroup.DEFAULT_WAREKI_SEIREKI;
+        this.build();
+    },
+    build: function(){
+		this.element.appendChild(this.createHeader());
+		this.element.appendChild(this.createBody());
+		this.element.appendChild(this.createFooter());
 		//
-		this._calDiv = calDiv || this.createCalendarDiv();
-		this._createContents();
+		this.updateBody();
+		this.updateHeader( this.currentModel );
+		this.currentModel.attachEvent(this.modelOnChange.bind(this));
+		this.selectedModel.attachEvent(this.modelOnChange.bind(this));
+    },
+	
+	modelOnChange: function(model) {
+		this.updateBody();
+		this.updateHeader(this.currentModel);
 	},
 	
-	_currentModelOnChange: function( model ) {
-		this._updateBody();
-		this._updateHeader( this._currentModel );
+	createHeader: function() {
+	   return Element.build({
+	       tagName:"div", className:"calendarHeader",
+	       style:"background:ActiveCaption; padding:0px; border-bottom: 1px solid WindowText;",
+	       body: [
+	           {tagName:"table", boder:0, cellSpacing:0, body:
+	               {tagName:"tbody", body:[
+	                   {tagName:"tr", body:[
+    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"right", body:
+        	                   {tagName:"select", body:
+    	                           this.eraGroup.collect(function(era, index){
+    	                               return {
+    	                                   tagName:"option", value:index, body: era["longName"], 
+    	                                   selected:(index == this.eraGroup.size() -1)
+    	                               };
+    	                           }.bind(this)),
+        	                       afterBuild: function(element){ this.eraSelection = element; }.bind(this)
+            	               }
+        	               },
+    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"right", body:
+        	                   {tagName:"input", value: this.currentModel.getYear(), size:6,
+        	                       afterBuild: function(element){ this.yearField = element; }.bind(this)
+            	               }
+        	               }
+    	               ]},
+	                   {tagName:"tr", body:[
+    	                   {tagName:"td", align:"right", body:
+        	                   {tagName:"button", className:"prevMonthButton", body:"<<",
+        	                       afterBuild:function(element){ this.prevMonthButton = element; }.bind(this)
+            	               }
+        	               },
+    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
+        	                   {tagName:"select", body:
+    	                           this.options.MonthNames.collect(function(monthName, index){
+    	                               return {
+    	                                   tagName:"option", value:index+1, body: monthName, 
+    	                                   selected:(index == this.currentModel.getMonth())
+    	                               };
+    	                           }.bind(this)),
+        	                       afterBuild: function(element){ this.monthSelection = element; }.bind(this)
+            	               }
+        	               },
+    	                   {tagName:"td", align:"left", body:
+        	                   {tagName:"button", className:"nextMonthButton", body:">>",
+        	                       afterBuild: function(element){ this.nextMonthButton = element; }.bind(this)
+            	               }
+        	               }
+    	               ]}
+	               ]}
+	           }
+	       ]
+	   });
 	},
-	
-	_selectedModelOnChange: function( model ) {
-		var selectedValue = this.selectedModel.getValue();
-		if (!selectedValue)
-			return;
-		if (this._currentModel.getYear() == this.selectedModel.getYear() && 
-			this._currentModel.getMonth() == this.selectedModel.getMonth() ) {
-			this._updateBody();
-			this._updateHeader( this.selectedModel );
-		} else {
-			this._currentModel.setValue( selectedValue );
-		}
-	},
-	
-	getCurrentDate: function() {
-		return this._currentModel.getValue();
-	},
-	
-	isShowing: function() {
-		return this._showing;
-	},
-	
-	getEraGroup: function() {
-		return this.selectedModel.eraGroup || DateEraGroup.DEFAULT;
-	},
-	
-	_updateHeader: function ( model ) {
-		model = model || this._currentModel;
-		if (!this._calDiv)
+	updateHeader: function (model) {
+		model = model || this.currentModel;
+		if (!this.element)
 			return ;
-		var eraIndex = this.getEraGroup().indexOf( model.getEra() );
-		Form.Element.setValue(this._eraSelect, eraIndex);
-		var ey = model.getEraYear();
-		this._yearSelect.value = ey;
-		var m = model.getMonth();
-		Form.Element.setValue(this._monthSelect, m);
+		var eraIndex = this.eraGroup.indexOf(model.getEra());
+		Form.Element.setValue(this.eraSelection, eraIndex);
+		Form.Element.setValue(this.yearField, model.getEraYear());
+		Form.Element.setValue(this.monthSelection, model.getMonth());
 	},
 
-	_updateBody: function() {
-		if (!this._calDiv)
+
+	createBody: function() {
+		this.dateSlot = new Array(42);
+		this.weekSlot = new Array(6);
+		//
+	    var headerCells = [];
+		if (this.includeWeek)
+		    headerCells.push({ tagName: "th", className:"weekNumberHead", style:"text-align:left;", body: "w"});
+		for(i=0; i < 7; ++i)
+		    headerCells.push({ tagName: "th", className:"weekDayHead", 
+		      style:"font-weight:bold; border-bottom:1px solid WindowText;", 
+		      body: this.options.ShortWeekDayNames[(i + this.options.firstDayOfWeek)%7] });
+	    var bodyRows = [];
+		for(var week=0;week<6;++week) {
+		    var tr={tagName:"tr", body:[]};
+    		bodyRows.push(tr);
+    		if (this.includeWeek){
+    		    var td = {
+    		        tagName: "td", className:"weekNumber", align:"center", body: String.fromCharCode(160),
+    		        style:"font-weight:normal; border-bottom:1px solid WindowText; text-align:left;", 
+    		        afterBuild: function(element){ 
+    		            var w = element.parentNode.rowIndex;
+    		            this.weekSlot[w] = {tag:"WEEK", value:-1, textNode:element.firstChild}; 
+    		        }.bind(this)
+    		    };
+    		    tr.body.push(td);
+    		}
+			for(var day=0; day<7; ++day) {
+    		    var td = {
+    		        tagName: "td", className:"weekNumber", align:"center", body:String.fromCharCode(160),
+    		        style:"font-weight:normal; cursor:" + ((/MSIE/.test(navigator.appVersion))?"hand":"pointer"),
+    		        afterBuild: function(element){
+    		            var w = element.parentNode.rowIndex -1;
+    		            var d = element.cellIndex - (this.includeWeek?1:0);
+    		            this.dateSlot[(w*7)+d] = {tag:"DATE", value:-1, textNode:element.firstChild}; 
+    		        }.bind(this)
+    		    };
+    		    tr.body.push(td);
+			}
+		}
+		return Element.build(
+		    {tagName:"div", className:"calendarBody", body:
+	           {tagName:"table", className:"grid", boder:0, cellPadding:3, cellSpacing:0,
+	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", body: [
+	               {tagName:"thead", body: {tagName:"tr", body: headerCells} },
+	               {tagName:"tbody", body: bodyRows}
+	           ]}
+	        }
+	   );
+	},
+	
+	updateBody: function() {
+		if (!this.element)
 			return ;
 		// Calculate the number of days in the month for the selected date
-		var date = this.getCurrentDate();
-		if (!date)
-			date = new Date();
+		var date = this.currentModel.getValue()||new Date();
 		var firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
 		var monthLength = Date.getDaysOfMonth(date.getFullYear(), date.getMonth());
 		// Find out the weekDay index for the first of this month
-		var firstIndex = (firstDayOfMonth.getDay() - this._firstDayOfWeek) % 7 ;
+		var firstIndex = (firstDayOfMonth.getDay() - this.options.firstDayOfWeek) % 7;
 		if (firstIndex < 0) 
 			firstIndex += 7;
 		var index = 0;
 		while (index < firstIndex) {
-			this._dateSlot[index].value = -1;
-			this._dateSlot[index].data.data = String.fromCharCode(160);
-			this._dateSlot[index].data.parentNode.className = "";
-			this._dateSlot[index].data.parentNode.style.fontWeight = "normal";
-			this._dateSlot[index].data.parentNode.style.border= "none";
+			this.dateSlot[index].value = -1;
+			var textNode = this.dateSlot[index].textNode;
+			textNode.data = String.fromCharCode(160);
+			textNode.parentNode.className = "";
+			textNode.parentNode.style.fontWeight = "normal";
+			textNode.parentNode.style.border= "none";
 			index++;
 		}
 		var today = (new Date()).toISODate();
@@ -334,612 +444,78 @@ Date.Calendar.MonthlyController.prototype = {
 		var selected = (this.selectedModel.getValue()) ? this.selectedModel.getValue().toISODate() : "";
 		for (i = 1; i <= monthLength; i++, index++) {
 			var firstDayOfMonthIsoDate = firstDayOfMonth.toISODate();
-			this._dateSlot[index].value = i;
-			this._dateSlot[index].data.data = i;
-			this._dateSlot[index].data.parentNode.className = "";
-			this._dateSlot[index].data.parentNode.style.fontWeight = "normal";
-			this._dateSlot[index].data.parentNode.style.border= "none";
+			this.dateSlot[index].value = i;
+			var textNode = this.dateSlot[index].textNode;
+			textNode.data = i;
+			textNode.parentNode.className = "";
+			textNode.parentNode.style.fontWeight = "normal";
+			textNode.parentNode.style.border= "none";
 			if (firstDayOfMonthIsoDate == today) {
-				this._dateSlot[index].data.parentNode.className = "today";
-				this._dateSlot[index].data.parentNode.style.fontWeight = "bold";
+				textNode.parentNode.className = "today";
+				textNode.parentNode.style.fontWeight = "bold";
 			}
 			if (firstDayOfMonthIsoDate == current) {
-				this._dateSlot[index].data.parentNode.className += " current";
-				this._dateSlot[index].data.parentNode.style.border= "1px dotted WindowText";
+				textNode.parentNode.className += " current";
+				textNode.parentNode.style.border= "1px dotted WindowText";
 			}
 			if (firstDayOfMonthIsoDate == selected) {
-				this._dateSlot[index].data.parentNode.className += " selected";
-				this._dateSlot[index].data.parentNode.style.border= "1px solid WindowText";
+				textNode.parentNode.className += " selected";
+				textNode.parentNode.style.border= "1px solid WindowText";
 			}
 			firstDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), firstDayOfMonth.getDate()+1);
 		}
 		var lastDateIndex = index;
 		while(index < 42) { //42 days means 6 weeks
-			this._dateSlot[index].value = -1;
-			this._dateSlot[index].data.data = String.fromCharCode(160);
-			this._dateSlot[index].data.parentNode.className = "";
-			this._dateSlot[index].data.parentNode.style.fontWeight = "normal";
-			this._dateSlot[index].data.parentNode.style.border= "none";
+			this.dateSlot[index].value = -1;
+			var textNode = this.dateSlot[index].textNode;
+			textNode.data = String.fromCharCode(160);
+			textNode.parentNode.className = "";
+			textNode.parentNode.style.fontWeight = "normal";
+			textNode.parentNode.style.border= "none";
 			++index;
 		}
 		// Week numbers
 		if (this._includeWeek) {
 			firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
 			for (i=0; i < 6; ++i) {
+    			var textNode = this.weekSlot[i].textNode;
 				if (i == 5 && lastDateIndex < 36) {
-					this._weekSlot[i].data.data = String.fromCharCode(160);
-					this._weekSlot[i].data.parentNode.style.borderRight = "none";
+					textNode.data = String.fromCharCode(160);
+					textNode.parentNode.style.borderRight = "none";
 				} else {
 					week = Calendar.weekNumber(this, firstDayOfMonth);
-					this._weekSlot[i].data.data = week;
-					this._weekSlot[i].data.parentNode.style.borderRight = "1px solid WindowText";
+					textNode.data = week;
+					textNode.parentNode.style.borderRight = "1px solid WindowText";
 				}
 				firstDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), firstDayOfMonth.getDate()+7);
 			}
 		}
 	},
 	
-	_getSelectedEra: function() {
-		var selectedEraIndex = this._eraSelect.value;
-		if (selectedEraIndex < 0)
-			return null;
-		return this.getEraGroup().get(selectedEraIndex);
-	},
-	
-	_previousMonth_onclick: function () {
-		this._currentModel.prevMonth();
-	},
-
-	_nextMonth_onclick: function () {
-		this._currentModel.nextMonth();
-	},
-
-	_todayButton_onclick: function () {
-		this.selectedModel.setValue(new Date());
-		//this.hide();
-	},
-
-	_clearButton_onclick: function () {
-		this.selectedModel.setValue(null);
-		//this.hide();
-	},
-
-	_calDiv_onselectstart: function (event) {
-		var t = Event.element(event);
-		if (t == this._yearSelect) {
-			return true;
-		} else {
-			Event.stop(event);
-			return false;
-		}
-	},
-	
-	_select_onClickTable: function( e ) {
-		var t = Event.element(e);
-		var td = Element.findAncestorByTagName(t, "TD");
-		if (!td)
-			return;
-		var date = this.getCurrentDate();
-		if (!date)
-			date = new Date();
-		var d = new Date( date.getTime() );
-		var n = Number(td.firstChild.data);
-		if (isNaN(n) || n <= 0 || n == null)
-			return;
-		if (td.className == "weekNumber")
-			return;
-		d.setDate(n);
-		this.selectedModel.setValue(d);
-		this._currentModel.setValue(d);
-		if (!this._alwaysVisible && this._hideOnSelect) {
-			this.hide();
-			Event.stop(e);
-		}
-	},
-	
-	_table_onclick: function (e) {
-		this._select_onClickTable( e );
-		if (this.closeOnClick)
-			this.hide();
-	},
-	
-	_table_ondblclick: function (e) {
-		this._select_onClickTable( e );
-		if (this.closeOnDblClick)
-			this.hide();
-	},
-	
-	_calDiv_onkeydown: function (e) {
-		if (e == null) 
-			e = document.parentWindow.event;
-		var keyCode = e.keyCode != null ? e.keyCode : e.charCode;
-		if(keyCode == Event.KEY_RETURN || keyCode == Event.KEY_ENTER) {
-			//var d = new Date(this.getCurrentDate()).valueOf();
-			this.selectedModel.setValue(this.getCurrentDate());
-			if (this.closeOnEnterKey) 
-				this.hide();
-			Event.stop(e);
-			return false;
-		}
-		var t = Event.element(e);
-		if ((t.tagName == "SELECT") || (t.tagName == "INPUT" && t.type == "text") )
-			return true;
-		switch (keyCode) {
-			case Event.KEY_LEFT: 
-				this._currentModel.prevDate();
-				break;
-			case Event.KEY_RIGHT: 
-				this._currentModel.nextDate();
-				break;
-			case Event.KEY_UP: 
-				this._currentModel.prevWeek();
-				break;
-			case Event.KEY_DOWN: 
-				this._currentModel.nextWeek();
-				break;
-			default:
-				return true;
-		}
-		Event.stop(e);
-		return false;
-	},
-	
-	// ie6 extension
-	_calDiv_onmousewheel: function (e) {
-		if (e == null) 
-			e = document.parentWindow.event;
-		var n = - e.wheelDelta / 120;
-		var d = new Date(this.getCurrentDate());
-		var m = d.getMonth() + n;
-		d.setMonth(m);
-		this.setCurrentDate(d);
-		Event.stop(e);
-		return false;
-	},
-	
-	_monthSelect_onchange: function(e) {
-		this._currentModel.setMonth(this._monthSelect.value);
-	},
-
-	_monthSelect_onclick: function(e) {
-		Event.stop(e);
-	},
-	
-	_yearSelect_onkeyup: function(e) {
-		if ((!this._yearSelect.value) || (this._yearSelect.value == "NaN") || (this._yearSelect.value == "null")) {
-			//this.setYear( (new Date()).getFullYear() );
-		} else {
-			var inputYear = this._yearSelect.value * 1;
-			if (!inputYear)
-				return;
-			this._currentModel.setEraYear(inputYear);
-		}
-	},
-	
-	_eraSelect_onchange: function(e) {
-		var era = this._getSelectedEra();
-		this._currentModel.setEra( era );
-	},
-	
-	createCalendarDiv: function() {
-		// Create the top-level div element
-		this._calDiv = document.createElement("div");
-		this._calDiv.className = "calendar";
-		this._calDiv.style.position = "absolute";
-		this._calDiv.style.display = "none";
-		this._calDiv.style.border = "1px solid WindowText";
-		this._calDiv.style.textAlign = "center";
-		this._calDiv.style.background = "Window";
-		this._calDiv.style.zIndex = "400";
-		document.body.appendChild(this._calDiv);
-		this.controlShowing = true;
-		return this._calDiv;
-	},
-	
-	_createContents: function() {
-		// Create header div
-		this._createHeaderDiv();
-		// Create the inside of calendar body
-		this._createBodyDiv();
-		// Calendar Footer
-		this._createFooterDiv();
-		this._updateBody();
-		this._updateHeader( this._currentModel );
-		// IE55+ extension	
-		this._previousMonth.hideFocus = true;
-		this._nextMonth.hideFocus = true;
-		this._todayButton.hideFocus = true;
-		// observe events
-		Event.observe(this._previousMonth, "click", this._previousMonth_onclick.bindAsEventListener(this), false);
-		Event.observe(this._nextMonth, "click", this._nextMonth_onclick.bindAsEventListener(this), false);
-		Event.observe(this._todayButton, "click", this._todayButton_onclick.bindAsEventListener(this), false);
-		Event.observe(this._clearButton, "click", this._clearButton_onclick.bindAsEventListener(this), false);
-		Event.observe(this._calDiv, "selectstart", this._calDiv_onselectstart.bindAsEventListener(this), false);
-		Event.observe(this._table, "click", this._table_onclick.bindAsEventListener(this), false);
-		Event.observe(this._table, "dblclick", this._table_ondblclick.bindAsEventListener(this), false);
-		Event.observe(this._calDiv, "keydown", this._calDiv_onkeydown.bindAsEventListener(this), false);
-		Event.observe(this._calDiv, "mousewheel", this._calDiv_onmousewheel.bindAsEventListener(this), false);
-		Event.observe(this._monthSelect, "change", this._monthSelect_onchange.bindAsEventListener(this), false);
-		Event.observe(this._monthSelect, "click", this._monthSelect_onclick.bindAsEventListener(this), false);
-		Event.observe(this._eraSelect, "change", this._eraSelect_onchange.bindAsEventListener(this), false);
-		Event.observe(this._yearSelect, "keyup", this._yearSelect_onkeyup.bindAsEventListener(this), true);
-	},
-	
-	_createHeaderDiv: function() {
-		var div = document.createElement("div");
-		div.className = "calendarHeader";
-		div.style.background = "ActiveCaption";
-		//div.style.padding = "3px";
-		div.style.padding = "0px";
-		div.style.borderBottom = "1px solid WindowText";
-		this._calDiv.appendChild(div);
-		var table = document.createElement("table");
-		table.border = 0;
-		table.style.cellSpacing = 0;
-		div.appendChild(table);
-		var tbody = document.createElement("tbody");
-		table.appendChild(tbody);
-		//header row 1
-		var tr = document.createElement("tr");
-		tbody.appendChild(tr);
-		// Create the era drop down
-		var td = document.createElement("td");
-		td.className = "labelContainer";
-		td.colSpan = 2;
-		td.align = "right";
-		tr.appendChild(td);
-		this._eraSelect = document.createElement("select");
-		var eraGroup = this.getEraGroup();
-		for(var i=0; i < eraGroup.size(); ++i) {
-			var era = eraGroup.get(i);
-			var opt = document.createElement("option");
-			opt.innerHTML = era["longName"];
-			opt.value = i; //eraIndex
-			opt.selected = (i == eraGroup.size() -1);
-			this._eraSelect.appendChild(opt);
-		}
-		td.appendChild(this._eraSelect);
-		// Create the year text input
-		td = document.createElement("td");
-		td.className = "labelContainer";
-		td.colSpan = 2;
-		td.align = "left";
-		tr.appendChild(td);
-		this._yearSelect = document.createElement("input");
-		this._yearSelect.value = this.getCurrentDate().getFullYear();
-		this._yearSelect.size = 4;
-		td.appendChild(this._yearSelect);
-		//header row 2
-		tr = document.createElement("tr");
-		tbody.appendChild(tr);
-		// Previous Month Button
-		td = document.createElement("td");
-		td.align = "right";
-		this._previousMonth = document.createElement("button");
-		this._previousMonth.className = "prevMonthButton"
-		this._previousMonth.appendChild(document.createTextNode("<<"));
-		//this._previousMonth.appendChild(document.createTextNode(String.fromCharCode(9668)));
-		td.appendChild(this._previousMonth);
-		tr.appendChild(td);
-		// Create the month drop down 
-		td = document.createElement("td");
-		td.className = "labelContainer";
-		td.colSpan = 2;
-		td.align = "center";
-		tr.appendChild(td);
-		this._monthSelect = document.createElement("select");
-		for (var i = 0 ; i < this._monthNames.length ; i++) {
-			var opt = document.createElement("option");
-			opt.innerHTML = this._monthNames[i];
-			opt.value = i +1; //??1????
-			if (i == this.getCurrentDate().getMonth()) {
-				opt.selected = true;
-			}
-			this._monthSelect.appendChild(opt);
-		}
-		td.appendChild(this._monthSelect);
-		td = document.createElement("td");
-		td.align = "left";
-		this._nextMonth = document.createElement("button");
-		this._nextMonth.appendChild(document.createTextNode(">>"));
-		//this._nextMonth.appendChild(document.createTextNode(String.fromCharCode(9654)));
-		this._nextMonth.className = "nextMonthButton";
-		td.appendChild(this._nextMonth);
-		tr.appendChild(td);
-	},
-	
-	_createBodyDiv: function() {
-		// Calendar body
-		var div = document.createElement("div");
-		div.className = "calendarBody";
-		this._calDiv.appendChild(div);
-		this._table = div;
-		var table = document.createElement("table");
-		//table.style.width="100%";
-		table.className = "grid";
-		table.style.font 	 	= "small-caption";
-		table.style.fontWeight 	= "normal";
-		table.style.textAalign	= "center";
-		table.style.color		= "WindowText";
-		table.style.cursor		= "default";
-		table.cellPadding		= "3";
-		table.cellSpacing		= "0";
-		div.appendChild(table);
-		var thead = document.createElement("thead");
-		table.appendChild(thead);
-		var tr = document.createElement("tr");
-		thead.appendChild(tr);
-		// weekdays header
-		if (this._includeWeek) {
-			var td = document.createElement("th");
-			var text = document.createTextNode("w");
-			td.appendChild(text);
-			td.className = "weekNumberHead";
-			td.style.textAlign = "left";
-			tr.appendChild(td);
-		}
-		for(i=0; i < 7; ++i) {
-			var td = document.createElement("th");
-			var text = document.createTextNode(this._shortWeekDayNames[(i+this._firstDayOfWeek)%7]);
-			td.appendChild(text);
-			td.className = "weekDayHead";
-			td.style.fontWeight = "bold";
-			td.style.borderBottom = "1px solid WindowText";
-			tr.appendChild(td);
-		}
-		// Date grid
-		var tbody = document.createElement("tbody");
-		table.appendChild(tbody);
-		for(week=0; week<6; ++week) {
-			var tr = document.createElement("tr");
-			tbody.appendChild(tr);
-			if (this._includeWeek) {
-				var td = document.createElement("td");
-				td.className = "weekNumber";
-				td.style.fontWeight = "normal";
-				td.style.borderRight = "1px solid WindowText";
-				td.style.textAlign = "left";
-				var text = document.createTextNode(String.fromCharCode(160));
-				td.appendChild(text);
-				//Date.Calendar.MonthlyController.setCursor(td);
-				td.align="center";
-				tr.appendChild(td);
-				var tmp = new Object();
-				tmp.tag = "WEEK";
-				tmp.value = -1;
-				tmp.data = text;
-				this._weekSlot[week] = tmp;
-			}
-			for(day=0; day<7; ++day) {
-				var td = document.createElement("td");
-				var text = document.createTextNode(String.fromCharCode(160));
-				td.appendChild(text);
-				Date.Calendar.MonthlyController.setCursor(td);
-				td.align="center";
-				td.style.fontWeight="normal";
-				
-				tr.appendChild(td);
-				var tmp = new Object();
-				tmp.tag = "DATE";
-				tmp.value = -1;
-				tmp.data = text;
-				this._dateSlot[(week*7)+day] = tmp;
-			}
-		}
-	},
-	
-	_createFooterDiv: function() {
-		var div = document.createElement("div");
-		div.className = "calendarFooter";
-		this._calDiv.appendChild(div);
-		var table = document.createElement("table");
-		//table.style.width="100%";
-		table.className = "footerTable";
-		table.cellSpacing = 0;
-		div.appendChild(table);
-		var tbody = document.createElement("tbody");
-		table.appendChild(tbody);
-		var tr = document.createElement("tr");
-		tbody.appendChild(tr);
-		// The TODAY button	
-		var td = document.createElement("td");
-		this._todayButton = document.createElement("button");
+	createFooter: function() {
 		var today = new Date();
-		//var buttonText =  today.getDate() + " " + this._monthNames[today.getMonth()] + ", " + today.getFullYear();
-		var buttonText = today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate();
-		this._todayButton.appendChild(document.createTextNode(buttonText));
-		td.appendChild(this._todayButton);
-		tr.appendChild(td);
-		// The CLEAR button
-		var td = document.createElement("td");
-		this._clearButton = document.createElement("button");
-		var today = new Date();
-		this._clearButton.appendChild(document.createTextNode("Clear"));
-		td.appendChild(this._clearButton);
-		tr.appendChild(td);
-	},
-
-	getMinimalDaysInFirstWeek: function () {
-		return this._minimalDaysInFirstWeek;
-	},
-
-	getFirstDayOfWeek: function () {
-		return this._firstDayOfWeek;
-	},
-	
-	_getShim: function() {
-		if (!this._shim) {
-			this._shim = new HTMLIFrameElement.Shim(this._calDiv);
-		}
-		return this._shim;
-	},
-
-	isShowing: function() {
-		return this._showing;
-	},
-	
-	show: function(x, y) {
-		if (!this.controlShowing)
-			return;
-		if(this._showing) 
-			return;
-		this._calDiv.style.display = "block";
-		this._calDiv.style.top = y + "px";
-		this._calDiv.style.left = x + "px";
-		this._getShim().enableShim();
-		this._showing = true;
-		if (this._calDiv.focus)
-			this._calDiv.focus();
-		if (this.onshow)
-			this.onshow();
-	},
-
-	hide: function() {
-		if (!this.controlShowing)
-			return;
-		if(!this._showing) 
-			return;
-		this._calDiv.style.display = "none";
-		this._getShim().disableShim();
-		this._showing = false;
-		if (this.onhide)
-			this.onhide();
+		return Element.build({
+	        tagName:"div", className:"calendarFooter",
+	        body: [
+	           {tagName:"table", className:"footerTable", boder:0, cellSpacing:0,
+	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", body:
+	               {tagName:"tbody", body: 
+	                   {tagName:"tr", body: [
+    	                   {tagName:"td", body:
+    	                       {tagName:"button", body: today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate()}
+    	                   },
+    	                   {tagName:"td", body: 
+    	                       {tagName:"button", body: this.options.clearButtonCaption,
+        	                       afterBuild:function(element){
+        	                           this.clearButton = element; 
+                    		       }.bind(this)
+    	                       }
+    	                   }
+	                   ]}
+                   }
+	           }
+	        ]
+	   });
 	}
-	
-}
 
-Date.Calendar.MonthlyFieldController = Class.create();
-Date.Calendar.MonthlyFieldController.prototype = {
-	initialize: function(field, eraGroup, model, calendarControl) {
-		this.eventInitialized = false;
-		this.showOnFocusIfEmpty = true;
-		this.showOnFocus = false;
-		this.focusFieldOnHide = true;
-		this.field = field;
-		this.eraGroup = eraGroup;
-		this.model = model;
-		this._attachModel();
-		this.calendarControl = calendarControl;
-		Event.observe(this.field, "focus", this._fieldFocused.bindAsEventListener(this), false);
-	},
-	
-	_attachModel: function() {
-		if (!this.model) 
-			return;
-		this.model.attachEvent( this._modelOnChange.bindAsEventListener(this) );
-		this._modelOnChange( this.model );
-	},
-
-	updateModel: function() {
-		var fieldDate = (this.field.value) ? this.getEraGroup().parse( this.field.value ) : null;
-		this.model.setValue( fieldDate );
-	},
-	
-	updateField: function() {
-		var d = this.model.getValue();
-		this.field.value = (d) ? this.getEraGroup().format( d ) : "";
-	},
-	
-	getEraGroup: function() {
-		return this.eraGroup || DateEraGroup.DEFAULT;
-	},
-
-	initializeEventListeners: function() {
-		if (!this.model) {
-			var fieldDate = (this.field.value) ? this.getEraGroup().parse( this.field.value ) : null;
-			this.model = new Date.Calendar.Model(fieldDate, this.getEraGroup());
-			this._attachModel();
-		}
-		if (!this.calendarControl) {
-			this.calendarControl = new Date.Calendar.MonthlyController(this.model, null);
-			this.calendarControl.onhide = this._calendarHide.bindAsEventListener(this);
-		}
-		Event.observe(this.field, "change", this._fieldChange.bindAsEventListener(this), false);
-		Event.observe(this.field, "keydown", this._fieldKeyDown.bindAsEventListener(this), true);
-		Event.observe(this.field, "dblclick", this._fieldDblClicked.bindAsEventListener(this), false);
-		Event.observe(document, "click", this._documentClick.bindAsEventListener(this), false);
-		this.eventInitialized = true;
-	},
-	
-	_calendarHide: function() {
-		if (!this.focusFieldOnHide)
-			return;
-		// onfocusイベントは、focusメソッドを呼び出した直後ではなく、
-		// このイベントハンドラを抜けた後に実行されるので、try...finallyではなく
-		// setTimoutでフォーカスが移った後（のはず）に、calendarHidingをfalseに戻す
-		this.calendarHiding = true;
-		this.field.focus();
-		setTimeout(this._finishCalendarHiding.bind(this), 100);
-	},
-	
-	_finishCalendarHiding: function() {
-		this.calendarHiding = false;
-	},
-	
-	_fieldFocused: function(event) {
-		if (this.calendarHiding)
-			return;
-		if (!this.eventInitialized) {
-			this.initializeEventListeners();
-			this.updateModel();
-		}
-		if (!this.showOnFocus && !(this.showOnFocusIfEmpty && !(this.field.value)))
-			return;
-		
-		this.showCalendar();
-	},
-	
-	_modelOnChange: function( model ) {
-		this.updateField();
-	},
-	
-	_fieldChange: function(event) {
-		this.updateModel();
-	},
-	
-	_fieldKeyDown: function(event) {
-		var keyCode = Event.getKeyCode(event);
-		switch(keyCode) {
-			case Event.KEY_SPACE:
-				if (event.ctrlKey) {
-					this.toggleCalendar();
-					Event.stop(event);
-					return false;
-				}
-			default:
-				return true;
-		}
-	},
-	
-	_fieldDblClicked: function(event) {
-		this.toggleCalendar();
-	},
-	
-	_documentClick: function( event ) {
-		var t = Event.element(event);
-		if (t == this.field)
-			return;
-		if (!this.calendarControl.isShowing() )
-			return;
-		if (Element.childOf(t, this.calendarControl._calDiv))
-			return;
-		this.hideCalendar();
-	},
-	
-	showCalendar: function() {
-		var p = Position.positionedOffset(this.field);
-		this.calendarControl.show(p[0], p[1] + this.field.offsetHeight + 1);
-	},
-	
-	hideCalendar: function() {
-		this.calendarControl.hide();
-	},
-	
-	toggleCalendar: function() {
-		if (this.calendarControl.isShowing())
-			this.hideCalendar();
-		else
-			this.showCalendar();
-	}
-	
-}
+};
