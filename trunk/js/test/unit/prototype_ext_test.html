@@ -933,6 +933,54 @@ function test_Element_Finder_next() {
         ));
 }
 
+function test_Element_Style_toStyleObject() {
+    var styleObj1 = Element.Style.toStyleObject("margin-top:10px; text-align:right;");
+    assertEquals("10px", styleObj1["marginTop"]);
+    assertEquals("right", styleObj1["textAlign"]);
+}
+
+function test_Element_build() {
+    var div1 = Element.build({
+        tagName: "div",
+        className: "content indent",
+        style: "margin:10px;padding:5px;background-color:#FEDCBA;",
+        body:[
+            1234567,
+            {tagName:"span", body: "span1"},
+            {tagName:"span", style:"text-align:right", body: {tagName:"b", body:"b1"}},
+            "abcdefghijklmnopqrstuvwxyz"
+        ]
+    });
+    assertEquals("DIV", div1.tagName);
+    assertEquals(true, Element.hasClassName(div1, "content"));
+    assertEquals(true, Element.hasClassName(div1, "indent"));
+    assertEquals("10px", div1.style.marginTop);
+    assertEquals("10px", div1.style.marginRight);
+    assertEquals("10px", div1.style.marginBottom);
+    assertEquals("10px", div1.style.marginLeft);
+    assertEquals("5px", div1.style.paddingTop);
+    assertEquals("5px", div1.style.paddingRight);
+    assertEquals("5px", div1.style.paddingBottom);
+    assertEquals("5px", div1.style.paddingLeft);
+    var colorString = (/Firefox/.test(navigator.userAgent)) ? "RGB(254, 220, 186)" : "#FEDCBA";
+    assertEquals(colorString, div1.style.backgroundColor.toUpperCase());
+    assertEquals(4, div1.childNodes.length);
+    assertEquals(Node.TEXT_NODE, div1.childNodes[0].nodeType);
+    assertEquals("1234567", div1.childNodes[0].data);
+    assertEquals("SPAN", div1.childNodes[1].tagName);
+    assertEquals("span1", div1.childNodes[1].innerHTML);
+    assertEquals(1, div1.childNodes[1].childNodes.length);
+    assertEquals("SPAN", div1.childNodes[2].tagName);
+    assertEquals("right", div1.childNodes[2].style.textAlign);
+    assertEquals(1, div1.childNodes[2].childNodes.length);
+    assertEquals("B", div1.childNodes[2].firstChild.tagName);
+    assertEquals("b1", div1.childNodes[2].firstChild.innerHTML);
+    assertEquals(Node.TEXT_NODE, div1.childNodes[3].nodeType);
+    assertEquals("abcdefghijklmnopqrstuvwxyz", div1.childNodes[3].data);
+}
+
+
+
 --></script>
 
 </body>

@@ -767,6 +767,155 @@ Object.extend(Element, {
 	
 });
 
+if (!Element.Style) Element.Style = {};
+Object.extend(Element.Style, {
+	toStyleObject: function( styleString ) {
+		if (!styleString)
+			return null;
+		var result = {};
+		var entries = styleString.split( ";" );
+		for(var i = 0; i < entries.length; i++) {
+			var items = entries[i].split( ":", 2 );
+			if (items.length < 1)
+				continue;
+			var key = items[0].strip().camelize();
+			if (!key)
+				continue;
+			var value = items.length < 2 ? null : items[1];
+			result[key] = value;
+		}
+		return result;
+	}
+});
+
+Element.Builder = Class.create();
+Element.Builder.prototype = {
+	initialize: function( bodyPropertyName,  baseDocument ) {
+		this.bodyPropertyName = bodyPropertyName || "body";
+		this.baseDocument = baseDocument || document;
+		this.ignoreProperties = ["tagName", "afterBuild", this.bodyPropertyName];
+		if (Object.prototype.extend) {
+			this.ignoreProperties.push( "extend");
+		}
+	},
+	execute: function( obj ) {
+		return this.dispatchBuild(obj);
+	},
+	dispatchBuild: function( obj ) {
+		if (obj.constructor == Array) {
+			return this.buildNodes( obj );
+		} else if (obj.tagName) {
+			return this.buildNode( obj );
+		} else if (obj.constructor == String) {
+			return this.buildText( obj );
+		} else if (obj.constructor == Number) {
+			return this.buildText( obj.toString() );
+		} else if (obj.constructor == Date) {
+			return this.buildText( obj.toString() );
+		} else {
+			throw new Error("obj  have no tagName ");
+		}
+	},
+	buildText: function( string ) {
+		return this.baseDocument.createTextNode( string );
+	},
+	buildNode: function( obj ) {
+		var result = this.baseDocument.createElement( obj.tagName );
+		this.applyAttributes( result, obj, this.ignoreProperties );
+		var body = obj[ this.bodyPropertyName ];
+		if ((body != null) && (body != undefined) ) {
+			var children = this.dispatchBuild( body );
+			if (children) {
+				if (children.constructor != Array) 
+					children = [ children ];
+				for( var i = 0; i < children.length; i++ ) {
+					result.appendChild( children[i] );
+				}
+			}
+		}
+		if ((obj.afterBuild) && (obj.afterBuild.constructor == Function)) {
+			obj.afterBuild( result, this, obj );
+		}
+		return result;
+	},
+	buildNodes: function( arrayObj ) {
+		var result = new Array();
+		for(var i = 0; i < arrayObj.length; i++) {
+			if (arrayObj[i])
+				result.push( this.dispatchBuild( arrayObj[i] ) );
+		}
+		return result;
+	},
+	applyAttributes: function( node, attributeObj, ignoreProperties ) {
+		if (!attributeObj)
+			return;
+		for(var prop in attributeObj) {
+			if (ignoreProperties && this._array_contains( ignoreProperties, prop ))
+				continue;
+			//IEのstyleは特別扱い
+			if ((prop == "style") &&  (navigator.appVersion.indexOf("MSIE") > -1)) {
+				var style = attributeObj[prop];
+				var styleObj = Element.Style.toStyleObject( style );
+				for(var styleItemName in styleObj) {
+					if (styleItemName == "extend")
+						continue;
+					var styleItemValue = styleObj[styleItemName].strip();
+					try {
+						node.style[styleItemName] = styleItemValue;
+					} catch(e) {
+					}
+				}
+				continue;
+			} else if (prop == "className" || prop == "class") {
+				node.className = attributeObj[prop];
+			} else {
+				var value = attributeObj[prop];
+				if (node.tagName.toUpperCase() == "LABEL") {
+					// labelタグのfor属性は、javascriptからアクセスする場合には名前が違う。for(fx) / htmlFor(ie)
+					if ((prop == "for") &&  (navigator.appVersion.indexOf("MSIE") > -1))
+						prop = "htmlFor";
+					if ((prop == "htmlFor") &&  (navigator.appVersion.indexOf("MSIE") < 0))
+						prop = "for";
+				}
+				node.setAttribute(prop, value);
+			}
+		}
+	},
+	_array_contains: function( arrayObj, obj ) {
+		for(var i = 0; i < arrayObj.length; i++) {
+			if (arrayObj[i] == obj)
+				return true;
+		}
+		return false;
+	}
+};
+Object.extend(Element, {
+    build: function(elementObj){
+        if (!Element.Builder.instance)
+            Element.Builder.instance = new Element.Builder();
+        return Element.Builder.instance.execute(elementObj);
+    }
+});
+
+
+if (!StyleSheet)
+  StyleSheet = {};
+Object.extend(StyleSheet, {
+  find_rules: function( regExp ) {
+    var result = [];
+    for(var i = 0; i < document.styleSheets.length; i++) {
+        var styleSheet = document.styleSheets[i];
+        var rules = styleSheet.cssRules || styleSheet.rurles;
+        for(var j = 0; j < rules.length; j++) {
+            var rule = rules[j];
+            if (rule.selectorText.match(regExp))
+                result.push(rule);
+        }
+    }
+    return result;
+  }
+});
+
 
 Object.extend(Event, {
 	KEY_CANCEL		:   3,
