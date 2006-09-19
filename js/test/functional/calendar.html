@@ -11,8 +11,10 @@
 </head>
 <body>
 
-
-	Simple Calendar Field: <input type="text" id="simpleCalendarField1"/><br/>
+<div>
+  <div style="float:left;margin:10px;">
+	Current: <input type="text" id="simpleCalendarField1"/><br/>
+	Selected: <input type="text" id="simpleCalendarField2"/><br/>
 	<table>
 	   <tr><td>[Ctrl+LEFT]</td><td>prev date</td></tr>
 	   <tr><td>[Ctrl+RIGHT]</td><td>next date</td></tr>
@@ -23,76 +25,29 @@
 	   <tr><td>[Ctrl+PAGE_UP]</td><td>prev year</td></tr>
 	   <tr><td>[Ctrl+PAGE_DOWN]</td><td>next year</td></tr>
 	</table>
+  </div>
+  <div id="calendarDiv1" style="float:left;margin:10px;"></div>
+  <div style="clear:left;"></div>
+</div>
 
 <script language="javascript" type="text/javascript" ><!--
 
 Logger.setActiveOnLoad(true);
 
-Date.Calendar.KeyController = Class.create();
-Date.Calendar.KeyController.prototype = {
-    initialize: function(field, model) {
-        this.field = $(field);
-        this.model = model;
-        this.model.attachEvent(this.modelChanged.bind(this));
-        this.activate();
-    },
+var currentModel = new Date.Calendar.Model();
+var selectedModel = new Date.Calendar.Model();
+new Date.Calendar.KeyController($("simpleCalendarField1"), currentModel);
+new Date.Calendar.KeyController($("simpleCalendarField2"), selectedModel);
+var view = new Date.Calendar.View( $("calendarDiv1"), 
+    {"currentModel":currentModel, "selectedModel":selectedModel} );
     
-    prevDate : function(event){ this.model.prevDate(); }, 
-    nextDate : function(event){ this.model.nextDate(); }, 
-    prevWeek : function(event){ this.model.prevWeek(); }, 
-    nextWeek : function(event){ this.model.nextWeek(); }, 
-    prevMonth: function(event){ this.model.prevMonth(); }, 
-    nextMonth: function(event){ this.model.nextMonth(); }, 
-    prevYear : function(event){ this.model.prevYear(); }, 
-    nextYear : function(event){ this.model.nextYear(); },
     
-    activate: function() {
-        var actions = [
-            {ctrl: true , key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_UP  , method: this.prevMonth.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_DOWN, method: this.nextMonth.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_UP  , method: this.prevYear.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_DOWN, method: this.nextYear.bindAsEventListener(this) },
-            {matchAll: true, method: this.keyup.bindAsEventListener(this), stopEvent: false }
-        ];
-        actions.each(function(action){ 
-            action.event = "keydown";
-            action.shift = false;
-            action.alt = false;
-        });
-        new Event.KeyHandler(this.field, actions);
-    },
-    
-    keyup: function(){
-        if (this.lastUpdateModelId){
-            clearTimeout(this.lastUpdateModelId);
-            this.lastUpdateModelId = null;
-        }
-        this.lastUpdateModelId = setTimeout(this.updateModel.bind(this), 500);
-    },
-    
-    updateModel: function() {
-        this.lastUpdateModelId = null;
-        var str = this.field.value;
-        if (this.model.isValid(str))
-            this.model.setAsString(str);
-    },
-    
-    modelChanged: function() {
-        var s = this.model.getAsString();
-        if (this.field.value != s)
-            this.field.value = s;
-    }
-}
-var model = new Date.Calendar.Model();
-new Date.Calendar.KeyController($("simpleCalendarField1"), model);
+//var controller = new Date.Calendar.View(view, {"currentModel":model} );
 
-//new Object.Aspect.Logger(model);
 
 --></script>
+
+
 
 
 
