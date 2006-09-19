@@ -51,7 +51,7 @@ if (!document.setSelection) {
 Object.extend(Object, {
     fill: function(target, properties) {
         for(var prop in properties) {
-            if (!target[prop])
+            if (target[prop] == undefined)
                 target[prop] = properties[prop];
         }
         return target;
@@ -1044,6 +1044,7 @@ Event.KeyHandler.DefaultOptions = {
 };
 Event.KeyHandler.prototype = {
     initialize: function(handlingFields, actions, options) {
+        this.active = false;
 		this.handlingFields = (!handlingFields) ? [] : (handlingFields.constructor == Array) ? handlingFields : [ handlingFields ];
 		this.handlingFields = this.handlingFields.collect( function(field){return $(field);} );
         this.actions = actions;
@@ -1061,6 +1062,7 @@ Event.KeyHandler.prototype = {
                 Event.observe(field, eventName, this.handler, true);
             }
         }
+        this.active = true;
     },
     deactivate: function() {
         if (!this.handler)
@@ -1072,6 +1074,7 @@ Event.KeyHandler.prototype = {
                 Event.stopObserving(field, eventName, this.handler, true);
             }
         }
+        this.active = false;
     },
     matchFunctionKey: function(action, actionKeyName, event, eventKeyName) {
         return !((action[actionKeyName] == false && event[eventKeyName]) || 

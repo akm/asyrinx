@@ -33,12 +33,9 @@
 <script language="javascript" type="text/javascript" ><!--
 Logger.setActiveOnLoad(true);
 
-var currentModel = new Date.Calendar.Model();
-var selectedModel = new Date.Calendar.Model();
-new Date.Calendar.KeyController($("simpleCalendarField1"), currentModel);
-new Date.Calendar.KeyController($("simpleCalendarField2"), selectedModel);
-var view = new Date.Calendar.View( $("calendarDiv1"), 
-    {"currentModel":currentModel, "selectedModel":selectedModel} );
+var model1 = new Date.Calendar.Model();
+new Date.Calendar.KeyController($("simpleCalendarField1"), model1);
+var view = new Date.Calendar.View( $("calendarDiv1"), {"model":model1} );
 
 new Date.Calendar.ViewController(view);
 --></script>
@@ -56,11 +53,13 @@ Date.Calendar.PullDown.DefaultPaneStyle ={
 Date.Calendar.PullDown.DefaultPaneOptions ={
 	"style": Date.Calendar.PullDown.DefaultPaneStyle
 };
-Date.Calendar.PullDown.DefaultOptions ={
+Date.Calendar.PullDown.DefaultOptions = {
     activateSoon: true,
     hideOnPaneClick: false,
     toggleOnDblClick: true,
-	pane: Date.Calendar.PullDown.DefaultPaneOptions
+	pane: Date.Calendar.PullDown.DefaultPaneOptions,
+	closeOnClick: false,
+	closeOnDblClick: true
 }
 Date.Calendar.PullDown.Methods = {};
 Object.extend(Date.Calendar.PullDown.Methods, HTMLInputElement.PullDown.Methods);
@@ -71,21 +70,45 @@ Object.extend(Date.Calendar.PullDown.Methods, {
         HTMLInputElement.PullDown.Methods.initialize.apply(this, [options]);
         this.eraGroup = this.options["eraGroup"]||Date.EraGroup.DEFAULT;
 	    var d = this.eraGroup.parse(this.field.value);
-	    this.currentModel = new Date.Calendar.Model(d, this.eraGroup);
-	    this.selectedModel = new Date.Calendar.Model(d, this.eraGroup);
-        this.fieldKeyController = new Date.Calendar.KeyController(this.field, this.selectedModel);
+	    this.model = new Date.Calendar.Model(d, this.eraGroup);
         if (this.options.activateSoon)
             this.activate();
     },
 	createPane: function() {
 		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
-        this.view = new Date.Calendar.View(result, 
-            {"currentModel":this.currentModel, "selectedModel":this.selectedModel} );
-        new Date.Calendar.ViewController(this.view);
+        this.view = new Date.Calendar.View(result, {"model":this.model} );
+        this.viewController = new Date.Calendar.ViewController(this.view, {activateSoon:false, keyHandlingElement: document});
+        Object.extend(this.viewController, {
+            getActions: function() {
+                var result = Date.Calendar.ViewController.Methods.getActions.apply(this.viewController, arguments);
+                result.unshift(
+                    {event:"keyup", ctrl: true , key: Event.KEY_SPACE, method: this.toggle.bindAsEventListener(this) });
+                return result;
+            }.bind(this),
+            
+            dateCellClicked: function(event, td, dateNumber){
+                var result = Date.Calendar.ViewController.Methods.dateCellClicked.apply(this.viewController, arguments);
+                if (this.options.closeOnClick)
+                    this.hide();
+                return result;
+            }.bind(this)
+        });
+        if (this.options.closeOnDblClick)
+            Event.observe(this.view.calendarBodyTable, "dblclick", this.hide.bindAsEventListener(this), false);
 		return result;
 	},
     activate: function() {
         var visibleHandlingMatcher = this.matchWhenVisible.bind(this);
+        this.fieldKeyController = new Date.Calendar.KeyController(this.field, this.model, {activateSoon:false});
+        Object.extend(this.fieldKeyController, {
+            getActions: function() {
+                var result = Date.Calendar.KeyController.Methods.getActions.apply(this.fieldKeyController, arguments);
+                result.unshift(
+                    {event:"keyup", ctrl: true , key: Event.KEY_SPACE, method: this.toggle.bindAsEventListener(this) });
+                return result;
+            }.bind(this)
+        });
+        this.fieldKeyController.activate();
         Event.observe(this.field, "blur", this.hide.bindAsEventListener(this) , false);
         if (this.options.toggleOnDblClick) 
             Event.observe(this.field, "dblclick", this.toggle.bindAsEventListener(this) , false);
@@ -93,17 +116,49 @@ Object.extend(Date.Calendar.PullDown.Methods, {
     matchWhenVisible: function(action, event, keyCode, keyHandler) {
         return (this.visible && keyHandler.matchAction(action, event, keyCode));
     },
+    clickDocument: function(event) {
+        if (!this.options.closeOnClick) {
+            var element = Event.element(event);
+            if (Element.childOf(element, this.pane) || element == this.field)
+                return;
+        }
+        this.hide();
+    },
+
+    _hide: function(event) {
+        HTMLInputElement.PullDown.Methods._hide.apply(this, arguments);
+        if (!this.visible){
+            if (this.viewController)
+                this.viewController.deactivateKeys();
+            this.fieldKeyController.activate();
+            if (this.clickDocumentHandler) {
+                Event.stopObserving(document, "click", this.clickDocumentHandler, false);
+                this.clickDocumentHandler = null;
+            }
+        }
+    },
     hide: function(event) {
         HTMLInputElement.PullDown.Methods.hide.apply(this, arguments);
     },
     show: function(event) {
         HTMLInputElement.PullDown.Methods.show.apply(this, arguments);
+        if (this.visible) {
+            if (!this.clickDocumentHandler) {
+                this.clickDocumentHandler = this.clickDocument.bindAsEventListener(this);
+                Event.observe(document, "click", this.clickDocumentHandler, false);
+            }
+            this.fieldKeyController.deactivate();
+            this.viewController.activateKeys();
+        }
     }
 	
 });
 Object.extend(Date.Calendar.PullDown.prototype, Date.Calendar.PullDown.Methods);
 
-new Date.Calendar.PullDown($("calendarField1"));
+new Date.Calendar.PullDown($("calendarField1"), {
+    closeOnClick: true,
+    closeOnDblClick: false
+});
 
 --></script>
 
