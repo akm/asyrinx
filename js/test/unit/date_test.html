@@ -114,24 +114,24 @@ function test_ObjectRange_of_Date() {
         dateRange1.collect(function(date){return date.toISODate();}) );
 }
 
-function test_DateEraGroup_getEraByDate() {
-    assertEquals("1867/12/31", null, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1867/12/31")));
-    assertEquals("1868/01/01", DateEra.MEIJI , DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1868/01/01")));
-    assertEquals("1912/07/29", DateEra.MEIJI , DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/29")));
-    assertEquals("1912/07/30", DateEra.TAISHO, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/30")));
-    assertEquals("1926/12/24", DateEra.TAISHO, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/24")));
-    assertEquals("1926/12/25", DateEra.SHOWA , DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/25")));
-    assertEquals("1989/01/07", DateEra.SHOWA , DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/07")));
-    assertEquals("1989/01/08", DateEra.HEISEI, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/08")));
-    assertEquals("2050/12/31", DateEra.HEISEI, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2050/12/31")));
-    assertEquals("2051/01/01", null, DateEraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2051/01/01")));
+function test_Date_EraGroup_getEraByDate() {
+    assertEquals("1867/12/31", null, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1867/12/31")));
+    assertEquals("1868/01/01", Date.Era.MEIJI , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1868/01/01")));
+    assertEquals("1912/07/29", Date.Era.MEIJI , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/29")));
+    assertEquals("1912/07/30", Date.Era.TAISHO, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/30")));
+    assertEquals("1926/12/24", Date.Era.TAISHO, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/24")));
+    assertEquals("1926/12/25", Date.Era.SHOWA , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/25")));
+    assertEquals("1989/01/07", Date.Era.SHOWA , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/07")));
+    assertEquals("1989/01/08", Date.Era.HEISEI, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/08")));
+    assertEquals("2050/12/31", Date.Era.HEISEI, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2050/12/31")));
+    assertEquals("2051/01/01", null, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2051/01/01")));
 }
 
-function test_DateEraGroup_parse() {
-    var eraGroup = DateEraGroup.DEFAULT_WAREKI_SEIREKI;
+function test_Date_EraGroup_parse() {
+    var eraGroup = Date.EraGroup.DEFAULT_WAREKI_SEIREKI;
     
-    //logger.debug("test_DateEraGroup_parse");
-    //new Object.Aspect.Logger(DateEra.MEIJI, "toADYear");
+    //logger.debug("test_Date_EraGroup_parse");
+    //new Object.Aspect.Logger(Date.Era.MEIJI, "toADYear");
     //new Object.Aspect.Logger(eraGroup, ["getEraOf","parse"]);
     
     assertEquals("18671231", eraGroup.parse("1867/12/31").toISODate());
@@ -146,11 +146,11 @@ function test_DateEraGroup_parse() {
     assertEquals("20510101", eraGroup.parse("2051/01/01").toISODate());
 }
 
-function test_DateEraGroup_format() {
-    var eraGroup = DateEraGroup.DEFAULT_WAREKI_SEIREKI;
+function test_Date_EraGroup_format() {
+    var eraGroup = Date.EraGroup.DEFAULT_WAREKI_SEIREKI;
     
-    //logger.debug("test_DateEraGroup_parse");
-    //new Object.Aspect.Logger(DateEra.MEIJI, "toADYear");
+    //logger.debug("test_Date_EraGroup_parse");
+    //new Object.Aspect.Logger(Date.Era.MEIJI, "toADYear");
     //new Object.Aspect.Logger(eraGroup, ["getEraOf","parse"]);
     
     assertEquals("1867/12/31", eraGroup.format(new Date("1867/12/31")));

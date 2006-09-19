@@ -1095,9 +1095,15 @@ Event.KeyHandler.prototype = {
             var action = this.actions[i];
             if (this.isHandlingAction(action, event, keyCode)) {
                 if (action.event.indexOf(event.type) > -1) {
-                    action.method(event);
+                    try{
+                        action.method(event);
+                    }catch(ex){
+                        if (ex==$continue) continue;
+                        if (ex==$break) break;
+                        throw ex;
+                    }
                 }
-                if (action.stopEvent == undefined || action.stopEvent == null || action.stopEvent) {
+                if (action.stopEvent==undefined||action.stopEvent==null||action.stopEvent) {
                     Event.stop(event);
                     return;
                 }
@@ -1247,7 +1253,7 @@ HTMLInputElement.PullDown = Class.create();
 HTMLInputElement.PullDown.DefaultOptions = {
     hideTimeout: 500,
     hideSoonOnKeyEvent: true,
-    hideOnPaneFocus: false
+    hideOnPaneClick: false
 };
 HTMLInputElement.PullDown.DefaultPaneStyle = {
 	"cursor": "default",
@@ -1287,8 +1293,9 @@ HTMLInputElement.PullDown.Methods = {
         if (!this.pane) {
             this.pane = this.createPane();
             this.shim = new HTMLIFrameElement.Shim(this.pane);
-            Event.observe(this.pane, "focus", this.paneFocus.bindAsEventListener(this), false);
-            Event.observe(this.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
+            Event.observe(this.pane, "click", this.paneClick.bindAsEventListener(this), false);
+            //Event.observe(this.pane, "focus", this.paneClick.bindAsEventListener(this), false);
+            //Event.observe(this.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
         }
 		this.updatePaneRect(event);
         Element.show(this.pane);
@@ -1299,8 +1306,8 @@ HTMLInputElement.PullDown.Methods = {
         }catch(ex){
         }
     },
-    paneFocus: function(event) {
-        if (!this.options.hideOnPaneFocus)
+    paneClick: function(event) {
+        if (!this.options.hideOnPaneClick)
             this.waitHiding = false;
     },
     paneBlur: function(event) {
