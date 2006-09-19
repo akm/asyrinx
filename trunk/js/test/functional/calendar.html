@@ -31,7 +31,6 @@
 </div>
 
 <script language="javascript" type="text/javascript" ><!--
-
 Logger.setActiveOnLoad(true);
 
 var currentModel = new Date.Calendar.Model();
@@ -40,10 +39,71 @@ new Date.Calendar.KeyController($("simpleCalendarField1"), currentModel);
 new Date.Calendar.KeyController($("simpleCalendarField2"), selectedModel);
 var view = new Date.Calendar.View( $("calendarDiv1"), 
     {"currentModel":currentModel, "selectedModel":selectedModel} );
-    
-    
-//var controller = new Date.Calendar.View(view, {"currentModel":model} );
 
+new Date.Calendar.ViewController(view);
+--></script>
+
+PullDownCalendar: <input type="text" id="calendarField1" value="2005/6/1"/>
+
+<script language="javascript" type="text/javascript" ><!--
+
+Date.Calendar.PullDown = Class.create();
+Date.Calendar.PullDown.DefaultPaneStyle ={
+	"width": "160px",
+	"max-height": "250px",
+	"overflow": "hidden"
+};
+Date.Calendar.PullDown.DefaultPaneOptions ={
+	"style": Date.Calendar.PullDown.DefaultPaneStyle
+};
+Date.Calendar.PullDown.DefaultOptions ={
+    activateSoon: true,
+    hideOnPaneClick: false,
+    toggleOnDblClick: true,
+	pane: Date.Calendar.PullDown.DefaultPaneOptions
+}
+Date.Calendar.PullDown.Methods = {};
+Object.extend(Date.Calendar.PullDown.Methods, HTMLInputElement.PullDown.Methods);
+Object.extend(Date.Calendar.PullDown.Methods, {
+    initialize: function(field, options) {
+        this.field = $(field);
+        options = Object.fill( options || {}, Date.Calendar.PullDown.DefaultOptions);
+        HTMLInputElement.PullDown.Methods.initialize.apply(this, [options]);
+        this.eraGroup = this.options["eraGroup"]||Date.EraGroup.DEFAULT;
+	    var d = this.eraGroup.parse(this.field.value);
+	    this.currentModel = new Date.Calendar.Model(d, this.eraGroup);
+	    this.selectedModel = new Date.Calendar.Model(d, this.eraGroup);
+        this.fieldKeyController = new Date.Calendar.KeyController(this.field, this.selectedModel);
+        if (this.options.activateSoon)
+            this.activate();
+    },
+	createPane: function() {
+		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
+        this.view = new Date.Calendar.View(result, 
+            {"currentModel":this.currentModel, "selectedModel":this.selectedModel} );
+        new Date.Calendar.ViewController(this.view);
+		return result;
+	},
+    activate: function() {
+        var visibleHandlingMatcher = this.matchWhenVisible.bind(this);
+        Event.observe(this.field, "blur", this.hide.bindAsEventListener(this) , false);
+        if (this.options.toggleOnDblClick) 
+            Event.observe(this.field, "dblclick", this.toggle.bindAsEventListener(this) , false);
+    },
+    matchWhenVisible: function(action, event, keyCode, keyHandler) {
+        return (this.visible && keyHandler.matchAction(action, event, keyCode));
+    },
+    hide: function(event) {
+        HTMLInputElement.PullDown.Methods.hide.apply(this, arguments);
+    },
+    show: function(event) {
+        HTMLInputElement.PullDown.Methods.show.apply(this, arguments);
+    }
+	
+});
+Object.extend(Date.Calendar.PullDown.prototype, Date.Calendar.PullDown.Methods);
+
+new Date.Calendar.PullDown($("calendarField1"));
 
 --></script>
 

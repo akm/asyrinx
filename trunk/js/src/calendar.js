@@ -16,11 +16,11 @@ Date.Calendar={};
 Date.Calendar.Model = Class.create();
 Date.Calendar.Model.prototype = {
 	initialize: function(value, eraGroup){
-		this.eraGroup = eraGroup || DateEraGroup.DEFAULT;
+		this.eraGroup = eraGroup || Date.EraGroup.DEFAULT;
 		this.setValue(value||new Date());
 		this.observers = null;
 		Object.Aspect.after(this, 
-            ["setValue", "setDate", "setMonth", "setEraYear", "setYear", "nextDate"], 
+            ["setValue", "setDate", "setMonth", "setEraYear", "setYear", "setEra", "nextDate"], 
             this.notify.bind(this));
 	},
 	
@@ -47,16 +47,14 @@ Date.Calendar.Model.prototype = {
 	
 	getValue: function(){ return this.value; },
 	setValue: function(date){
-		if (date){
-			var newEra = this.eraGroup.getEraByDate(date);
-			if (date.getEra()!=newEra)
-				date.setEra(newEra);
-		}
 		this.value = date;
+  	    this.eraGroup.updateEraAndYear(this.value);
 	},
 	
-	getEra: function(){ return this.value.getEra(); },
-	setEra: function(era){ this.value.setEraAndYear(era,this.getEraYear()); },
+	getEra: function(){return (this.value)?this.value.getEra():null;},
+	setEra: function(era){
+	   this.value.setEraAndYear(era,this.getEraYear());
+	},
 	
 	getEraYear: function(){
 		if (this.value){
@@ -76,13 +74,22 @@ Date.Calendar.Model.prototype = {
 	setEraYear: function(yy){ this.value.setEraYear(yy); },
 	
 	getMonth: function(){ return this.value.getMonth() + 1; },
-	setMonth: function(mm){ this.value.setMonth(mm - 1); },
+	setMonth: function(mm){ 
+	    this.value.setMonth(mm - 1); 
+	    this.eraGroup.updateEraAndYear(this.value);
+	},
 	
 	getDate: function(){ return this.value.getDate(); },
-	setDate: function(dd){ this.value.setDate(dd); },
+	setDate: function(dd){ 
+	    this.value.setDate(dd); 
+	    this.eraGroup.updateEraAndYear(this.value);
+	},
 	
 	getYear: function(){ return this.value.getFullYear(); },
-	setYear: function(yy){ this.value.setFullYear(yy); },
+	setYear: function(yy){ 
+	    this.value.setFullYear(yy);
+	    this.eraGroup.updateEraAndYear(this.value);
+	},
 	
 	prevYear: function(value){ this.nextYear( -(value || 1) ); },
 	nextYear: function(value){ this.setYear( this.getYear() + (value || 1) ); },
@@ -285,7 +292,7 @@ Date.Calendar.View.prototype = {
         this.options = Object.fill(options||{}, Date.Calendar.View.DefaultOptions);
         this.currentModel = this.options["currentModel"]||new Date.Calendar.Model();
         this.selectedModel = this.options["selectedModel"]||new Date.Calendar.Model();
-        this.eraGroup = this.options["eraGroup"]||DateEraGroup.DEFAULT_WAREKI_SEIREKI;
+        this.eraGroup = this.currentModel["eraGroup"]||this.options["eraGroup"]||Date.EraGroup.DEFAULT_WAREKI;
         this.build();
     },
     build: function(){
@@ -312,7 +319,7 @@ Date.Calendar.View.prototype = {
 	           {tagName:"table", boder:0, cellSpacing:0, body:
 	               {tagName:"tbody", body:[
 	                   {tagName:"tr", body:[
-    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"right", body:
+    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
         	                   {tagName:"select", body:
     	                           this.eraGroup.collect(function(era, index){
     	                               return {
@@ -323,8 +330,8 @@ Date.Calendar.View.prototype = {
         	                       afterBuild: function(element){ this.eraSelection = element; }.bind(this)
             	               }
         	               },
-    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"right", body:
-        	                   {tagName:"input", value: this.currentModel.getYear(), size:6,
+    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
+        	                   {tagName:"input", value: this.currentModel.getYear(), size:4,
         	                       afterBuild: function(element){ this.yearField = element; }.bind(this)
             	               }
         	               }
@@ -361,7 +368,10 @@ Date.Calendar.View.prototype = {
 		model = model || this.currentModel;
 		if (!this.element)
 			return ;
-		var eraIndex = this.eraGroup.indexOf(model.getEra());
+	    if (!model.getValue())
+			return ;
+	    var era = model.getEra();
+		var eraIndex = this.eraGroup.indexOf(era);
 		Form.Element.setValue(this.eraSelection, eraIndex);
 		Form.Element.setValue(this.yearField, model.getEraYear());
 		Form.Element.setValue(this.monthSelection, model.getMonth());
@@ -410,10 +420,13 @@ Date.Calendar.View.prototype = {
 		return Element.build(
 		    {tagName:"div", className:"calendarBody", body:
 	           {tagName:"table", className:"grid", boder:0, cellPadding:3, cellSpacing:0,
-	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", body: [
-	               {tagName:"thead", body: {tagName:"tr", body: headerCells} },
-	               {tagName:"tbody", body: bodyRows}
-	           ]}
+	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", 
+                   afterBuild: function(element){ this.calendarBodyTable = element; }.bind(this),
+	               body: [
+    	               {tagName:"thead", body: {tagName:"tr", body: headerCells} },
+    	               {tagName:"tbody", body: bodyRows}
+    	           ]
+	           }
 	        }
 	   );
 	},
@@ -442,7 +455,7 @@ Date.Calendar.View.prototype = {
 		var today = (new Date()).toISODate();
 		var current = date.toISODate();
 		var selected = (this.selectedModel.getValue()) ? this.selectedModel.getValue().toISODate() : "";
-		for (i = 1; i <= monthLength; i++, index++) {
+		for (var i = 1; i <= monthLength; i++, index++) {
 			var firstDayOfMonthIsoDate = firstDayOfMonth.toISODate();
 			this.dateSlot[index].value = i;
 			var textNode = this.dateSlot[index].textNode;
@@ -454,11 +467,11 @@ Date.Calendar.View.prototype = {
 				textNode.parentNode.className = "today";
 				textNode.parentNode.style.fontWeight = "bold";
 			}
-			if (firstDayOfMonthIsoDate == current) {
+			if (firstDayOfMonthIsoDate == current && this.currentModel) {
 				textNode.parentNode.className += " current";
 				textNode.parentNode.style.border= "1px dotted WindowText";
 			}
-			if (firstDayOfMonthIsoDate == selected) {
+			if (firstDayOfMonthIsoDate == selected && this.selectedModel) {
 				textNode.parentNode.className += " selected";
 				textNode.parentNode.style.border= "1px solid WindowText";
 			}
@@ -477,7 +490,7 @@ Date.Calendar.View.prototype = {
 		// Week numbers
 		if (this._includeWeek) {
 			firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-			for (i=0; i < 6; ++i) {
+			for (var i=0; i < 6; ++i) {
     			var textNode = this.weekSlot[i].textNode;
 				if (i == 5 && lastDateIndex < 36) {
 					textNode.data = String.fromCharCode(160);
@@ -502,13 +515,13 @@ Date.Calendar.View.prototype = {
 	               {tagName:"tbody", body: 
 	                   {tagName:"tr", body: [
     	                   {tagName:"td", body:
-    	                       {tagName:"button", body: today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate()}
+    	                       {tagName:"button", body: today.getFullYear() + "/" + (today.getMonth() + 1) + "/" + today.getDate(),
+        	                       afterBuild:function(element){this.todayButton = element;}.bind(this)
+   	                           }
     	                   },
     	                   {tagName:"td", body: 
     	                       {tagName:"button", body: this.options.clearButtonCaption,
-        	                       afterBuild:function(element){
-        	                           this.clearButton = element; 
-                    		       }.bind(this)
+        	                       afterBuild:function(element){this.clearButton = element;}.bind(this)
     	                       }
     	                   }
 	                   ]}
@@ -517,5 +530,121 @@ Date.Calendar.View.prototype = {
 	        ]
 	   });
 	}
+};
 
+Date.Calendar.ViewController = Class.create();
+Date.Calendar.ViewController.prototype = {
+    initialize: function(view){
+        this.view = view;
+        this.model = this.view.currentModel;
+        this.activate();
+    },
+    activate: function() {
+        Event.observe(this.view.element, "click", this.paneClick.bindAsEventListener(this));
+        //Event.observe(this.view.element, "dblclick", this.paneDblClick.bindAsEventListener(this));
+        Event.observe(this.view.eraSelection, "change", this.eraChanged.bindAsEventListener(this));
+        Event.observe(this.view.monthSelection, "change", this.monthChanged.bindAsEventListener(this));
+        var actions = [
+            {ctrl: false, key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_PAGE_UP  , method: this.prevMonth.bindAsEventListener(this) },
+            {ctrl: false, key: Event.KEY_PAGE_DOWN, method: this.nextMonth.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_PAGE_UP  , method: this.prevYear.bindAsEventListener(this) },
+            {ctrl: true , key: Event.KEY_PAGE_DOWN, method: this.nextYear.bindAsEventListener(this) },
+            {matchAll: true, method: this.keyup.bindAsEventListener(this), stopEvent: false }
+        ];
+        actions.each(function(action){ 
+            action.event = "keydown";
+            action.shift = false;
+            action.alt = false;
+        });
+        new Event.KeyHandler(this.view.element, actions);
+    },
+    paneClick: function(event){
+        var element = Event.element(event);
+        if (element == this.view.prevMonthButton)
+            this.model.prevMonth();
+        else if (element == this.view.nextMonthButton)
+            this.model.nextMonth();
+        else if (element == this.view.todayButton)
+            this.model.setValue(new Date());
+        else if (element == this.view.clearButton)
+            this.model.setValue(null);
+        else { 
+            var td = Node.Finder.first(element, Node.Walk.parentNode,
+                Node.Predicate.and(
+                    Element.Predicate.tagName("TD"),
+                    Node.Predicate.childOf(this.view.calendarBodyTable)), true);
+            if (!td)
+                return null;
+    		var dateNumber = Number(td.firstChild.data);
+    		if (isNaN(dateNumber) || dateNumber <= 0 || dateNumber == null)
+    			return;
+    		if (td.className == "weekNumber")
+    			return;
+    		var d = (this.model.getValue())?new Date(this.model.getValue().getTime()):new Date();
+    		d.setDate(dateNumber);
+    		this.model.setValue(d);
+    		this.view.selectedModel.setValue(d);
+        }
+    },
+    eraChanged: function(event){
+		var selectedEraIndex = this.view.eraSelection.value;
+		if (selectedEraIndex < 0)
+			return null;
+		var era = this.view.eraGroup.get(selectedEraIndex);
+		this.model.setEra(era);
+    },
+    monthChanged: function(event){
+        this.model.setMonth(this.view.monthSelection.value);
+    }, 
+    keyup: function(event){
+        if (this.lastUpdateModelId){
+            clearTimeout(this.lastUpdateModelId);
+            this.lastUpdateModelId = null;
+        }
+        var element = Event.element(event);
+        if (element.tagName != "INPUT")
+            throw $break;
+        if (element == this.view.yearField)
+            this.lastUpdateModelId = setTimeout(this.updateEraYear.bind(this), 500);
+    },
+
+    updateEraYear: function() {
+        this.lastUpdateModelId = null;
+        this.model.setEraYear(this.view.yearField.value * 1);
+    },
+
+    prevMonth: function(event){ this.model.prevMonth(); }, 
+    nextMonth: function(event){ this.model.nextMonth(); }, 
+    prevYear : function(event){ this.model.prevYear(); }, 
+    nextYear : function(event){ this.model.nextYear(); },
+    
+    prevDate : function(event){ 
+        var element = Event.element(event);
+        if (element.tagName == "INPUT")
+            throw $break;
+        this.model.prevDate(); 
+    }, 
+    nextDate : function(event){ 
+        var element = Event.element(event);
+        if (element.tagName == "INPUT")
+            throw $break;
+        this.model.nextDate(); 
+    }, 
+    prevWeek : function(event){ 
+        var element = Event.element(event);
+        if (element.tagName == "SELECT")
+            throw $break;
+        this.model.prevWeek(); 
+    }, 
+    nextWeek : function(event){ 
+        var element = Event.element(event);
+        if (element.tagName == "SELECT")
+            throw $break;
+        this.model.nextWeek(); 
+    }
+    
 };

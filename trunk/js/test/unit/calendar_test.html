@@ -18,14 +18,14 @@
 
 <script language="JavaScript" type="text/javascript"><!--
 function test_CalendarModel_setValue() {
-    var model = new Date.Calendar.Model(new Date("2006/09/16"), DateEraGroup.DEFAULT_WAREKI);
-    assertEquals(DateEra.HEISEI, model.getValue().getEra());
+    var model = new Date.Calendar.Model(new Date("2006/09/16"), Date.EraGroup.DEFAULT_WAREKI);
+    assertEquals(Date.Era.HEISEI, model.getValue().getEra());
     assertEquals(2006, model.getValue().getFullYear());
     assertEquals(18, model.getValue().getEraYear());
     assertEquals(8, model.getValue().getMonth());
     assertEquals(16, model.getValue().getDate());
     model.setValue(new Date("1969/10/07"));
-    assertEquals(DateEra.SHOWA, model.getValue().getEra());
+    assertEquals(Date.Era.SHOWA, model.getValue().getEra());
     assertEquals(1969, model.getValue().getFullYear());
     assertEquals(44, model.getValue().getEraYear());
     assertEquals(9, model.getValue().getMonth());
@@ -33,11 +33,11 @@ function test_CalendarModel_setValue() {
 }
 
 function test_CalendarModel_attachEvent() {
-    var model = new Date.Calendar.Model(new Date("2006/09/16"), DateEraGroup.DEFAULT_WAREKI);
+    var model = new Date.Calendar.Model(new Date("2006/09/16"), Date.EraGroup.DEFAULT_WAREKI);
     var notified = false;
     var f = function(dateModel){
         notified = true;
-        assertEquals(DateEra.SHOWA, dateModel.getValue().getEra());
+        assertEquals(Date.Era.SHOWA, dateModel.getValue().getEra());
         assertEquals(1969, dateModel.getValue().getFullYear());
         assertEquals(44, dateModel.getValue().getEraYear());
         assertEquals(9, dateModel.getValue().getMonth());
@@ -53,7 +53,7 @@ function test_CalendarModel_attachEvent() {
 }
 
 function test_CalendarModel_setDate() {
-    var model = new Date.Calendar.Model(new Date("2006/09/16"), DateEraGroup.DEFAULT_WAREKI);
+    var model = new Date.Calendar.Model(new Date("2006/09/16"), Date.EraGroup.DEFAULT_WAREKI);
     model.setDate(30);
     assertEquals("20060930", model.getValue().toISODate());
     model.setMonth(10);
@@ -64,7 +64,7 @@ function test_CalendarModel_setDate() {
     assertEquals("20071031", model.getValue().toISODate());
     model.setMonth(9);
     assertEquals("20071001", model.getValue().toISODate());
-    model.setEra(DateEra.SHOWA);
+    model.setEra(Date.Era.SHOWA);
     assertEquals("19441001", model.getValue().toISODate());
 }
 
