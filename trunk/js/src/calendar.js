@@ -330,12 +330,28 @@ Date.Calendar.View.prototype = {
 		this.element.appendChild(this.createBody());
 		this.element.appendChild(this.createFooter());
 		//
-		this.updateBody();
-		this.updateHeader();
-		this.model.attachEvent(this.modelOnChange.bind(this));
+		this.update();
+		if (!this.modelOnChangeHandler)
+		    this.modelOnChangeHandler = this.modelOnChange.bind(this);
+		this.model.attachEvent(this.modelOnChangeHandler);
     },
 	
-	modelOnChange: function(model) {
+	modelOnChange: function() {
+	    this.update();
+	},
+	
+	switchModel: function(newModel){
+	    if (this.model == newModel)
+	        return;
+	    if (this.modelOnChangeHandler)
+	        this.model.detachEvent(this.modelOnChangeHandler);
+	    this.model = newModel;
+		if (!this.modelOnChangeHandler)
+		    this.modelOnChangeHandler = this.modelOnChange.bind(this);
+	    this.model.attachEvent(this.modelOnChangeHandler);
+	},
+	
+	update: function(){
 		this.updateBody();
 		this.updateHeader();
 	},
@@ -699,3 +715,142 @@ Date.Calendar.ViewController.Methods = {
     }
 }
 Object.extend(Date.Calendar.ViewController.prototype, Date.Calendar.ViewController.Methods);
+
+
+Date.Calendar.PullDown = Class.create();
+Date.Calendar.PullDown.DefaultPaneStyle ={
+	"width": "160px",
+	"max-height": "250px",
+	"overflow": "hidden"
+};
+Date.Calendar.PullDown.DefaultPaneOptions ={
+	"style": Date.Calendar.PullDown.DefaultPaneStyle
+};
+Date.Calendar.PullDown.DefaultOptions = {
+    activateSoon: true,
+    hideOnPaneClick: false,
+    toggleOnDblClick: true,
+	pane: Date.Calendar.PullDown.DefaultPaneOptions,
+	closeOnClick: false,
+	closeOnDblClick: true
+}
+Object.extend(Date.Calendar.PullDown, {
+    invokeActivePullDown: function(event, methodName){
+        if (!this.activePullDown)
+            return;
+        var f = this.activePullDown[methodName];
+        f.call(this.activePullDown, event);
+    }
+});
+Date.Calendar.PullDown.Methods = {};
+Object.extend(Date.Calendar.PullDown.Methods, HTMLInputElement.PullDown.Methods);
+Object.extend(Date.Calendar.PullDown.Methods, {
+    initialize: function(field, options) {
+        this.field = $(field);
+        options = Object.fill( options || {}, Date.Calendar.PullDown.DefaultOptions);
+        HTMLInputElement.PullDown.Methods.initialize.apply(this, [options]);
+        this.eraGroup = this.options["eraGroup"]||Date.EraGroup.DEFAULT;
+	    var d = this.eraGroup.parse(this.field.value);
+	    this.model = new Date.Calendar.Model(d, this.eraGroup);
+        if (this.options.activateSoon)
+            this.activate();
+    },
+    getPaneHolder: function(){
+        return Date.Calendar.PullDown;
+    },
+	createPane: function(paneHolder) {
+		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
+        paneHolder.view = new Date.Calendar.View(result, {"model":this.model} );
+        paneHolder.viewController = new Date.Calendar.ViewController(paneHolder.view, {activateSoon:false, keyHandlingElement: document});
+        Object.extend(paneHolder.viewController, {
+            getActions: function() {
+                var result = Date.Calendar.ViewController.Methods.getActions.apply(paneHolder.viewController, arguments);
+                result.unshift({event:"keyup", ctrl: true , key: Event.KEY_SPACE , 
+                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "toggle") });
+                result.unshift({event:"keyup", ctrl: false, key: Event.KEY_RETURN, 
+                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "hide") });
+                result.unshift({event:"keyup", ctrl: false, key: Event.KEY_ESC   ,
+                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "rollback") });
+                return result;
+            }.bind(this),
+            
+            dateCellClicked: function(event, td, dateNumber){
+                var result = Date.Calendar.ViewController.Methods.dateCellClicked.apply(paneHolder.viewController, arguments);
+                if (this.options.closeOnClick)
+                    this.hide();
+                return result;
+            }.bind(this)
+        });
+        if (this.options.closeOnDblClick)
+            Event.observe(paneHolder.view.calendarBodyTable, "dblclick", this.hide.bindAsEventListener(this), false);
+		return result;
+	},
+    activate: function() {
+        var visibleHandlingMatcher = this.matchWhenVisible.bind(this);
+        this.fieldKeyController = new Date.Calendar.KeyController(this.field, this.model, {activateSoon:false});
+        Object.extend(this.fieldKeyController, {
+            getActions: function() {
+                var result = Date.Calendar.KeyController.Methods.getActions.apply(this.fieldKeyController, arguments);
+                result.unshift(
+                    {event:"keyup", ctrl: true , key: Event.KEY_SPACE, method: this.toggle.bindAsEventListener(this) });
+                return result;
+            }.bind(this)
+        });
+        this.fieldKeyController.activate();
+        Event.observe(this.field, "blur", this.hide.bindAsEventListener(this) , false);
+        if (this.options.toggleOnDblClick) 
+            Event.observe(this.field, "dblclick", this.toggle.bindAsEventListener(this) , false);
+    },
+    matchWhenVisible: function(action, event, keyCode, keyHandler) {
+        return (this.visible && keyHandler.matchAction(action, event, keyCode));
+    },
+    clickDocument: function(event) {
+        if (!this.options.closeOnClick) {
+            var element = Event.element(event);
+            if (Element.childOf(element, this.pane) || element == this.field)
+                return;
+        }
+        this.hide();
+    },
+
+    _hide: function(event) {
+        HTMLInputElement.PullDown.Methods._hide.apply(this, arguments);
+        var paneHolder = this.getPaneHolder();
+        if (!this.visible){
+            if (paneHolder.viewController)
+                paneHolder.viewController.deactivateKeys();
+            this.fieldKeyController.activate();
+            if (this.clickDocumentHandler) {
+                Event.stopObserving(document, "click", this.clickDocumentHandler, false);
+                this.clickDocumentHandler = null;
+            }
+        }
+        this.lastFieldValue = null;
+    },
+    hide: function(event) {
+        HTMLInputElement.PullDown.Methods.hide.apply(this, arguments);
+    },
+    rollback: function(event){
+        this.field.value = this.lastFieldValue;
+        this.hide();
+    },
+    show: function(event) {
+        this.lastFieldValue = this.field.value;
+        HTMLInputElement.PullDown.Methods.show.apply(this, arguments);
+        var paneHolder = this.getPaneHolder();
+        paneHolder.activePullDown = this;
+        paneHolder.view.switchModel(this.model);
+        paneHolder.viewController.model = this.model;
+        paneHolder.view.update();
+        if (this.visible) {
+            if (!this.clickDocumentHandler) {
+                this.clickDocumentHandler = this.clickDocument.bindAsEventListener(this);
+                Event.observe(document, "click", this.clickDocumentHandler, false);
+            }
+            this.fieldKeyController.deactivate();
+            paneHolder.viewController.activateKeys();
+        }
+    }
+	
+});
+Object.extend(Date.Calendar.PullDown.prototype, Date.Calendar.PullDown.Methods);

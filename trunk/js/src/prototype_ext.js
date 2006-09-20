@@ -47,6 +47,14 @@ if (!document.setSelection) {
     }
 }
 
+Function.prototype.bindWithArgsAsEventListener = function(object) {
+    var __method = this, args = $A(arguments), object = args.shift();
+    return function(event) {
+        var _args = args.clone();
+        _args.unshift(event || window.event);
+        return __method.apply(object, _args);
+    }
+}
 
 Object.extend(Object, {
     fill: function(target, properties) {
@@ -1275,12 +1283,15 @@ HTMLInputElement.PullDown.Methods = {
 		this.paneStyle = Object.fill( this.paneOptions["style"] || {}, HTMLInputElement.PullDown.DefaultPaneStyle );
         this.visible = false;
     },
-	createPane: function() {
+    getPaneHolder: function(){
+        return this;
+    },
+	createPane: function(paneHolder) {
 		var result = document.createElement("DIV");
 		result.style.position = "absolute";
 		result.style.display = "none";
 		if (this.paneOptions.style)
-		  delete this.paneOptions.style;
+		    delete this.paneOptions.style;
 		Object.extendProperties(result, this.paneOptions);
 		Element.setStyle(result, this.paneStyle);
 		document.body.appendChild(result);
@@ -1293,19 +1304,20 @@ HTMLInputElement.PullDown.Methods = {
             this.show(event);
     },
     show: function(event) {
-        if (!this.pane) {
-            this.pane = this.createPane();
-            this.shim = new HTMLIFrameElement.Shim(this.pane);
-            Event.observe(this.pane, "click", this.paneClick.bindAsEventListener(this), false);
-            //Event.observe(this.pane, "focus", this.paneClick.bindAsEventListener(this), false);
-            //Event.observe(this.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
+        var paneHolder = this.getPaneHolder();
+        if (!paneHolder.pane) {
+            paneHolder.pane = this.createPane(paneHolder);
+            paneHolder.shim = new HTMLIFrameElement.Shim(paneHolder.pane);
+            Event.observe(paneHolder.pane, "click", this.paneClick.bindAsEventListener(this), false);
+            //Event.observe(paneHolder.pane, "focus", this.paneClick.bindAsEventListener(this), false);
+            //Event.observe(paneHolder.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
         }
 		this.updatePaneRect(event);
-        Element.show(this.pane);
-        this.shim.enableShim();
+        Element.show(paneHolder.pane);
+        paneHolder.shim.enableShim();
         this.visible = true;
         try{
-            HTMLElement.scrollIfInvisible(this.pane);
+            HTMLElement.scrollIfInvisible(paneHolder.pane);
         }catch(ex){
         }
     },
@@ -1330,18 +1342,20 @@ HTMLInputElement.PullDown.Methods = {
     _hide: function(event) {
         if (!this.waitHiding)
             return;
-        if (!this.pane)
+        var paneHolder = this.getPaneHolder();
+        if (!paneHolder.pane)
             return;
-        Element.hide(this.pane);
-        this.shim.disableShim();
+        Element.hide(paneHolder.pane);
+        paneHolder.shim.disableShim();
         this.visible = false;
         this.waitHiding = false;
     },
     updatePaneRect: function(event) {
         var field = Event.element(event);
 		var fieldPosition = Position.positionedOffset(field);
-        this.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
-		this.pane.style.left = (fieldPosition[0]) + "px";
+        var paneHolder = this.getPaneHolder();
+        paneHolder.pane.style.top = (fieldPosition[1] + field.offsetHeight)  + "px";
+		paneHolder.pane.style.left = (fieldPosition[0]) + "px";
     }
 };
 Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Methods);
