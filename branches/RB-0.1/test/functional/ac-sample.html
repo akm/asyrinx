@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>AutoComplete Sample</title>
+<script language="javascript" type="text/javascript" src="../../lib/prototype.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/prototype_ext.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/logger.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/table_selection.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/ac.js" ></script>
+
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+	.number{ text-align: right; }
+	.currency{ text-align: right; }
+--></style>
+
+</head>
+<body>
+<script language="javascript"    type="text/javascript" ><!--
+var products = [
+    {id: 1, category:1, name: "Debian 辞典", asin:"4798109088", price: 2940 },
+    {id: 2, category:1, name: "Debian GNU/Linux徹底入門第3版 Sarge対応", asin:"4798102865", price: 4968 },
+    {id: 3, category:1, name: "プログラミングRuby―達人プログラマーガイド", asin:"4894714531", price: 6708},
+    {id: 4, category:1, name: "Rubyレシピブック 268の技", asin:"4797324295", price: 2940},
+    {id: 5, category:1, name: "Subversion実践入門達人プログラマに学ぶバージョン管理", asin:"4274066134", price: 2730 },
+    {id: 6, category:1, name: "かんたんRuby on RailsでWebアプリケーション開発", asin:"4798111570", price: 2940},
+    {id: 7, category:1, name: "RailsによるアジャイルWebアプリケーション開発", asin:"4274066401", price: 3990 },
+    {id: 8, category:1, name: "ライド・オン・Rails Ruby on Railsを徹底攻略", asin:"4797335750", price: 3129 },
+    {id: 9, category:1, name: "RubyonRails入門 優しいRailsの育て方", asin:"4798013951", price: 2940},
+    {id:10, category:1, name: "プログラミングRuby 第2版 言語編", asin:"4274066428", price: 3990 },
+    {id:11, category:1, name: "プログラミングRuby 第2版 ライブラリ編", asin:"4274066436", price: 4410},
+    {id:12, category:1, name: "Ship It! ソフトウェアプロジェクト 成功のための達人式ガイドブック", asin:"4274066568", price: 2730},
+    {id:13, category:2, name: "オースティン・パワーズ", asin:"B000FI9P12", price: 2052},
+    {id:14, category:2, name: "ラブ・アクチュアリー", asin:"B000E6GB9E", price: 1406 },
+    {id:15, category:2, name: "ライフ・イズ・ビューティフル", asin:"B00005V2NG", price: 2980},
+    {id:16, category:2, name: "CUBE", asin:"B0000DJWJE", price: 2963 },
+    {id:17, category:2, name: "となりのトトロ", asin:"B00005NJLP", price: 3664 }
+];
+function selectProducts(params) {
+    var result = [];
+    for(var i = 0; i < products.length; i++) {
+        var p = products[i];
+        if (p.name.indexOf(params.name) < 0)
+            continue;
+        if (p.asin.indexOf(params.asin) < 0)
+            continue;
+        result.push(p);
+    }
+    return result;
+}
+
+--></script>
+
+	<form name="f">
+		<table><tr><td>
+    		<label for="f_id">ID</label>
+    		<input type="text" id="f_id" name="f_id" size="10" autocomplete="off" class="number"/>
+		</td></tr>
+		<tr><td>
+			<label for="f_name">名前</label>
+			<input type="text" id="f_name" name="f_name" autocomplete="off"/>
+		</td></tr>
+		<tr><td>
+			<label for="f_asin">ASIN</label>
+			<input type="text" id="f_asin" name="f_asin" autocomplete="off"/>
+		</td></tr>
+		<table><tr><td>
+			<select id="f_category" name="f_category">
+				<option value="1">書籍</option>
+				<option value="2">DVD</option>
+				<option value="3">CD</option>
+			</select>
+		</td></tr>
+		<tr><td>
+			<label for="f_price">価格</label>
+			<input type="text" id="f_price" name="f_price" autocomplete="off" class="currency"
+			     onclick='logger.debugObj("event", event)'/>
+		</td></tr>
+		<tr><td>
+			<a href="javascript:void(0)" id="btn_clear">クリア</a>
+			&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" id="btn_prev">prev</a>
+			&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" id="btn_next">next</a>
+		</td></tr>
+		</table>
+	</form>
+
+<table id="amazon_products"  border="1" cellspacing="0" cellpadding="0">
+    <thead><tr>
+        <th width="30">ID</th>
+        <th width="50">カテゴリ</th>
+        <th width="400">名前</th>
+        <th width="100">ASINコード</th>
+        <th width="80">価格</th>
+    </tr></thead>
+    <tbody id="amazon_products_body">
+    </tbody>
+</table>
+
+<script language="javascript"    type="text/javascript" ><!--
+
+var mappings = [
+   { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f_id") },
+   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f_category"), defaultValue:1, htmlOptions:{"align":"center"} },
+   { suggestive:true , visible:true , type:"String"  , property: "name", field: $("f_name") },
+   { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f_asin") },
+   { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f_price") }
+];
+var rowGenerator = new ACFields.BasicTable($("amazon_products"), mappings);
+
+var acFields = new ACFields(mappings, {
+    query: function(parameters, sender) {
+        var result = selectProducts(parameters);
+        rowGenerator.execute(result);
+    }
+});
+rowGenerator.execute(products.slice(0, 10));
+var selection = new HTMLTableElement.MouseOverRowSelection($("amazon_products"));
+Event.observe($("btn_prev"), "click", selection.prev.bindAsEventListener(selection), false);
+Event.observe($("btn_next"), "click", selection.next.bindAsEventListener(selection), false);
+Event.observe($("btn_clear"), "click", acFields.clear.bind(acFields), false);
+
+var selectRow = function(event) {
+    var values = rowGenerator.toValues(selection.row);
+    acFields.select(values);
+};
+Event.observe($("amazon_products"), "click", selectRow, false);
+
+new Event.KeyHandler([$("f_name"), $("f_asin")], [
+    {event: "keydown", key: Event.KEY_UP    , method: selection.prev.bindAsEventListener(selection) },
+    {event: "keydown", key: Event.KEY_DOWN  , method: selection.next.bindAsEventListener(selection) },
+    {event: "keydown", key: Event.KEY_RETURN, method: selectRow }
+]);
+
+--></script>
+
+	<form name="f2">
+		<table><tr><td>
+    		<label for="f2_id">ID</label>
+    		<input type="text" id="f2_id" name="f_id" size="10" autocomplete="off" class="number"/>
+		</td></tr>
+		<tr><td>
+			<label for="f2_name">名前</label>
+			<input type="text" id="f2_name" name="f_name" autocomplete="off"/>
+		</td></tr>
+		<tr><td>
+			<label for="f2_asin">ASIN</label>
+			<input type="text" id="f2_asin" name="f_asin" autocomplete="off"/>
+		</td></tr>
+		<table><tr><td>
+			<select id="f2_category" name="f_category">
+				<option value="1">書籍</option>
+				<option value="2">DVD</option>
+				<option value="3">CD</option>
+			</select>
+		</td></tr>
+		<tr><td>
+			<label for="f2_price">価格</label>
+			<input type="text" id="f2_price" name="f_price" autocomplete="off" class="currency"
+			     onclick='logger.debugObj("event", event)'/>
+		</td></tr>
+		</table>
+	</form>
+	
+<script language="javascript" type="text/javascript" ><!--
+
+var mappings2 = [
+   { suggestive:false, visible:true , type:"Number"  , property: "id", field: $("f2_id") },
+   { suggestive:false, visible:true , type:"Number"  , property: "category", field: $("f2_category"), defaultValue:1, htmlOptions:{"align":"center"} },
+   { suggestive:true , visible:true , type:"String"  , property: "name", field: $("f2_name") },
+   { suggestive:true , visible:true , type:"String"  , property: "asin", field: $("f2_asin") },
+   { suggestive:false, visible:true , type:"Currency", property: "price", field: $("f2_price") }
+];
+var pullDown = new ACFields.PullDown(mappings2, 
+    function(parameters, callback) {
+        var result = selectProducts(parameters);
+        setTimeout(function(){ callback(result); }, 500);
+        //return result; 
+    },
+    {
+        searchingHTML: '<img src="./spinner.gif">検索中・・・',
+        pane: {
+            style: {
+                "height": "200px"
+            }
+        },
+        rowGenerator: {
+            "noRecordHTML": "( -- 該当無し -- )",
+            "clearSelectionHTML": "[クリア]"
+        }
+    }
+);
+logger.showWindow();
+
+--></script>
+
+</body>
+</html>

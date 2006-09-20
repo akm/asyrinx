@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>Test prototype_ext.js</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/jsUnitCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../lib/test_helper.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/date.js"></script>
+</head>
+<body>
+<h1>date.js Tests</h1>
+<p>This page tests loading data documents asynchronously.  To see them, take a look at the source.</p>
+
+
+<script language="JavaScript" type="text/javascript"><!--
+function test_Date_toISODate() {
+    assertEquals("20060915", new Date("2006/9/15").toISODate());
+    assertEquals("20061001", new Date("2006/9/31").toISODate());
+    assertEquals("20061005", new Date("2006/9/35").toISODate());
+}
+
+function test_Date_clone() {
+    var d1=new Date("2006/9/15");
+    var d2=d1.clone();
+    d1.setFullYear(2007);
+    assertEquals("20070915", d1.toISODate());
+    assertEquals("20060915", d2.toISODate());
+}
+
+function test_Date_toBeginOfDate_toEndOfDate() {
+    var d1 = new Date(2006,9,15,21,46,7,378);
+    var d2 = d1.toBeginOfDate();
+    var d3 = d1.toEndOfDate();
+    assertEquals(2006, d1.getFullYear());
+    assertEquals(9, d1.getMonth());
+    assertEquals(15, d1.getDate());
+    assertEquals(21, d1.getHours());
+    assertEquals(46, d1.getMinutes());
+    assertEquals(7, d1.getSeconds());
+    assertEquals(378, d1.getMilliseconds());
+    assertEquals(2006, d2.getFullYear());
+    assertEquals(9, d2.getMonth());
+    assertEquals(15, d2.getDate());
+    assertEquals(0, d2.getHours());
+    assertEquals(0, d2.getMinutes());
+    assertEquals(0, d2.getSeconds());
+    assertEquals(0, d2.getMilliseconds());
+    assertEquals(2006, d3.getFullYear());
+    assertEquals(9, d3.getMonth());
+    assertEquals(15, d3.getDate());
+    assertEquals(23, d3.getHours());
+    assertEquals(59, d3.getMinutes());
+    assertEquals(59, d3.getSeconds());
+    assertEquals(999, d3.getMilliseconds());
+}
+
+function test_Date_isLeapYear() {
+    assertEquals("1996 leapYear", true , Date.isLeapYear(1996));
+    assertEquals("2000 leapYear", true,  Date.isLeapYear(2000));
+    assertEquals("2004 leapYear", true , Date.isLeapYear(2004));
+    assertEquals("2008 leapYear", true , Date.isLeapYear(2008));
+    assertEquals("2012 leapYear", true , Date.isLeapYear(2012));
+}
+
+function test_Date_getDaysOfYear() {
+    assertEquals("1996", 366, Date.getDaysOfYear(1996));
+    assertEquals("1997", 365, Date.getDaysOfYear(1997));
+    assertEquals("1998", 365, Date.getDaysOfYear(1998));
+    assertEquals("1999", 365, Date.getDaysOfYear(1999));
+    assertEquals("2000", 366, Date.getDaysOfYear(2000));
+    assertEquals("2001", 365, Date.getDaysOfYear(2001));
+}
+
+function test_Date_getDaysOfMonth() {
+    assertEquals("1996/01", 31, Date.getDaysOfMonth(1996,0));
+    assertEquals("1996/02", 29, Date.getDaysOfMonth(1996,1));
+    assertEquals("1996/03", 31, Date.getDaysOfMonth(1996,2));
+    assertEquals("1996/04", 30, Date.getDaysOfMonth(1996,3));
+    assertEquals("1997/01", 31, Date.getDaysOfMonth(1997,0));
+    assertEquals("1997/02", 28, Date.getDaysOfMonth(1997,1));
+    assertEquals("1997/03", 31, Date.getDaysOfMonth(1997,2));
+    assertEquals("1997/04", 30, Date.getDaysOfMonth(1997,3));
+}
+
+function test_Date_succ() {
+    var d1 = new Date("2006/12/30");
+    var d2 = d1.succ();
+    var d3 = d2.succ();
+    assertEquals("20061231", d2.toISODate());
+    assertEquals("20070101", d3.toISODate());
+}
+
+function test_ObjectRange_of_Date() {
+    var d1 = new Date(2006,11,30).toBeginOfDate(); 
+    var d2 = new Date(2007,0,3).toEndOfDate();
+    var dateRange1 = new ObjectRange(d1,d2);
+    
+    logger.debug("d1.getTime()=" + d1.getTime());
+    logger.debug("d2.getTime()=" + d2.getTime());
+    logger.debug("d3.getTime()=" + (new Date("2006/12/31")).getTime());
+    
+    assertEquals("2006/12/29 in range", false, dateRange1.include(new Date("2006/12/29")));
+    assertEquals("2006/12/30 in range", true , dateRange1.include(new Date("2006/12/30")));
+    assertEquals("2006/12/31 in range", true , dateRange1.include(new Date("2006/12/31")));
+    assertEquals("2007/01/01 in range", true , dateRange1.include(new Date("2007/01/01")));
+    assertEquals("2007/01/02 in range", true , dateRange1.include(new Date("2007/01/02")));
+    assertEquals("2007/01/03 in range", true , dateRange1.include(new Date("2007/01/03")));
+    assertEquals("2007/01/04 in range", false, dateRange1.include(new Date("2007/01/04")));
+
+    assertArray(["20061230","20061231","20070101","20070102","20070103"],
+        dateRange1.collect(function(date){return date.toISODate();}) );
+}
+
+function test_Date_EraGroup_getEraByDate() {
+    assertEquals("1867/12/31", null, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1867/12/31")));
+    assertEquals("1868/01/01", Date.Era.MEIJI , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1868/01/01")));
+    assertEquals("1912/07/29", Date.Era.MEIJI , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/29")));
+    assertEquals("1912/07/30", Date.Era.TAISHO, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1912/07/30")));
+    assertEquals("1926/12/24", Date.Era.TAISHO, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/24")));
+    assertEquals("1926/12/25", Date.Era.SHOWA , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1926/12/25")));
+    assertEquals("1989/01/07", Date.Era.SHOWA , Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/07")));
+    assertEquals("1989/01/08", Date.Era.HEISEI, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("1989/01/08")));
+    assertEquals("2050/12/31", Date.Era.HEISEI, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2050/12/31")));
+    assertEquals("2051/01/01", null, Date.EraGroup.DEFAULT_WAREKI.getEraByDate(new Date("2051/01/01")));
+}
+
+function test_Date_EraGroup_parse() {
+    var eraGroup = Date.EraGroup.DEFAULT_WAREKI_SEIREKI;
+    
+    //logger.debug("test_Date_EraGroup_parse");
+    //new Object.Aspect.Logger(Date.Era.MEIJI, "toADYear");
+    //new Object.Aspect.Logger(eraGroup, ["getEraOf","parse"]);
+    
+    assertEquals("18671231", eraGroup.parse("1867/12/31").toISODate());
+    assertEquals("18680101", eraGroup.parse("M1/01/01").toISODate());
+    assertEquals("19120729", eraGroup.parse("M45/07/29").toISODate());
+    assertEquals("19120730", eraGroup.parse("T1/07/30").toISODate());
+    assertEquals("19261224", eraGroup.parse("T15/12/24").toISODate());
+    assertEquals("19261225", eraGroup.parse("S1/12/25").toISODate());
+    assertEquals("19890107", eraGroup.parse("S64/01/07").toISODate());
+    assertEquals("19890108", eraGroup.parse("H1/01/08").toISODate());
+    assertEquals("20501231", eraGroup.parse("H62/12/31").toISODate());
+    assertEquals("20510101", eraGroup.parse("2051/01/01").toISODate());
+}
+
+function test_Date_EraGroup_format() {
+    var eraGroup = Date.EraGroup.DEFAULT_WAREKI_SEIREKI;
+    
+    //logger.debug("test_Date_EraGroup_parse");
+    //new Object.Aspect.Logger(Date.Era.MEIJI, "toADYear");
+    //new Object.Aspect.Logger(eraGroup, ["getEraOf","parse"]);
+    
+    assertEquals("1867/12/31", eraGroup.format(new Date("1867/12/31")));
+    assertEquals("M1/1/1" , eraGroup.format(new Date("1868/01/01")));
+    assertEquals("M45/7/29" , eraGroup.format(new Date("1912/07/29")));
+    assertEquals("T1/7/30" , eraGroup.format(new Date("1912/07/30")));
+    assertEquals("T15/12/24" , eraGroup.format(new Date("1926/12/24")));
+    assertEquals("S1/12/25" , eraGroup.format(new Date("1926/12/25")));
+    assertEquals("S64/1/7" , eraGroup.format(new Date("1989/01/07")));
+    assertEquals("H1/1/8" , eraGroup.format(new Date("1989/01/08")));
+    assertEquals("H62/12/31" , eraGroup.format(new Date("2050/12/31")));
+    assertEquals("2051/1/1", eraGroup.format(new Date("2051/01/01")));
+}
+
+
+--></script>
+
+</body>
+</html>
