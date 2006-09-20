@@ -54,7 +54,19 @@ Function.prototype.bindWithArgsAsEventListener = function(object) {
         _args.unshift(event || window.event);
         return __method.apply(object, _args);
     }
-}
+};
+
+//see http://nanto.asablo.jp/blog/2005/10/24/118564
+//by nanto_vi
+Function.prototype.applyNew = function(args){
+    var constructor = function(){};
+    constructor.prototype = this.prototype;
+    var instance = new constructor();
+    var result = this.apply(instance, args);
+    return (result instanceof Object)?result:instance;
+};
+
+
 
 Object.extend(Object, {
     fill: function(target, properties) {
@@ -248,7 +260,15 @@ Object.extend(Array.prototype, {
                 result.push(val);
         }
         return result;
-    }
+    },
+	unique: function() {
+		return this.inject([], 
+			function(dest, value, index) {
+				if (!dest.include(value))
+					dest.push( value );
+				return dest;
+			} );
+	}
 });
 Object.extend(String, {
 	PluralizePatterns: [
@@ -1183,6 +1203,53 @@ Form.Element.Deserializers = {
 	}
 }
 
+
+Math.Rectangle = Class.create();
+Math.toRect = function(obj) {
+ 	if (arguments.length == 1) {
+     	if (obj.offsetLeft && obj.offsetTop)
+     	    return new Math.Rectangle(obj.offsetLeft, obj.offsetTop, obj.offsetWidth, obj.offsetHeight);
+     	else
+     	    return new Math.Rectangle(obj.left, obj.top, obj.width, obj.height);
+ 	} else {
+ 	    return Math.Rectangle.applyNew(arguments)
+ 	}
+}
+Object.extend(Math.Rectangle, {
+	containsPosition: function(left,top,width,height,x,y) {
+		return (left<x && x<left+width && top<y && y<top+height);
+	}
+});
+Math.Rectangle.prototype = {
+ 	initialize: function(left, top, width, height) {
+ 		this.left = left||0; 
+ 		this.top = top||0; 
+ 		this.width = width||0; 
+ 		this.height = height||0;
+ 	},
+ 	getLeft: function(){return this.left;},
+ 	getTop: function(){return this.top;},
+ 	getRight: function(){return this.left+this.width;},
+ 	getBottom: function(){return this.top+this.height;},
+ 	
+    containsPosition: function(position) {
+ 		return Math.Rectangle.containsPosition(
+ 			this.left, this.top, this.width, this.height, position.x, position.y);
+ 	},
+ 	
+	isIntersectedWith: function(rect) {
+		if (!rect)
+			throw new Error("rect is not specified");
+		return !( (this.getRight() < rect.left)||
+		      (this.left > rect.left + rect.width)||
+		      (this.getBottom() < rect.top)||
+		      (this.top > rect.top + rect.height) );
+	}
+}
+
+
+
+
 if (!HTMLElement) HTMLElement = {};
 
 Object.extend(HTMLElement, {
@@ -1253,8 +1320,39 @@ Object.extend(HTMLElement, {
                 scrollable[scrollableProp] = pos;
             }
         }
-    }
-    
+	},
+	getIntersectedElements: function(baseElement, tagName){
+	    tagName = tagName||"DIV";
+	    var elements = document.getElementsByTagName(tagName);
+	    var baseRect = Math.toRect(baseElement);
+	    var result = [];
+	    for(var i=0;i<elements.length;i++){
+	        var element = elements[i];
+	        if (element==elements || element.style.position!="absolute")
+	            continue;
+	        if (baseRect.isIntersectedWith(Math.toRect(element)))
+	            result.push(element);
+	    }
+	    return result;
+	},
+	bringToFront: function(target){
+	    var intersected = this.getIntersectedElements(target);
+	    if (intersected.length < 1)
+	        return;
+	    var maxZIndex = intersected.collect(function(element){
+	        return (element.style.zIndex)?element.style.zIndex*1:0}).max();
+	    target.style.zIndex = maxZIndex + 1;
+	},
+	centering: function(target) {
+		target = $(target);
+		var documentBody = document.documentElement || document.body;
+		var clientW = documentBody.clientWidth;
+		var clientH = documentBody.clientHeight;
+		var scrollL = documentBody.scrollLeft;
+		var scrollT = documentBody.scrollTop;
+		target.style.left = ((clientW-target.offsetWidth)/2+scrollL)+"px";
+		target.style.top = ((clientH-target.offsetHeight)/2+scrollT)+"px";
+	}
 });
 
 
@@ -1264,7 +1362,7 @@ HTMLInputElement.PullDown = Class.create();
 HTMLInputElement.PullDown.DefaultOptions = {
     hideTimeout: 500,
     hideSoonOnKeyEvent: true,
-    hideOnPaneClick: false
+    hideOnPaneClick: true
 };
 HTMLInputElement.PullDown.DefaultPaneStyle = {
 	"cursor": "default",
@@ -1307,7 +1405,7 @@ HTMLInputElement.PullDown.Methods = {
         var paneHolder = this.getPaneHolder();
         if (!paneHolder.pane) {
             paneHolder.pane = this.createPane(paneHolder);
-            paneHolder.shim = new HTMLIFrameElement.Shim(paneHolder.pane);
+            paneHolder.shim = HTMLIFrameElement.Shim.fit(paneHolder.pane);
             Event.observe(paneHolder.pane, "click", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "focus", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
@@ -1374,13 +1472,27 @@ HTMLIFrameElement.Shim.DefaultStyle = {
 	"display": "none",
 	"z-index": 10
 };
+Object.extend(HTMLIFrameElement.Shim, {
+    fit: function(pane) {
+        var result = HTMLIFrameElement.Shim.needShim() ?
+            new HTMLIFrameElement.Shim(pane) : HTMLIFrameElement.Shim.NULL; 
+		result.enableShim();
+		return result;
+    },
+    needShim: function() {
+		return 
+		  (navigator.appVersion.indexOf("MSIE") > -1) &&
+		  (navigator.appVersion.indexOf("MSIE 7") < 0);
+    }
+});
+HTMLIFrameElement.Shim.NULL = {
+	fit: function() {},
+	enableShim: function() {},
+	disableShim: function() {}
+};
 HTMLIFrameElement.Shim.prototype = {
     initialize: function(pane, options, style) {
         this.pane = pane;
-		if (navigator.appVersion.indexOf("MSIE") < 0)
-		    return;
-		if (navigator.appVersion.indexOf("MSIE 7") > -1)
-		    return;
 		this.frame = document.createElement("IFRAME");
 		document.body.appendChild(this.frame);
 		Object.extend(this.frame, Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions));
