@@ -12,7 +12,7 @@
  */
 
 Pane = {
-    fitShim: HTMLIFrameElement.Shim.fit
+    createShim: HTMLIFrameElement.Shim.create
 };
 
 Pane.Draggable = Class.create();
@@ -24,7 +24,7 @@ Pane.Draggable.prototype = {
 		this.dragging = false;
 		this.dragOffsetX = 0;
 		this.dragOffsetY = 0;
-		this.shim = Pane.fitShim(draggedPane);
+		this.shim = Pane.createShim(draggedPane);
 		Event.observe(this.draggingPane, 'mousedown', this.draggingPaneMouseDown.bindAsEventListener(this), true);
 		Event.observe(this.draggedPane, 'mousedown', this.draggedPaneMouseDown.bindAsEventListener(this), true);
 		Event.observe(document, 'mousemove', this.draggingPaneMouseMove.bindAsEventListener(this), true);
