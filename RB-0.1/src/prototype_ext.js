@@ -942,6 +942,7 @@ Object.extend(Event, {
 	KEY_ALT			:  18,
 	KEY_PAUSE		:  19,
 	KEY_CAPS_LOCK	:  20,
+	KEY_ESCAPE     	:  27,
 	KEY_ESC        	:  27,
 	KEY_SPACE		:  32,
 	KEY_PAGE_UP		:  33,
@@ -1053,6 +1054,7 @@ Object.extend(Event, {
 	KEY_IME_ON		: 243,
 	KEY_IME_OFF 	: 244
 });
+
 Object.extend(Event, {
 	observeDelay: function(element, name, observer, useCapture, options) {
 		options = Object.fill( options || {}, {"delay":500} );
@@ -1069,6 +1071,91 @@ Object.extend(Event, {
 	
 	getKeyCode: function(event) {
 	   return event.keyCode || event.charCode || event.which;
+	},
+	getKeyName: function(keyCode){
+	   if (!Event.keyNames){
+	       Event.keyNames = {
+              3:"Cancel",
+              6:"Help",
+              8:"BackSpace",
+              9:"Tab",
+             12:"Clear",
+             13:"Return",
+             14:"Enter",
+             16:"Shift",
+             17:"Control",
+             18:"Alt",
+             19:"Pause",
+             20:"CapsLock",
+             //27:"ESCAPE",
+             27:"Esc",
+             32:"Space",
+             33:"PageUp",
+             34:"PageDown",
+             35:"End",
+             36:"Home",
+             37:"Left",
+             38:"Up",
+             39:"Right",
+             40:"Down",
+             44:"PrintScreen",
+             45:"Insert",
+             46:"Delete",
+             93:"ContextMenu",
+             96:"Numpad0",
+             97:"Numpad1",
+             98:"Numpad2",
+             99:"Numpad3",
+            100:"Numpad4",
+            101:"Numpad5",
+            102:"Numpad6",
+            103:"Numpad7",
+            104:"Numpad8",
+            105:"Numpad9",
+            112:"F1",
+            113:"F2",
+            114:"F3",
+            115:"F4",
+            116:"F5",
+            117:"F6",
+            118:"F7",
+            119:"F8",
+            120:"F9",
+            121:"F10",
+            122:"F11",
+            123:"F12",
+            124:"F13",
+            125:"F14",
+            126:"F15",
+            127:"F16",
+            128:"F17",
+            129:"F18",
+            130:"F19",
+            131:"F20",
+            132:"F21",
+            133:"F22",
+            134:"F23",
+            135:"F24",
+            144:"NumLock",
+            145:"ScrollLock",
+            186:"Colon",
+            187:"SemiColon2",
+            188:"Comma",
+            189:"Hyphen",
+            190:"Period",
+            191:"Slash",
+            192:"BackQuote",
+            219:"OpenBracket",
+            220:"BackSlash",
+            221:"CloseBracket",
+            222:"Quote",
+            224:"Meta",
+            226:"BackSlash2",
+            243:"ImeOn",
+            244:"ImeOff"
+	       };
+	   }
+	   return Event.keyNames[keyCode] || String.fromCharCode(keyCode) || keyCode;
 	}
 });
 
@@ -1124,13 +1211,14 @@ Event.KeyHandler.prototype = {
                this.matchFunctionKey(action, "shift", event, "shiftKey")
     },
     isHandlingAction: function(action, event, keyCode) {
-        var result = (action.matchAll) ||
-            (action.match && action.match(action, event, keyCode, this)) ||
+        var result = (action.matchAll) ? true :
+            (action.match) ? action.match(action, event, keyCode, this):
             this.matchAction(action, event, keyCode);
         return (this.options.handleOnMatch) ? result : !result;
     },
     handle: function(event) {
         var keyCode = Event.getKeyCode(event);
+        //logger.debug(event.type + " alt:" + event.altKey + " ctrl:" + event.ctrlKey + " shift:" + event.shiftKey + " keyCode:" + keyCode);
         for(var i = 0; i < this.actions.length; i++) {
             var action = this.actions[i];
             if (this.isHandlingAction(action, event, keyCode)) {
@@ -1255,8 +1343,6 @@ Math.Rectangle.prototype = {
 		      (this.top > rect.top + rect.height) );
 	}
 }
-
-
 
 
 if (!HTMLElement) HTMLElement = {};
@@ -1414,7 +1500,7 @@ HTMLInputElement.PullDown.Methods = {
         var paneHolder = this.getPaneHolder();
         if (!paneHolder.pane) {
             paneHolder.pane = this.createPane(paneHolder);
-            paneHolder.shim = HTMLIFrameElement.Shim.fit(paneHolder.pane);
+            paneHolder.shim = HTMLIFrameElement.Shim.create(paneHolder.pane);
             Event.observe(paneHolder.pane, "click", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "focus", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
@@ -1482,16 +1568,21 @@ HTMLIFrameElement.Shim.DefaultStyle = {
 	"z-index": 10
 };
 Object.extend(HTMLIFrameElement.Shim, {
-    fit: function(pane) {
+    create: function(pane) {
+	    
+	    logger.debug("HTMLIFrameElement.Shim.create  => " + HTMLIFrameElement.Shim.needShim());
+	    
         var result = HTMLIFrameElement.Shim.needShim() ?
             new HTMLIFrameElement.Shim(pane) : HTMLIFrameElement.Shim.NULL; 
 		result.enableShim();
 		return result;
     },
     needShim: function() {
-		return 
+		var result =
 		  (navigator.appVersion.indexOf("MSIE") > -1) &&
 		  (navigator.appVersion.indexOf("MSIE 7") < 0);
+	    logger.debug("HTMLIFrameElement.Shim.needShim  => " + result);
+		return result
     }
 });
 HTMLIFrameElement.Shim.NULL = {
@@ -1511,8 +1602,12 @@ HTMLIFrameElement.Shim.prototype = {
 		Event.observe(this.pane, "resize", this.paneResized.bindAsEventListener(this), true);
     },
 	fit: function() {
+	    logger.debug("HTMLIFrameElement.Shim#fit");
+	    
 	    if (!this.frame)
 	       return;
+	       
+	       
 		this.frame.style.width = this.pane.offsetWidth + "px";
 		this.frame.style.height = this.pane.offsetHeight + "px";
 		this.frame.style.top = this.pane.style.top;
