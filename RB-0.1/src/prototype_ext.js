@@ -210,6 +210,14 @@ EnumerableExt = {
       }
     });
     return result;
+  },
+  sum: function(iterator) {
+    var result = 0;
+    this.each(function(value, index) {
+      value = (iterator||Prototype.K)(value,index);
+      result += value;
+    });
+    return result;
   }
 }
 
@@ -871,8 +879,9 @@ Element.Builder.prototype = {
 	applyAttributes: function(node, attributeObj, ignoreProperties){
 		if (!attributeObj)
 			return;
+	    ignoreProperties = ignoreProperties||this.ignoreProperties;
 		for(var prop in attributeObj) {
-			if (ignoreProperties && this._array_contains( ignoreProperties, prop ))
+			if (ignoreProperties && this._array_contains(ignoreProperties, prop))
 				continue;
 			//IEのstyleは特別扱い
 			if ((prop == "style") &&  (navigator.appVersion.indexOf("MSIE") > -1)) {
