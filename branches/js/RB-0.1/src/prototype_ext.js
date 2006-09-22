@@ -1581,11 +1581,9 @@ Object.extend(HTMLIFrameElement.Shim, {
 		return result;
     },
     needShim: function() {
-		var result =
+		return 
 		  (navigator.appVersion.indexOf("MSIE") > -1) &&
 		  (navigator.appVersion.indexOf("MSIE 7") < 0);
-	    logger.debug("HTMLIFrameElement.Shim.needShim  => " + result);
-		return result
     }
 });
 HTMLIFrameElement.Shim.NULL = {
