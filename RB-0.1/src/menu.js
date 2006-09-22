@@ -261,6 +261,8 @@ Menu.Item.Methods = {
     },
     
     isChildElement: function(element){
+        if (!this.cells)
+            return false;
         for(var i=0;i<this.cells.length;i++){
             var cell=this.cells[i];
             if ((element == cell)||Element.childOf(element,cell))
@@ -299,6 +301,7 @@ Menu.Methods = {
         Menu.Item.Methods.initialize.apply(this, [body, null, items, options]);
         if (this.options.showSoon)
             this.updateBody();
+        Event.observe(document, "click", this.documentClicked.bindAsEventListener(this));
     },
     getOptionForChild: function(key, item){
         switch(key){
@@ -308,6 +311,20 @@ Menu.Methods = {
                 return (item.getTreeLevel() < this.options.havingItemsHtmlMinLevel) ? "" : this.options[key];
         }
         return this.getOption(key);
+    },
+    documentClicked: function(event){
+        var element = Event.element(event);
+        try{
+            this.visit(function(item){
+                if (item.isChildElement(element))
+                    throw "elementFound"; 
+            });
+        }catch(ex){
+            if (ex == "elementFound") return;
+            throw ex;
+        }
+        this.blurItems();
+        this.hideItems();
     }
 }
 Object.extend(Menu.prototype, Menu.Item.Methods);
