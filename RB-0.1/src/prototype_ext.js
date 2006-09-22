@@ -341,6 +341,12 @@ Object.extend(String.prototype, {
 	   var actualSize = size - mark.length;
 	   if (actualSize<1) return mark;
 	   return (this.length<=actualSize)?this:(this.substring(0,actualSize)+mark);
+	},
+	capitalize: function() {
+	   return (this.length<1)?"":(this.charAt(0).toUpperCase()+this.substring(1));
+	},
+	uncapitalize: function() {
+	   return (this.length<1)?"":(this.charAt(0).toLowerCase()+this.substring(1));
 	}
 } );
 
@@ -1569,9 +1575,6 @@ HTMLIFrameElement.Shim.DefaultStyle = {
 };
 Object.extend(HTMLIFrameElement.Shim, {
     create: function(pane) {
-	    
-	    logger.debug("HTMLIFrameElement.Shim.create  => " + HTMLIFrameElement.Shim.needShim());
-	    
         var result = HTMLIFrameElement.Shim.needShim() ?
             new HTMLIFrameElement.Shim(pane) : HTMLIFrameElement.Shim.NULL; 
 		result.enableShim();
@@ -1602,12 +1605,8 @@ HTMLIFrameElement.Shim.prototype = {
 		Event.observe(this.pane, "resize", this.paneResized.bindAsEventListener(this), true);
     },
 	fit: function() {
-	    logger.debug("HTMLIFrameElement.Shim#fit");
-	    
 	    if (!this.frame)
 	       return;
-	       
-	       
 		this.frame.style.width = this.pane.offsetWidth + "px";
 		this.frame.style.height = this.pane.offsetHeight + "px";
 		this.frame.style.top = this.pane.style.top;

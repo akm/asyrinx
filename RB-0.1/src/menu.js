@@ -31,7 +31,8 @@ Menu.Item.DefaultOptions = {
     hideDelay:200,
     selectedColor: "#FFFFFF",
     selectedBgColor: "#93A070",
-    havingItemsHtml: '<img src="http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/black_left_triangle.png"/>'
+    havingItemsHtmlVertical: '<img src="http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/black_left_triangle.png"/>',
+    havingItemsHtmlHorizontal: '<img src="http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/black_bottom_triangle.png"/>'
 };
 Menu.Item.DefaultCursorStyle = (/MSIE/.test(navigator.appVersion))?"hand":"pointer";
 Menu.Item.DefaultBody = { tagName: "div", style:"position:absolute;background-color:#FFFFFF;border: 1px solid #BBBBBB;" };
@@ -141,8 +142,10 @@ Menu.Item.Methods = {
             var cell=this.cells[i];
             tr.appendChild(cell);
         }
-        if (this.items && this.items.length>0)
-            this.marginRightCell.innerHTML = this.getOption("havingItemsHtml");
+        if (this.items && this.items.length>0){
+            var key = "havingItemsHtml" + ((this.parentItem)?this.parentItem.getOption("direction"):"vertical").capitalize();
+            this.marginRightCell.innerHTML = this.getOption(key);
+        }
         this.updateContent(this.cells[1]);
     },
     
@@ -300,8 +303,9 @@ Menu.Methods = {
     getOptionForChild: function(key, item){
         switch(key){
             case "direction": return this.options.itemDirection;
-            case "havingItemsHtml": 
-                return (item.getTreeLevel() < this.options.havingItemsHtmlMinLevel) ? "" : this.options.havingItemsHtml;
+            case "havingItemsHtmlHorizontal":
+            case "havingItemsHtmlVertical":
+                return (item.getTreeLevel() < this.options.havingItemsHtmlMinLevel) ? "" : this.options[key];
         }
         return this.getOption(key);
     }

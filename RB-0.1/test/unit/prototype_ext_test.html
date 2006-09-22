@@ -479,6 +479,17 @@ function test_String_abbreviate() {
     assertEquals("abcdefg", "abcdefg".abbreviate(7));
 }
 
+function test_String_capitalize(){
+    assertEquals("capitalize(String)", "Foo", "foo".capitalize() );
+    assertEquals("capitalize(empty-string)", "", "".capitalize() );
+    assertEquals("capitalize(single-char-string)", "X", "x".capitalize() );
+    assertEquals("uncapitalize(String)", "foo", "Foo".uncapitalize() );
+    assertEquals("uncapitalize(empty-string)", "", "".uncapitalize() );
+    assertEquals("uncapitalize(single-char-string)", "x", "X".uncapitalize() );
+    assertEquals("uncapitalize(capitalize(String))", "foo", "foo".capitalize().uncapitalize() );
+    assertEquals("capitalize(uncapitalize(String))", "Foo", "Foo".uncapitalize().capitalize() );
+}
+
 function test_Number_commify() {
     assertEquals("0", (0).commify());
     assertEquals("1", (1).commify());
