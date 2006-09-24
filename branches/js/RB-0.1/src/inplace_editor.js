@@ -219,6 +219,7 @@ HTMLElement.InplaceEditor.prototype = {
         element.innerHTML = "";
         this.editor = document.createElement("input");
         var textField = this.editor;
+        element.appendChild(textField);
         textField.type = "text";
         textField.value = text;
         textField.style.textAlign = element.style.textAlign;
@@ -226,7 +227,6 @@ HTMLElement.InplaceEditor.prototype = {
 	        textField.style.width = elementSize.width + "px";
         if (elementSize.height > 0)
 	        textField.style.height = elementSize.height + "px";
-        element.appendChild(textField);
         this.observeEditor(textField);
         if (navigator.appVersion.indexOf("MSIE") < 0) {
             setTimeout(this.focusEditor.bind(this), 300);
