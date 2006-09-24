@@ -276,6 +276,11 @@ Object.extend(Array.prototype, {
 					dest.push( value );
 				return dest;
 			} );
+	},
+	pushAll: function(enumerable){
+	   var _dest = this;
+	   enumerable.each(function(item){_dest.push(item);});
+	   return this;
 	}
 });
 Object.extend(String, {
