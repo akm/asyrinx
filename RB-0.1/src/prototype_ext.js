@@ -1491,13 +1491,13 @@ HTMLInputElement.PullDown.Methods = {
     },
 	createPane: function(paneHolder) {
 		var result = document.createElement("DIV");
+		document.body.appendChild(result);
 		result.style.position = "absolute";
 		result.style.display = "none";
 		if (this.paneOptions.style)
 		    delete this.paneOptions.style;
 		Object.extendProperties(result, this.paneOptions);
 		Element.setStyle(result, this.paneStyle);
-		document.body.appendChild(result);
 		return result;
 	},
     toggle: function(event) {
@@ -1585,9 +1585,10 @@ Object.extend(HTMLIFrameElement.Shim, {
 		return result;
     },
     needShim: function() {
-		return 
+		var result =
 		  (navigator.appVersion.indexOf("MSIE") > -1) &&
 		  (navigator.appVersion.indexOf("MSIE 7") < 0);
+		return result
     }
 });
 HTMLIFrameElement.Shim.NULL = {
@@ -1597,7 +1598,7 @@ HTMLIFrameElement.Shim.NULL = {
 };
 HTMLIFrameElement.Shim.prototype = {
     initialize: function(pane, options, style) {
-        this.pane = pane;
+        this.pane = $(pane);
 		this.frame = document.createElement("IFRAME");
 		document.body.appendChild(this.frame);
 		Object.extend(this.frame, Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions));

@@ -10,7 +10,7 @@
 </head>
 <body>
 
-	<div id="pane1" style="position:absolute; top:0px;left:0px; width:200px; z-index:100;">
+	<div id="pane1" style="position:absolute; top:0px;left:0px; width:200px;">
 		<div id="pane1_title" style="background-color:#EEDDFF;">
 			<a id="pane1_open" href="javascript:void(0)">+</a>
 			<a id="pane1_close" href="javascript:void(0)">-</a>
@@ -23,6 +23,8 @@
 		</div>
 	</div>
 <script language="javascript" type="text/javascript" ><!--
+    Logger.setActiveOnLoad(true);
+
 	new Pane.Draggable( "pane1_title", "pane1" );
 	var pane = new Pane.Closable( "pane1_open", "pane1_close", ["pane1_body"] );
 	pane.open();
@@ -72,12 +74,12 @@
 		</div>
 	</div>
 <script language="javascript" type="text/javascript" ><!--
-	new Pane.Draggable( "pane3_title", "pane3" );
 	var pane = new Pane.SelectClosable( "pane3_select" );
 	pane.addByValue("a",  ["pane3_body1"]);
 	pane.addByValue("b",  ["pane3_body2"]);
 	pane.addByValue("c",  ["pane3_body3"]);
 	pane.refresh();
+	new Pane.Draggable( "pane3_title", "pane3" );
 --></script>
 	
 	
