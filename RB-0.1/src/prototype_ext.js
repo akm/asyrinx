@@ -877,7 +877,6 @@ Element.Builder.prototype = {
 			if (arrayObj[i]){
 			    var node = this.dispatchBuild(arrayObj[i],parentNode);
 				result.push(node);
-        		if (parentNode) parentNode.appendChild(node);
 			}
 		}
 		return result;
@@ -927,10 +926,10 @@ Element.Builder.prototype = {
 	}
 };
 Object.extend(Element, {
-    build: function(elementObj){
+    build: function(elementObj,parentNode){
         if (!Element.Builder.instance)
             Element.Builder.instance = new Element.Builder();
-        return Element.Builder.instance.execute(elementObj);
+        return Element.Builder.instance.execute(elementObj,parentNode);
     }
 });
 

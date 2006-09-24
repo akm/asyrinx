@@ -75,7 +75,7 @@ Menu.Item.Methods = {
         for(var i=0;i<this.items.length;i++)
             Menu.Item.initializeMethods(this.items[i], this);
         this.body.innerHTML = "";
-        var table = Element.build(this.getOption("table"));
+        var table = Element.build(this.getOption("table"),this.body);
         var tbody = document.createElement("tbody");
         table.appendChild(tbody);
         if (this.getOption("direction") == "horizontal") {
@@ -91,7 +91,6 @@ Menu.Item.Methods = {
                 this.items[i].createContentContainer(tr);
             }
         }
-        this.body.appendChild(table);
         Event.observe(this.body, "click", this.clicked.bindAsEventListener(this));
         Event.observe(this.body, "mouseover", this.mouseOver.bindAsEventListener(this));
     },
@@ -134,14 +133,10 @@ Menu.Item.Methods = {
             this.getOption("contentCell"), 
             { tagName:"td", body: this.getShortcutCaption(), style: "padding:0px 0px 0px 5px;margin:0px;cursor:" + Menu.Item.DefaultCursorStyle },
             this.getOption("marginRightCell")
-        ]);
+        ],tr);
         this.marginLeftCell = this.cells[0];
         this.contentCell = this.cells[1];
         this.marginRightCell = this.cells[3];
-        for(var i=0;i<this.cells.length;i++){
-            var cell=this.cells[i];
-            tr.appendChild(cell);
-        }
         if (this.items && this.items.length>0){
             var key = "havingItemsHtml" + ((this.parentItem)?this.parentItem.getOption("direction"):"vertical").capitalize();
             this.marginRightCell.innerHTML = this.getOption(key);
@@ -153,8 +148,7 @@ Menu.Item.Methods = {
         if (!this.content)
             this.content = (this.link)?{"tagName":"a", "href": this.link, "body": this.text}:this.text;
         if (!this.content.nodeType)
-            this.content = Element.build(this.content);
-        container.appendChild(this.content);
+            this.content = Element.build(this.content,container);
     },
     
     changeActiveItem: function(newActiveItem){
@@ -206,9 +200,8 @@ Menu.Item.Methods = {
     },
     
     createBody: function(){
-        this.body = Element.build(this.getOption("body"));
+        this.body = Element.build(this.getOption("body"),document.body);
         Element.hide(this.body);
-        document.body.appendChild(this.body);
     },
     showBody: function(){
         this.cancelHiding();
