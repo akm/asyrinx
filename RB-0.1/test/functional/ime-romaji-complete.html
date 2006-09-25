@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>ClosablePanelなど</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/string_jp.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/ime.js"></script>
+</head>
+<body>
+	<label for="t1">T-one</label><input type="text" id="t1" size="60" autocomplete="off"/><br/>
+	<label for="t2">T-two</label><input type="text" id="t2" size="60" autocomplete="off"/><br/>
+<script language="javascript" type="text/javascript" ><!--
+
+Logger.setActiveOnLoad(true);
+
+new HTMLInputElement.RomajiComplete( $("t1"), $("t2") );
+--></script>
+
+</body>
+</html>
