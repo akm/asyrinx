@@ -355,6 +355,42 @@ Object.extend(String.prototype, {
 	}
 } );
 
+
+if (!String.Character) String.Character = {};
+Object.extend(String.Character, {
+    toCharCode: function(obj){
+        if (!obj) return null;
+        if (obj.constructor == Number) return obj;
+        var s = String(obj);
+        if (s.length < 1) return null;
+        return s.charCodeAt(0);
+    },
+    
+	isNumber: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+	    return (48 <=charCode && charCode <= 57);
+	},
+
+	isUpperAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return (65 <=charCode && charCode <= 90);
+	},
+
+	isLowerAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return (97 <=charCode && charCode <= 122);
+	},
+
+	isAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return this.isUpperAlphabet(charCode) || this.isLowerAlphabet(charCode);
+	}
+});
+
 Object.extend( Number.prototype, {
 	//toCommaStr
 	commify: function() {
@@ -939,131 +975,152 @@ Object.extend(Element, {
 });
 
 
-Object.extend(Event, {
-	KEY_CANCEL		:   3,
-	KEY_HELP		:   6,
-	KEY_BACK_SPACE	:   8,
-	KEY_TAB			:   9,
-	KEY_CLEAR		:  12,
-	KEY_RETURN		:  13,
-	KEY_ENTER		:  14,
-	KEY_SHIFT		:  16,
-	KEY_CONTROL		:  17,
-	KEY_ALT			:  18,
-	KEY_PAUSE		:  19,
-	KEY_CAPS_LOCK	:  20,
-	KEY_ESCAPE     	:  27,
-	KEY_ESC        	:  27,
-	KEY_SPACE		:  32,
-	KEY_PAGE_UP		:  33,
-	KEY_PAGE_DOWN	:  34,
-	KEY_END			:  35,
-	KEY_HOME		:  36,
-	KEY_LEFT		:  37,
-	KEY_UP			:  38,
-	KEY_RIGHT		:  39,
-	KEY_DOWN		:  40,
-	KEY_PRINTSCREEN	:  44,
-	KEY_INSERT		:  45,
-	KEY_DELETE		:  46,
-	KEY_NUM_0		:  48,
-	KEY_NUM_1		:  49,
-	KEY_NUM_2		:  50,
-	KEY_NUM_3		:  51,
-	KEY_NUM_4		:  52,
-	KEY_NUM_5		:  53,
-	KEY_NUM_6		:  54,
-	KEY_NUM_7		:  55,
-	KEY_NUM_8		:  56,
-	KEY_NUM_9		:  57,
-	KEY_COLON		:  59,
-	//KEY_EQUALS	    :  60,
-	KEY_SEMICOLON	:  61,
-	KEY_A			:  65,
-	KEY_B			:  66,
-	KEY_C			:  67,
-	KEY_D			:  68,
-	KEY_E			:  69,
-	KEY_F			:  70,
-	KEY_G			:  71,
-	KEY_H			:  72,
-	KEY_I			:  73,
-	KEY_J			:  74,
-	KEY_K			:  75,
-	KEY_L			:  76,
-	KEY_M			:  77,
-	KEY_N			:  78,
-	KEY_O			:  79,
-	KEY_P			:  80,
-	KEY_Q			:  81,
-	KEY_R			:  82,
-	KEY_S			:  83,
-	KEY_T			:  84,
-	KEY_U			:  85,
-	KEY_V			:  86,
-	KEY_W			:  87,
-	KEY_X			:  88,
-	KEY_Y			:  89,
-	KEY_Z			:  90,
-	KEY_CONTEXT_MENU:  93,
-	KEY_NUMPAD0		:  96,
-	KEY_NUMPAD1		:  97,
-	KEY_NUMPAD2		:  98,
-	KEY_NUMPAD3		:  99,
-	KEY_NUMPAD4		: 100,
-	KEY_NUMPAD5		: 101,
-	KEY_NUMPAD6		: 102,
-	KEY_NUMPAD7		: 103,
-	KEY_NUMPAD8		: 104,
-	KEY_NUMPAD9		: 105,
-	KEY_MULTIPLY	: 106,
-	KEY_ADD			: 107,
-	KEY_SEPARATOR	: 108,
-	KEY_SUBTRACT	: 109,
-	KEY_DECIMAL		: 110,
-	KEY_DIVIDE		: 111,
-	KEY_F1			: 112,
-	KEY_F2			: 113,
-	KEY_F3			: 114,
-	KEY_F4			: 115,
-	KEY_F5			: 116,
-	KEY_F6			: 117,
-	KEY_F7			: 118,
-	KEY_F8			: 119,
-	KEY_F9			: 120,
-	KEY_F10			: 121,
-	KEY_F11			: 122,
-	KEY_F12			: 123,
-	KEY_F13			: 124,
-	KEY_F14			: 125,
-	KEY_F15			: 126,
-	KEY_F16			: 127,
-	KEY_F17			: 128,
-	KEY_F18			: 129,
-	KEY_F19			: 130,
-	KEY_F20			: 131,
-	KEY_F21			: 132,
-	KEY_F22			: 133,
-	KEY_F23			: 134,
-	KEY_F24			: 135,
-	KEY_NUM_LOCK	: 144,
-	KEY_SCROLL_LOCK	: 145,
-	KEY_COLON2		: 186,
-	KEY_SEMICOLON2	: 187,
-	KEY_COMMA		: 188,
-	KEY_HYPHEN		: 189,
-	KEY_PERIOD		: 190,
-	KEY_SLASH		: 191,
-	KEY_BACK_QUOTE	: 192,
-	KEY_OPEN_BRACKET: 219,
-	KEY_BACK_SLASH1	: 220,
-	KEY_CLOSE_BRACKET: 221,
-	KEY_QUOTE		: 222,
-	KEY_META		: 224,
-	KEY_BACK_SLASH2	: 226,
-	KEY_IME_ON		: 243,
-	KEY_IME_OFF 	: 244
-});
+(function(){
+    var keys = [
+        //1. KEY_XXXX (which will convert toUpperCase)
+        //2. keyCode
+        //3. charCode
+        //4. charCode with shift
+        ["cancel",			3, null, null	],
+        ["help",			6, null, null	],
+        ["back_space",		8, null, null	],
+        ["tab",				9, null, null	],
+        ["clear",			12, null, null	],
+        ["return",			13, null, null	],
+        ["enter",			14, null, null	],
+        ["shift",			16, null, null	],
+        ["ctrl",			17, null, null	],
+        ["alt",				18, null, null	],
+        ["pause",			19, null, null	],
+        ["caps_lock",		20, null, null	],
+        ["esc", 			27, null, null	],
+        ["space",			32, 32, 32	],
+        ["page_up",			33, null, null	],
+        ["page_down",		34, null, null	],
+        ["end",				35, null, null	],
+        ["home",			36, null, null	],
+        ["left",			37, null, null	],
+        ["up",				38, null, null	],
+        ["right",			39, null, null	],
+        ["down",			40, null, null	],
+        ["print_screen",	44, null, null	],
+        ["insert",			45, null, null	],
+        ["delete",			46, null, null	],
+        ["num_0",			48, 48, null	],
+        ["num_1",			49, 49, 33	],
+        ["num_2",			50, 50, 34	],
+        ["num_3",			51, 51, 35	],
+        ["num_4",			52, 52, 36	],
+        ["num_5",			53, 53, 37	],
+        ["num_6",			54, 54, 38	],
+        ["num_7",			55, 55, 39	],
+        ["num_8",			56, 56, 40	],
+        ["num_9",			57, 57, 41	],
+        ["colon",			59, 58, 42	],
+        //["equals",		60, '=', '-'  ],
+        ["semicolon",		61, 59, 43	],
+        ["a",				65, 97, 65	],
+        ["b",				66, 98, 66	],
+        ["c",				67, 99, 67	],
+        ["d",				68, 100, 68	],
+        ["e",				69, 101, 69	],
+        ["f",				70, 102, 70	],
+        ["g",				71, 103, 71	],
+        ["h",				72, 104, 72	],
+        ["i",				73, 105, 73	],
+        ["j",				74, 106, 74	],
+        ["k",				75, 107, 75	],
+        ["l",				76, 108, 76	],
+        ["m",				77, 109, 77	],
+        ["n",				78, 110, 78	],
+        ["o",				79, 111, 79	],
+        ["p",				80, 112, 80	],
+        ["q",				81, 113, 81	],
+        ["r",				82, 114, 82	],
+        ["s",				83, 115, 83	],
+        ["t",				84, 116, 84	],
+        ["u",				85, 117, 85	],
+        ["v",				86, 118, 86	],
+        ["w",				87, 119, 87	],
+        ["x",				88, 120, 88	],
+        ["y",				89, 121, 89	],
+        ["z",				90, 122, 90	],
+        ["context_menu",	93, null, null	],
+        ["numpad0",			96, 48, 48	],
+        ["numpad1",			97, 49, 49	],
+        ["numpad2",			98, 50, 50	],
+        ["numpad3",			99, 51, 51	],
+        ["numpad4",			100, 52, 52	],
+        ["numpad5",			101, 53, 53	],
+        ["numpad6",			102, 54, 54	],
+        ["numpad7",			103, 55, 55	],
+        ["numpad8",			104, 56, 56	],
+        ["numpad9",			105, 57, 57	],
+        ["multiply",		106, 42, 42	],
+        ["add",				107, 43, 43	],
+        ["separator",		108, 44, 44	],
+        ["subtract",		109, 45, 45	],
+        ["decimal",			110, 46, 46	],
+        ["divide",			111, 47, 47	],
+        ["f1",				112, null, null	],
+        ["f2",				113, null, null	],
+        ["f3",				114, null, null	],
+        ["f4",				115, null, null	],
+        ["f5",				116, null, null	],
+        ["f6",				117, null, null	],
+        ["f7",				118, null, null	],
+        ["f8",				119, null, null	],
+        ["f9",				120, null, null	],
+        ["f10",				121, null, null	],
+        ["f11",				122, null, null	],
+        ["f12",				123, null, null	],
+        ["f13",				124, null, null	],
+        ["f14",				125, null, null	],
+        ["f15",				126, null, null	],
+        ["f16",				127, null, null	],
+        ["f17",				128, null, null	],
+        ["f18",				129, null, null	],
+        ["f19",				130, null, null	],
+        ["f20",				131, null, null	],
+        ["f21",				132, null, null	],
+        ["f22",				133, null, null	],
+        ["f23",				134, null, null	],
+        ["f24",				135, null, null	],
+        ["num_lock",		144, null, null	],
+        ["scroll_lock",		145, null, null	],
+        ["colon2",			186, 58, 42	],
+        ["semicolon2",		187, 59, 43	],
+        ["comma",			188, 44, 60	],
+        ["hyphen",			189, 45, 61	],
+        ["period",			190, 46, 62	],
+        ["slash",			191, 47, 63	],
+        ["back_quote",		192, 64, 96	],
+        ["open_bracket",	219, 91, 123	],
+        ["back_slash1",		220, 92, 124	],
+        ["close_bracket",	221, 93, 125	],
+        ["quote",			222, 94, 126	],
+        ["meta",			224, null, null	],
+        ["back_slash2",		226, 92, 95	],
+        ["ime_on",			243, null, null	],
+        ["ime_off ",		244, null, null	]
+    ];
+    var keyNames = {}, charCodes = {}, charCodesShift = {};
+    var regExpUnderScore = /_/g;
+    for(var i=0;i<keys.length;i++){
+        var keyDef = keys[i];
+        var baseName = keyDef[0]; 
+        var keyCode = keyDef[1];
+        Event["KEY_"+baseName.toUpperCase()] = keyCode;
+        keyNames[keyCode] = baseName.replace(regExpUnderScore, "-").camelize();
+        charCodes[keyCode] = keyDef[2];
+        charCodesShift[keyCode] = keyDef[3];
+    }
+    Event.keyNames = keyNames;
+    Event.charCodes = charCodes;
+    Event.charCodesShift = charCodesShift;
+})();
+
+
 
 Object.extend(Event, {
 	observeDelay: function(element, name, observer, useCapture, options) {
@@ -1083,89 +1140,12 @@ Object.extend(Event, {
 	   return event.keyCode || event.charCode || event.which;
 	},
 	getKeyName: function(keyCode){
-	   if (!Event.keyNames){
-	       Event.keyNames = {
-              3:"Cancel",
-              6:"Help",
-              8:"BackSpace",
-              9:"Tab",
-             12:"Clear",
-             13:"Return",
-             14:"Enter",
-             16:"Shift",
-             17:"Control",
-             18:"Alt",
-             19:"Pause",
-             20:"CapsLock",
-             //27:"ESCAPE",
-             27:"Esc",
-             32:"Space",
-             33:"PageUp",
-             34:"PageDown",
-             35:"End",
-             36:"Home",
-             37:"Left",
-             38:"Up",
-             39:"Right",
-             40:"Down",
-             44:"PrintScreen",
-             45:"Insert",
-             46:"Delete",
-             93:"ContextMenu",
-             96:"Numpad0",
-             97:"Numpad1",
-             98:"Numpad2",
-             99:"Numpad3",
-            100:"Numpad4",
-            101:"Numpad5",
-            102:"Numpad6",
-            103:"Numpad7",
-            104:"Numpad8",
-            105:"Numpad9",
-            112:"F1",
-            113:"F2",
-            114:"F3",
-            115:"F4",
-            116:"F5",
-            117:"F6",
-            118:"F7",
-            119:"F8",
-            120:"F9",
-            121:"F10",
-            122:"F11",
-            123:"F12",
-            124:"F13",
-            125:"F14",
-            126:"F15",
-            127:"F16",
-            128:"F17",
-            129:"F18",
-            130:"F19",
-            131:"F20",
-            132:"F21",
-            133:"F22",
-            134:"F23",
-            135:"F24",
-            144:"NumLock",
-            145:"ScrollLock",
-            186:"Colon",
-            187:"SemiColon2",
-            188:"Comma",
-            189:"Hyphen",
-            190:"Period",
-            191:"Slash",
-            192:"BackQuote",
-            219:"OpenBracket",
-            220:"BackSlash",
-            221:"CloseBracket",
-            222:"Quote",
-            224:"Meta",
-            226:"BackSlash2",
-            243:"ImeOn",
-            244:"ImeOff"
-	       };
-	   }
 	   return Event.keyNames[keyCode] || String.fromCharCode(keyCode) || keyCode;
+	},
+	
+	getCharCode: function(event){
+	   var keyCode = this.getKeyCode(event);
+	   return (event.shiftKey) ? Event.charCodesShift[keyCode] : Event.charCodes[keyCode];
 	}
 });
 
@@ -1378,30 +1358,6 @@ Object.extend(HTMLElement, {
         }
     },
     
-    scrollIfInvisible: function(element, scrollable) {
-        this.scrollYIfInvisible(element, scrollable);
-        this.scrollXIfInvisible(element, scrollable);
-    },
-    scrollXIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
-        } else {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
-        }
-    },
-    scrollYIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
-        } else  {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
-        }
-    },
     _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
         element = $(element);
         scrollable = $(scrollable) || window;
@@ -1426,6 +1382,30 @@ Object.extend(HTMLElement, {
             }
         }
 	},
+    scrollXIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
+        } else {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
+        }
+    },
+    scrollYIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
+        } else  {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
+        }
+    },
+    scrollIfInvisible: function(element, scrollable) {
+        HTMLElement.scrollYIfInvisible(element, scrollable);
+        HTMLElement.scrollXIfInvisible(element, scrollable);
+    },
 	getIntersectedElements: function(baseElement, tagName){
 	    tagName = tagName||"DIV";
 	    var elements = document.getElementsByTagName(tagName);

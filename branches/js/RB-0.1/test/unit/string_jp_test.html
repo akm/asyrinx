@@ -19,7 +19,7 @@
 
 javascript:Logger.setActiveOnLoad(true);
 
-function test_String_Jp_toKatakana() {
+function test_String_Japanese_toKatakana() {
     assertEquals("", "".toKatakana());
 
     assertEquals("0123456789", "0123456789".toKatakana());
@@ -41,7 +41,7 @@ function test_String_Jp_toKatakana() {
                  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toKatakana());
 }
 
-function test_String_Jp_toHiragana() {
+function test_String_Japanese_toHiragana() {
     assertEquals("", "".toHiragana());
     
     assertEquals("0123456789", "0123456789".toHiragana());
@@ -63,7 +63,7 @@ function test_String_Jp_toHiragana() {
                  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toHiragana());
 }
 
-function test_String_Jp_toZenkaku() {
+function test_String_Japanese_toZenkaku() {
     assertEquals("", "".toZenkaku());
     
     assertEquals("０１２３４５６７８９", "0123456789".toZenkaku());
@@ -85,7 +85,7 @@ function test_String_Jp_toZenkaku() {
                  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toZenkaku());
 }
 
-function test_String_Jp_toHankaku() {
+function test_String_Japanese_toHankaku() {
     assertEquals("", "".toHankaku());
 
     assertEquals("0123456789", "0123456789".toHankaku());
@@ -103,6 +103,29 @@ function test_String_Jp_toHankaku() {
                  "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toHankaku());
     assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
                  "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ".toHankaku());
+}
+
+function test_String_Japanese_Romaji_toKatakana() {
+    assertEquals("", String.Japanese.Romaji.toKatakana(""));
+    assertEquals("アイウエオ", String.Japanese.Romaji.toKatakana("aiueo"));
+    assertEquals("カキクケコ", String.Japanese.Romaji.toKatakana("kakikukeko"));
+    assertEquals("シャシシュシェショ", String.Japanese.Romaji.toKatakana("shashishushesho"));
+    assertEquals("タチツテトット", String.Japanese.Romaji.toKatakana("tatitutetotto"));
+    assertEquals("ナンインウンエンオン", String.Japanese.Romaji.toKatakana("nanninnunnennon"));
+    assertEquals("ナンニンヌンネンノン", String.Japanese.Romaji.toKatakana("nannninnnunnnennnon"));
+    assertEquals("クァzwsェdcrfvtgbyhヌjミコlp", String.Japanese.Romaji.toKatakana("qazwsxedcrfvtgbyhnujmikolp"));
+}
+
+function test_String_Japanese_Romaji_toHiragana() {
+    assertEquals("", String.Japanese.Romaji.toHiragana(""));
+    assertEquals("あいうえお", String.Japanese.Romaji.toHiragana("aiueo"));
+    assertEquals("かきくけこ", String.Japanese.Romaji.toHiragana("kakikukeko"));
+    assertEquals("しゃししゅしぇしょ", String.Japanese.Romaji.toHiragana("shashishushesho"));
+    assertEquals("たちつてとっと", String.Japanese.Romaji.toHiragana("tatitutetotto"));
+    assertEquals("なにぬねの", String.Japanese.Romaji.toHiragana("naninuneno"));
+    assertEquals("なんいんうんえんおん", String.Japanese.Romaji.toHiragana("nanninnunnennon"));
+    assertEquals("なんにんぬんねんのん", String.Japanese.Romaji.toHiragana("nannninnnunnnennnon"));
+    assertEquals("くぁzwsぇdcrfvtgbyhぬjみこlp", String.Japanese.Romaji.toHiragana("qazwsxedcrfvtgbyhnujmikolp"));
 }
 
 
