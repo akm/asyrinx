@@ -198,12 +198,12 @@ HTMLTableElement.DnDSortable.prototype = {
 	
 	createDragRect: function() {
 		var rect = document.createElement("DIV");
+		document.body.appendChild(rect);
 		rect.style.position = "absolute";
 		rect.style.backgroundColor = "transparent";
 		rect.style.borderWidth = this.options.dragRect.borderWidth;
 		rect.style.borderStyle = this.options.dragRect.borderStyle;
 		rect.style.borderColor = this.options.dragRect.borderColor;
-		document.body.appendChild(rect);
 		return rect;
 	}
 	

@@ -54,7 +54,19 @@ Function.prototype.bindWithArgsAsEventListener = function(object) {
         _args.unshift(event || window.event);
         return __method.apply(object, _args);
     }
-}
+};
+
+//see http://nanto.asablo.jp/blog/2005/10/24/118564
+//by nanto_vi
+Function.prototype.applyNew = function(args){
+    var constructor = function(){};
+    constructor.prototype = this.prototype;
+    var instance = new constructor();
+    var result = this.apply(instance, args);
+    return (result instanceof Object)?result:instance;
+};
+
+
 
 Object.extend(Object, {
     fill: function(target, properties) {
@@ -198,6 +210,14 @@ EnumerableExt = {
       }
     });
     return result;
+  },
+  sum: function(iterator) {
+    var result = 0;
+    this.each(function(value, index) {
+      value = (iterator||Prototype.K)(value,index);
+      result += value;
+    });
+    return result;
   }
 }
 
@@ -248,7 +268,20 @@ Object.extend(Array.prototype, {
                 result.push(val);
         }
         return result;
-    }
+    },
+	unique: function() {
+		return this.inject([], 
+			function(dest, value, index) {
+				if (!dest.include(value))
+					dest.push( value );
+				return dest;
+			} );
+	},
+	pushAll: function(enumerable){
+	   var _dest = this;
+	   enumerable.each(function(item){_dest.push(item);});
+	   return this;
+	}
 });
 Object.extend(String, {
 	PluralizePatterns: [
@@ -313,8 +346,50 @@ Object.extend(String.prototype, {
 	   var actualSize = size - mark.length;
 	   if (actualSize<1) return mark;
 	   return (this.length<=actualSize)?this:(this.substring(0,actualSize)+mark);
+	},
+	capitalize: function() {
+	   return (this.length<1)?"":(this.charAt(0).toUpperCase()+this.substring(1));
+	},
+	uncapitalize: function() {
+	   return (this.length<1)?"":(this.charAt(0).toLowerCase()+this.substring(1));
 	}
 } );
+
+
+if (!String.Character) String.Character = {};
+Object.extend(String.Character, {
+    toCharCode: function(obj){
+        if (!obj) return null;
+        if (obj.constructor == Number) return obj;
+        var s = String(obj);
+        if (s.length < 1) return null;
+        return s.charCodeAt(0);
+    },
+    
+	isNumber: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+	    return (48 <=charCode && charCode <= 57);
+	},
+
+	isUpperAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return (65 <=charCode && charCode <= 90);
+	},
+
+	isLowerAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return (97 <=charCode && charCode <= 122);
+	},
+
+	isAlphabet: function(charCode) {
+	    charCode = this.toCharCode(charCode);
+	    if (!charCode) return false;
+		return this.isUpperAlphabet(charCode) || this.isLowerAlphabet(charCode);
+	}
+});
 
 Object.extend( Number.prototype, {
 	//toCommaStr
@@ -843,7 +918,6 @@ Element.Builder.prototype = {
 			if (arrayObj[i]){
 			    var node = this.dispatchBuild(arrayObj[i],parentNode);
 				result.push(node);
-        		if (parentNode) parentNode.appendChild(node);
 			}
 		}
 		return result;
@@ -851,8 +925,9 @@ Element.Builder.prototype = {
 	applyAttributes: function(node, attributeObj, ignoreProperties){
 		if (!attributeObj)
 			return;
+	    ignoreProperties = ignoreProperties||this.ignoreProperties;
 		for(var prop in attributeObj) {
-			if (ignoreProperties && this._array_contains( ignoreProperties, prop ))
+			if (ignoreProperties && this._array_contains(ignoreProperties, prop))
 				continue;
 			//IEのstyleは特別扱い
 			if ((prop == "style") &&  (navigator.appVersion.indexOf("MSIE") > -1)) {
@@ -892,138 +967,161 @@ Element.Builder.prototype = {
 	}
 };
 Object.extend(Element, {
-    build: function(elementObj){
+    build: function(elementObj,parentNode){
         if (!Element.Builder.instance)
             Element.Builder.instance = new Element.Builder();
-        return Element.Builder.instance.execute(elementObj);
+        return Element.Builder.instance.execute(elementObj,parentNode);
     }
 });
 
 
-Object.extend(Event, {
-	KEY_CANCEL		:   3,
-	KEY_HELP		:   6,
-	KEY_BACK_SPACE	:   8,
-	KEY_TAB			:   9,
-	KEY_CLEAR		:  12,
-	KEY_RETURN		:  13,
-	KEY_ENTER		:  14,
-	KEY_SHIFT		:  16,
-	KEY_CONTROL		:  17,
-	KEY_ALT			:  18,
-	KEY_PAUSE		:  19,
-	KEY_CAPS_LOCK	:  20,
-	KEY_ESC        	:  27,
-	KEY_SPACE		:  32,
-	KEY_PAGE_UP		:  33,
-	KEY_PAGE_DOWN	:  34,
-	KEY_END			:  35,
-	KEY_HOME		:  36,
-	KEY_LEFT		:  37,
-	KEY_UP			:  38,
-	KEY_RIGHT		:  39,
-	KEY_DOWN		:  40,
-	KEY_PRINTSCREEN	:  44,
-	KEY_INSERT		:  45,
-	KEY_DELETE		:  46,
-	KEY_NUM_0		:  48,
-	KEY_NUM_1		:  49,
-	KEY_NUM_2		:  50,
-	KEY_NUM_3		:  51,
-	KEY_NUM_4		:  52,
-	KEY_NUM_5		:  53,
-	KEY_NUM_6		:  54,
-	KEY_NUM_7		:  55,
-	KEY_NUM_8		:  56,
-	KEY_NUM_9		:  57,
-	KEY_COLON		:  59,
-	//KEY_EQUALS	    :  60,
-	KEY_SEMICOLON	:  61,
-	KEY_A			:  65,
-	KEY_B			:  66,
-	KEY_C			:  67,
-	KEY_D			:  68,
-	KEY_E			:  69,
-	KEY_F			:  70,
-	KEY_G			:  71,
-	KEY_H			:  72,
-	KEY_I			:  73,
-	KEY_J			:  74,
-	KEY_K			:  75,
-	KEY_L			:  76,
-	KEY_M			:  77,
-	KEY_N			:  78,
-	KEY_O			:  79,
-	KEY_P			:  80,
-	KEY_Q			:  81,
-	KEY_R			:  82,
-	KEY_S			:  83,
-	KEY_T			:  84,
-	KEY_U			:  85,
-	KEY_V			:  86,
-	KEY_W			:  87,
-	KEY_X			:  88,
-	KEY_Y			:  89,
-	KEY_Z			:  90,
-	KEY_CONTEXT_MENU:  93,
-	KEY_NUMPAD0		:  96,
-	KEY_NUMPAD1		:  97,
-	KEY_NUMPAD2		:  98,
-	KEY_NUMPAD3		:  99,
-	KEY_NUMPAD4		: 100,
-	KEY_NUMPAD5		: 101,
-	KEY_NUMPAD6		: 102,
-	KEY_NUMPAD7		: 103,
-	KEY_NUMPAD8		: 104,
-	KEY_NUMPAD9		: 105,
-	KEY_MULTIPLY	: 106,
-	KEY_ADD			: 107,
-	KEY_SEPARATOR	: 108,
-	KEY_SUBTRACT	: 109,
-	KEY_DECIMAL		: 110,
-	KEY_DIVIDE		: 111,
-	KEY_F1			: 112,
-	KEY_F2			: 113,
-	KEY_F3			: 114,
-	KEY_F4			: 115,
-	KEY_F5			: 116,
-	KEY_F6			: 117,
-	KEY_F7			: 118,
-	KEY_F8			: 119,
-	KEY_F9			: 120,
-	KEY_F10			: 121,
-	KEY_F11			: 122,
-	KEY_F12			: 123,
-	KEY_F13			: 124,
-	KEY_F14			: 125,
-	KEY_F15			: 126,
-	KEY_F16			: 127,
-	KEY_F17			: 128,
-	KEY_F18			: 129,
-	KEY_F19			: 130,
-	KEY_F20			: 131,
-	KEY_F21			: 132,
-	KEY_F22			: 133,
-	KEY_F23			: 134,
-	KEY_F24			: 135,
-	KEY_NUM_LOCK	: 144,
-	KEY_SCROLL_LOCK	: 145,
-	KEY_COLON2		: 186,
-	KEY_SEMICOLON2	: 187,
-	KEY_COMMA		: 188,
-	KEY_HYPHEN		: 189,
-	KEY_PERIOD		: 190,
-	KEY_SLASH		: 191,
-	KEY_BACK_QUOTE	: 192,
-	KEY_OPEN_BRACKET: 219,
-	KEY_BACK_SLASH1	: 220,
-	KEY_CLOSE_BRACKET: 221,
-	KEY_QUOTE		: 222,
-	KEY_META		: 224,
-	KEY_BACK_SLASH2	: 226,
-	KEY_IME_ON		: 243,
-	KEY_IME_OFF 	: 244
-});
+(function(){
+    var keys = [
+        //1. KEY_XXXX (which will convert toUpperCase)
+        //2. keyCode
+        //3. charCode
+        //4. charCode with shift
+        ["cancel",			3, null, null	],
+        ["help",			6, null, null	],
+        ["back_space",		8, null, null	],
+        ["tab",				9, null, null	],
+        ["clear",			12, null, null	],
+        ["return",			13, null, null	],
+        ["enter",			14, null, null	],
+        ["shift",			16, null, null	],
+        ["ctrl",			17, null, null	],
+        ["alt",				18, null, null	],
+        ["pause",			19, null, null	],
+        ["caps_lock",		20, null, null	],
+        ["esc", 			27, null, null	],
+        ["space",			32, 32, 32	],
+        ["page_up",			33, null, null	],
+        ["page_down",		34, null, null	],
+        ["end",				35, null, null	],
+        ["home",			36, null, null	],
+        ["left",			37, null, null	],
+        ["up",				38, null, null	],
+        ["right",			39, null, null	],
+        ["down",			40, null, null	],
+        ["print_screen",	44, null, null	],
+        ["insert",			45, null, null	],
+        ["delete",			46, null, null	],
+        ["num_0",			48, 48, null	],
+        ["num_1",			49, 49, 33	],
+        ["num_2",			50, 50, 34	],
+        ["num_3",			51, 51, 35	],
+        ["num_4",			52, 52, 36	],
+        ["num_5",			53, 53, 37	],
+        ["num_6",			54, 54, 38	],
+        ["num_7",			55, 55, 39	],
+        ["num_8",			56, 56, 40	],
+        ["num_9",			57, 57, 41	],
+        ["colon",			59, 58, 42	],
+        //["equals",		60, '=', '-'  ],
+        ["semicolon",		61, 59, 43	],
+        ["a",				65, 97, 65	],
+        ["b",				66, 98, 66	],
+        ["c",				67, 99, 67	],
+        ["d",				68, 100, 68	],
+        ["e",				69, 101, 69	],
+        ["f",				70, 102, 70	],
+        ["g",				71, 103, 71	],
+        ["h",				72, 104, 72	],
+        ["i",				73, 105, 73	],
+        ["j",				74, 106, 74	],
+        ["k",				75, 107, 75	],
+        ["l",				76, 108, 76	],
+        ["m",				77, 109, 77	],
+        ["n",				78, 110, 78	],
+        ["o",				79, 111, 79	],
+        ["p",				80, 112, 80	],
+        ["q",				81, 113, 81	],
+        ["r",				82, 114, 82	],
+        ["s",				83, 115, 83	],
+        ["t",				84, 116, 84	],
+        ["u",				85, 117, 85	],
+        ["v",				86, 118, 86	],
+        ["w",				87, 119, 87	],
+        ["x",				88, 120, 88	],
+        ["y",				89, 121, 89	],
+        ["z",				90, 122, 90	],
+        ["context_menu",	93, null, null	],
+        ["numpad0",			96, 48, 48	],
+        ["numpad1",			97, 49, 49	],
+        ["numpad2",			98, 50, 50	],
+        ["numpad3",			99, 51, 51	],
+        ["numpad4",			100, 52, 52	],
+        ["numpad5",			101, 53, 53	],
+        ["numpad6",			102, 54, 54	],
+        ["numpad7",			103, 55, 55	],
+        ["numpad8",			104, 56, 56	],
+        ["numpad9",			105, 57, 57	],
+        ["multiply",		106, 42, 42	],
+        ["add",				107, 43, 43	],
+        ["separator",		108, 44, 44	],
+        ["subtract",		109, 45, 45	],
+        ["decimal",			110, 46, 46	],
+        ["divide",			111, 47, 47	],
+        ["f1",				112, null, null	],
+        ["f2",				113, null, null	],
+        ["f3",				114, null, null	],
+        ["f4",				115, null, null	],
+        ["f5",				116, null, null	],
+        ["f6",				117, null, null	],
+        ["f7",				118, null, null	],
+        ["f8",				119, null, null	],
+        ["f9",				120, null, null	],
+        ["f10",				121, null, null	],
+        ["f11",				122, null, null	],
+        ["f12",				123, null, null	],
+        ["f13",				124, null, null	],
+        ["f14",				125, null, null	],
+        ["f15",				126, null, null	],
+        ["f16",				127, null, null	],
+        ["f17",				128, null, null	],
+        ["f18",				129, null, null	],
+        ["f19",				130, null, null	],
+        ["f20",				131, null, null	],
+        ["f21",				132, null, null	],
+        ["f22",				133, null, null	],
+        ["f23",				134, null, null	],
+        ["f24",				135, null, null	],
+        ["num_lock",		144, null, null	],
+        ["scroll_lock",		145, null, null	],
+        ["colon2",			186, 58, 42	],
+        ["semicolon2",		187, 59, 43	],
+        ["comma",			188, 44, 60	],
+        ["hyphen",			189, 45, 61	],
+        ["period",			190, 46, 62	],
+        ["slash",			191, 47, 63	],
+        ["back_quote",		192, 64, 96	],
+        ["open_bracket",	219, 91, 123	],
+        ["back_slash1",		220, 92, 124	],
+        ["close_bracket",	221, 93, 125	],
+        ["quote",			222, 94, 126	],
+        ["meta",			224, null, null	],
+        ["back_slash2",		226, 92, 95	],
+        ["ime_on",			243, null, null	],
+        ["ime_off ",		244, null, null	]
+    ];
+    var keyNames = {}, charCodes = {}, charCodesShift = {};
+    var regExpUnderScore = /_/g;
+    for(var i=0;i<keys.length;i++){
+        var keyDef = keys[i];
+        var baseName = keyDef[0]; 
+        var keyCode = keyDef[1];
+        Event["KEY_"+baseName.toUpperCase()] = keyCode;
+        keyNames[keyCode] = baseName.replace(regExpUnderScore, "-").camelize();
+        charCodes[keyCode] = keyDef[2];
+        charCodesShift[keyCode] = keyDef[3];
+    }
+    Event.keyNames = keyNames;
+    Event.charCodes = charCodes;
+    Event.charCodesShift = charCodesShift;
+})();
+
+
+
 Object.extend(Event, {
 	observeDelay: function(element, name, observer, useCapture, options) {
 		options = Object.fill( options || {}, {"delay":500} );
@@ -1040,6 +1138,14 @@ Object.extend(Event, {
 	
 	getKeyCode: function(event) {
 	   return event.keyCode || event.charCode || event.which;
+	},
+	getKeyName: function(keyCode){
+	   return Event.keyNames[keyCode] || String.fromCharCode(keyCode) || keyCode;
+	},
+	
+	getCharCode: function(event){
+	   var keyCode = this.getKeyCode(event);
+	   return (event.shiftKey) ? Event.charCodesShift[keyCode] : Event.charCodes[keyCode];
 	}
 });
 
@@ -1095,13 +1201,14 @@ Event.KeyHandler.prototype = {
                this.matchFunctionKey(action, "shift", event, "shiftKey")
     },
     isHandlingAction: function(action, event, keyCode) {
-        var result = (action.matchAll) ||
-            (action.match && action.match(action, event, keyCode, this)) ||
+        var result = (action.matchAll) ? true :
+            (action.match) ? action.match(action, event, keyCode, this):
             this.matchAction(action, event, keyCode);
         return (this.options.handleOnMatch) ? result : !result;
     },
     handle: function(event) {
         var keyCode = Event.getKeyCode(event);
+        //logger.debug(event.type + " alt:" + event.altKey + " ctrl:" + event.ctrlKey + " shift:" + event.shiftKey + " keyCode:" + keyCode);
         for(var i = 0; i < this.actions.length; i++) {
             var action = this.actions[i];
             if (this.isHandlingAction(action, event, keyCode)) {
@@ -1183,6 +1290,51 @@ Form.Element.Deserializers = {
 	}
 }
 
+
+Math.Rectangle = Class.create();
+Math.toRect = function(obj) {
+ 	if (arguments.length == 1) {
+     	if (obj.offsetLeft && obj.offsetTop)
+     	    return new Math.Rectangle(obj.offsetLeft, obj.offsetTop, obj.offsetWidth, obj.offsetHeight);
+     	else
+     	    return new Math.Rectangle(obj.left, obj.top, obj.width, obj.height);
+ 	} else {
+ 	    return Math.Rectangle.applyNew(arguments)
+ 	}
+}
+Object.extend(Math.Rectangle, {
+	containsPosition: function(left,top,width,height,x,y) {
+		return (left<x && x<left+width && top<y && y<top+height);
+	}
+});
+Math.Rectangle.prototype = {
+ 	initialize: function(left, top, width, height) {
+ 		this.left = left||0; 
+ 		this.top = top||0; 
+ 		this.width = width||0; 
+ 		this.height = height||0;
+ 	},
+ 	getLeft: function(){return this.left;},
+ 	getTop: function(){return this.top;},
+ 	getRight: function(){return this.left+this.width;},
+ 	getBottom: function(){return this.top+this.height;},
+ 	
+    containsPosition: function(position) {
+ 		return Math.Rectangle.containsPosition(
+ 			this.left, this.top, this.width, this.height, position.x, position.y);
+ 	},
+ 	
+	isIntersectedWith: function(rect) {
+		if (!rect)
+			throw new Error("rect is not specified");
+		return !( (this.getRight() < rect.left)||
+		      (this.left > rect.left + rect.width)||
+		      (this.getBottom() < rect.top)||
+		      (this.top > rect.top + rect.height) );
+	}
+}
+
+
 if (!HTMLElement) HTMLElement = {};
 
 Object.extend(HTMLElement, {
@@ -1206,30 +1358,6 @@ Object.extend(HTMLElement, {
         }
     },
     
-    scrollIfInvisible: function(element, scrollable) {
-        this.scrollYIfInvisible(element, scrollable);
-        this.scrollXIfInvisible(element, scrollable);
-    },
-    scrollXIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
-        } else {
-            Element._scrollIfInvisible(element, scrollable, 
-                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
-        }
-    },
-    scrollYIfInvisible: function(element, scrollable) {
-        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
-        if (scrollable == window) {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
-        } else  {
-            Element._scrollIfInvisible(element, scrollable, 
-                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
-        }
-    },
     _scrollIfInvisible: function(element, scrollable, elementPos, elementOffsetPos, elementOffsetSize, scrollableProp, scrollableClientSize) {
         element = $(element);
         scrollable = $(scrollable) || window;
@@ -1253,8 +1381,63 @@ Object.extend(HTMLElement, {
                 scrollable[scrollableProp] = pos;
             }
         }
-    }
-    
+	},
+    scrollXIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollX", "innerWidth");
+        } else {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "x", "offsetLeft", "offsetWidth", "scrollLeft", "clientWidth");
+        }
+    },
+    scrollYIfInvisible: function(element, scrollable) {
+        scrollable = (scrollable) ? scrollable : (navigator.appVersion.indexOf("MSIE") < 0) ? window : document.documentElement;
+        if (scrollable == window) {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollY", "innerHeight");
+        } else  {
+            HTMLElement._scrollIfInvisible(element, scrollable, 
+                "y", "offsetTop", "offsetHeight", "scrollTop", "clientHeight");
+        }
+    },
+    scrollIfInvisible: function(element, scrollable) {
+        HTMLElement.scrollYIfInvisible(element, scrollable);
+        HTMLElement.scrollXIfInvisible(element, scrollable);
+    },
+	getIntersectedElements: function(baseElement, tagName){
+	    tagName = tagName||"DIV";
+	    var elements = document.getElementsByTagName(tagName);
+	    var baseRect = Math.toRect(baseElement);
+	    var result = [];
+	    for(var i=0;i<elements.length;i++){
+	        var element = elements[i];
+	        if (element==elements || element.style.position!="absolute")
+	            continue;
+	        if (baseRect.isIntersectedWith(Math.toRect(element)))
+	            result.push(element);
+	    }
+	    return result;
+	},
+	bringToFront: function(target){
+	    var intersected = this.getIntersectedElements(target);
+	    if (intersected.length < 1)
+	        return;
+	    var maxZIndex = intersected.collect(function(element){
+	        return (element.style.zIndex)?element.style.zIndex*1:0}).max();
+	    target.style.zIndex = maxZIndex + 1;
+	},
+	centering: function(target) {
+		target = $(target);
+		var documentBody = document.documentElement || document.body;
+		var clientW = documentBody.clientWidth;
+		var clientH = documentBody.clientHeight;
+		var scrollL = documentBody.scrollLeft;
+		var scrollT = documentBody.scrollTop;
+		target.style.left = ((clientW-target.offsetWidth)/2+scrollL)+"px";
+		target.style.top = ((clientH-target.offsetHeight)/2+scrollT)+"px";
+	}
 });
 
 
@@ -1264,7 +1447,7 @@ HTMLInputElement.PullDown = Class.create();
 HTMLInputElement.PullDown.DefaultOptions = {
     hideTimeout: 500,
     hideSoonOnKeyEvent: true,
-    hideOnPaneClick: false
+    hideOnPaneClick: true
 };
 HTMLInputElement.PullDown.DefaultPaneStyle = {
 	"cursor": "default",
@@ -1288,13 +1471,13 @@ HTMLInputElement.PullDown.Methods = {
     },
 	createPane: function(paneHolder) {
 		var result = document.createElement("DIV");
+		document.body.appendChild(result);
 		result.style.position = "absolute";
 		result.style.display = "none";
 		if (this.paneOptions.style)
 		    delete this.paneOptions.style;
 		Object.extendProperties(result, this.paneOptions);
 		Element.setStyle(result, this.paneStyle);
-		document.body.appendChild(result);
 		return result;
 	},
     toggle: function(event) {
@@ -1307,7 +1490,7 @@ HTMLInputElement.PullDown.Methods = {
         var paneHolder = this.getPaneHolder();
         if (!paneHolder.pane) {
             paneHolder.pane = this.createPane(paneHolder);
-            paneHolder.shim = new HTMLIFrameElement.Shim(paneHolder.pane);
+            paneHolder.shim = HTMLIFrameElement.Shim.create(paneHolder.pane);
             Event.observe(paneHolder.pane, "click", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "focus", this.paneClick.bindAsEventListener(this), false);
             //Event.observe(paneHolder.pane, "blur", this.paneBlur.bindAsEventListener(this), false);
@@ -1374,13 +1557,28 @@ HTMLIFrameElement.Shim.DefaultStyle = {
 	"display": "none",
 	"z-index": 10
 };
+Object.extend(HTMLIFrameElement.Shim, {
+    create: function(pane) {
+        var result = HTMLIFrameElement.Shim.needShim() ?
+            new HTMLIFrameElement.Shim(pane) : HTMLIFrameElement.Shim.NULL; 
+		result.enableShim();
+		return result;
+    },
+    needShim: function() {
+		var result =
+		  (navigator.appVersion.indexOf("MSIE") > -1) &&
+		  (navigator.appVersion.indexOf("MSIE 7") < 0);
+		return result
+    }
+});
+HTMLIFrameElement.Shim.NULL = {
+	fit: function() {},
+	enableShim: function() {},
+	disableShim: function() {}
+};
 HTMLIFrameElement.Shim.prototype = {
     initialize: function(pane, options, style) {
-        this.pane = pane;
-		if (navigator.appVersion.indexOf("MSIE") < 0)
-		    return;
-		if (navigator.appVersion.indexOf("MSIE 7") > -1)
-		    return;
+        this.pane = $(pane);
 		this.frame = document.createElement("IFRAME");
 		document.body.appendChild(this.frame);
 		Object.extend(this.frame, Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions));
