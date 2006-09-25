@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>Test prototype_ext.js</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/jsUnitCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../lib/test_helper.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/string_jp.js"></script>
+</head>
+<body>
+<h1>calendar.js Tests</h1>
+<p>This page tests loading data documents asynchronously.  To see them, take a look at the source.</p>
+
+
+<script language="JavaScript" type="text/javascript"><!--
+
+javascript:Logger.setActiveOnLoad(true);
+
+function test_String_Japanese_toKatakana() {
+    assertEquals("", "".toKatakana());
+
+    assertEquals("0123456789", "0123456789".toKatakana());
+    assertEquals("`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?", "`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?".toKatakana());
+    assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toKatakana());
+    assertEquals("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz".toKatakana());
+    assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
+                 "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ".toKatakana());
+
+    assertEquals("０１２３４５６７８９", "０１２３４５６７８９".toKatakana());
+    assertEquals("｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？", "｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？".toKatakana());
+    assertEquals("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ", 
+                 "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ".toKatakana());
+    assertEquals("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ", 
+                 "ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ".toKatakana());
+    assertEquals("アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ",
+                 "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ".toKatakana());
+    assertEquals("アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ",
+                 "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toKatakana());
+}
+
+function test_String_Japanese_toHiragana() {
+    assertEquals("", "".toHiragana());
+    
+    assertEquals("0123456789", "0123456789".toHiragana());
+    assertEquals("`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?", "`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?".toHiragana());
+    assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toHiragana());
+    assertEquals("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz".toHiragana());
+    assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
+                 "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ".toHiragana());
+
+    assertEquals("０１２３４５６７８９", "０１２３４５６７８９".toKatakana());
+    assertEquals("｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？", "｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？".toHiragana());
+    assertEquals("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ", 
+                 "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ".toHiragana());
+    assertEquals("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ", 
+                 "ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ".toHiragana());
+    assertEquals("あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ",
+                 "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ".toHiragana());
+    assertEquals("あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ",
+                 "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toHiragana());
+}
+
+function test_String_Japanese_toZenkaku() {
+    assertEquals("", "".toZenkaku());
+    
+    assertEquals("０１２３４５６７８９", "0123456789".toZenkaku());
+    assertEquals("｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？", "`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?".toZenkaku());
+    assertEquals("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toZenkaku());
+    assertEquals("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ", "abcdefghijklmnopqrstuvwxyz".toZenkaku());
+    assertEquals("アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ",
+                 "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ".toZenkaku());
+
+    assertEquals("０１２３４５６７８９", "０１２３４５６７８９".toKatakana());
+    assertEquals("｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？", "｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？".toZenkaku());
+    assertEquals("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ", 
+                 "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ".toZenkaku());
+    assertEquals("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ", 
+                 "ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ".toZenkaku());
+    assertEquals("あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ",
+                 "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ".toZenkaku());
+    assertEquals("アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ",
+                 "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toZenkaku());
+}
+
+function test_String_Japanese_toHankaku() {
+    assertEquals("", "".toHankaku());
+
+    assertEquals("0123456789", "0123456789".toHankaku());
+    assertEquals("`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?", "`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?".toHankaku());
+    assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toHankaku());
+    assertEquals("abcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz".toHankaku());
+    assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
+                 "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ".toHankaku());
+    
+    assertEquals("0123456789", "０１２３４５６７８９".toHankaku());
+    assertEquals("`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?", "｀－＝［］￥；’，．／～！＠＃＄％＾＆＊（）＿＋｛｝｜：”＜＞？".toHankaku());
+    assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ".toHankaku());
+    assertEquals("abcdefghijklmnopqrstuvwxyz", "ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ".toHankaku());
+    assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
+                 "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョヵッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ".toHankaku());
+    assertEquals("ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮヵｯｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟｳﾞ",
+                 "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょヵっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽヴ".toHankaku());
+}
+
+function test_String_Japanese_Romaji_toKatakana() {
+    assertEquals("", String.Japanese.Romaji.toKatakana(""));
+    assertEquals("アイウエオ", String.Japanese.Romaji.toKatakana("aiueo"));
+    assertEquals("カキクケコ", String.Japanese.Romaji.toKatakana("kakikukeko"));
+    assertEquals("シャシシュシェショ", String.Japanese.Romaji.toKatakana("shashishushesho"));
+    assertEquals("タチツテトット", String.Japanese.Romaji.toKatakana("tatitutetotto"));
+    assertEquals("ナンインウンエンオン", String.Japanese.Romaji.toKatakana("nanninnunnennon"));
+    assertEquals("ナンニンヌンネンノン", String.Japanese.Romaji.toKatakana("nannninnnunnnennnon"));
+    assertEquals("クァzwsェdcrfvtgbyhヌjミコlp", String.Japanese.Romaji.toKatakana("qazwsxedcrfvtgbyhnujmikolp"));
+}
+
+function test_String_Japanese_Romaji_toHiragana() {
+    assertEquals("", String.Japanese.Romaji.toHiragana(""));
+    assertEquals("あいうえお", String.Japanese.Romaji.toHiragana("aiueo"));
+    assertEquals("かきくけこ", String.Japanese.Romaji.toHiragana("kakikukeko"));
+    assertEquals("しゃししゅしぇしょ", String.Japanese.Romaji.toHiragana("shashishushesho"));
+    assertEquals("たちつてとっと", String.Japanese.Romaji.toHiragana("tatitutetotto"));
+    assertEquals("なにぬねの", String.Japanese.Romaji.toHiragana("naninuneno"));
+    assertEquals("なんいんうんえんおん", String.Japanese.Romaji.toHiragana("nanninnunnennon"));
+    assertEquals("なんにんぬんねんのん", String.Japanese.Romaji.toHiragana("nannninnnunnnennnon"));
+    assertEquals("くぁzwsぇdcrfvtgbyhぬjみこlp", String.Japanese.Romaji.toHiragana("qazwsxedcrfvtgbyhnujmikolp"));
+}
+
+
+--></script>
+
+</body>
+</html>

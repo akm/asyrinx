@@ -326,9 +326,9 @@ Date.Calendar.View.prototype = {
         this.build();
     },
     build: function(){
-		this.element.appendChild(this.createHeader());
-		this.element.appendChild(this.createBody());
-		this.element.appendChild(this.createFooter());
+		this.createHeader(this.element);
+		this.createBody(this.element);
+		this.createFooter(this.element);
 		//
 		this.update();
 		if (!this.modelOnChangeHandler)
@@ -356,7 +356,7 @@ Date.Calendar.View.prototype = {
 		this.updateHeader();
 	},
 	
-	createHeader: function() {
+	createHeader: function(parentNode) {
 	   return Element.build({
 	       tagName:"div", className:"calendarHeader",
 	       style:"background:ActiveCaption; padding:0px; border-bottom: 1px solid WindowText;",
@@ -407,7 +407,7 @@ Date.Calendar.View.prototype = {
 	               ]}
 	           }
 	       ]
-	   });
+	   },parentNode);
 	},
 	updateHeader: function (model) {
 		model = model || this.model;
@@ -423,7 +423,7 @@ Date.Calendar.View.prototype = {
 	},
 
 
-	createBody: function() {
+	createBody: function(parentNode) {
 		this.dateSlot = new Array(42);
 		this.weekSlot = new Array(6);
 		//
@@ -472,7 +472,7 @@ Date.Calendar.View.prototype = {
     	               {tagName:"tbody", body: bodyRows}
     	           ]
 	           }
-	        }
+	        },parentNode
 	   );
 	},
 	
@@ -545,7 +545,7 @@ Date.Calendar.View.prototype = {
 		}
 	},
 	
-	createFooter: function() {
+	createFooter: function(parentNode) {
 		var today = new Date();
 		return Element.build({
 	        tagName:"div", className:"calendarFooter",
@@ -568,7 +568,7 @@ Date.Calendar.View.prototype = {
                    }
 	           }
 	        ]
-	   });
+	   },parentNode);
 	}
 };
 

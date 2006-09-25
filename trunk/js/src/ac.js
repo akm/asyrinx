@@ -502,18 +502,18 @@ Object.extend(ACFields.PullDown.Methods, {
     	if (!this.options.searchingHTML || this.searchingDiv)
     	   return;
         this.searchingDiv = document.createElement("DIV");
-        this.searchingDiv.innerHTML = this.options.searchingHTML;
         dest.appendChild(this.searchingDiv);
+        this.searchingDiv.innerHTML = this.options.searchingHTML;
     },
 	createPane: function() {
 		var result = HTMLInputElement.PullDown.Methods.createPane.apply(this, arguments);
 		this.appendSearchingDiv(result);
 		this.table = document.createElement("TABLE");
+		result.appendChild(this.table);
 		if (this.tableOptions.style)
 		  delete this.tableOptions.style;
 		Object.extendProperties(this.table, this.tableOptions);
 		Element.setStyle(this.table, this.tableStyle);
-		result.appendChild(this.table);
         this.rowGenerator = new ACFields.BasicTable(this.table, this.mappings, this.options["rowGenerator"]);
         this.selection = new HTMLTableElement.MouseOverRowSelection(this.table);
         Event.observe(this.table, "click", this.selectRow.bindAsEventListener(this), false);
