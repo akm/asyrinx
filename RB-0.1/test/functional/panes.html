@@ -2,6 +2,14 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>Panes sample</title>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+#pane6_content {
+    background-color:#EFABCD; 
+    height:134px; 
+    border: 5px solid #894567;
+}
+    
+--></style>
 
 <script language="javascript" type="text/javascript" src="../../lib/prototype.js" ></script>
 <script language="javascript" type="text/javascript" src="../../lib/effects.js" ></script>
@@ -151,9 +159,9 @@
 		Draggable Pane
 	</div>
 	<div id="pane5_body" style="background-color:transparent;">
-	    <div id="pane5_content" style="background-color:#ABCDEF; width:290px; height:134px; border:5px solid #456789;">
+	    <div id="pane5_content" style="background-color:#ABCDEF; height:134px; border:5px solid #456789;">
     	    <div style="margin-left:50px; width:100px; height:80px;">
-        	    <div id="pane5_1" style="background-color:#CDEFAB; width:96px; height:80px; border:2px solid #678945;">
+        	    <div id="pane5_1" style="background-color:#CDEFAB; height:80px; border:2px solid #678945;">
         	    </div>
     	    </div>
 	    </div>
@@ -161,8 +169,28 @@
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane5_title", "pane5" );
-    new Pane.RoundCorner($("pane5_content"), {size:16});
-    new Pane.RoundCorner($("pane5_1"), {size:12});
+    new Pane.RoundCorner($("pane5_content"), {size:50});
+    new Pane.RoundCorner($("pane5_1"), {size:10});
+    
+--></script>
+
+<div id="pane6" style="position:absolute; top:200px;left:200px; width:300px;">
+	<div id="pane6_title" style="background-color:#567890;">
+		Draggable Pane
+	</div>
+	<div id="pane6_body" style="background-color:transparent;">
+	    <div id="pane6_content">
+    	    <div style="margin-left:50px; width:100px; height:80px;">
+        	    <div id="pane6_1" style="background-color:#CDEFAB; height:80px; border:2px solid #678945;">
+        	    </div>
+    	    </div>
+	    </div>
+	</div>
+</div>
+<script language="javascript" type="text/javascript" ><!--
+	new Pane.Draggable( "pane6_title", "pane6" );
+    new Pane.RoundCorner($("pane6_content"), {size:50});
+    new Pane.RoundCorner($("pane6_1"), {size:10});
     
 --></script>
 
