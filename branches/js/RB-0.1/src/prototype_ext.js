@@ -1304,10 +1304,15 @@ Form.Element.Deserializers = {
 Math.Rectangle = Class.create();
 Math.toRect = function(obj) {
  	if (arguments.length == 1) {
-     	if (obj.offsetLeft && obj.offsetTop)
-     	    return new Math.Rectangle(obj.offsetLeft, obj.offsetTop, obj.offsetWidth, obj.offsetHeight);
-     	else
+     	if (obj.nodeType){
+     	    return new Math.Rectangle(
+     	        obj.offsetLeft || obj.style.left.toNumeric()*1,
+     	        obj.offsetHeight || obj.style.top.toNumeric()*1, 
+     	        obj.offsetWidth || obj.style.width.toNumeric()*1,
+     	        obj.offsetHeight || obj.style.height.toNumeric()*1);
+     	}else{
      	    return new Math.Rectangle(obj.left, obj.top, obj.width, obj.height);
+     	}
  	} else {
  	    return Math.Rectangle.applyNew(arguments)
  	}

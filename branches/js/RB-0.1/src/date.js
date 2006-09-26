@@ -185,8 +185,8 @@ Date.EraGroup = Class.create();
 Object.extend(Date.EraGroup, {
 	_createDefault: function() {
 		Date.EraGroup.ALL = new Date.EraGroup();
-		var userLanguage = navigator.language || navigator.userLanguage || navigator.systemLanguage;
-		if (userLanguage && (userLanguage.indexOf("ja") > -1)) {
+		var userLanguage = navigator.language || navigator.userLanguage || navigator.systemLanguage || "";
+		if (userLanguage.indexOf("ja") > -1) {
 			Date.Era.MEIJI = Date.Era.create("明治", "明", "M", "1868/01/01", "1912/07/29");
 			Date.Era.TAISHO = Date.Era.create("大正", "大", "T", "1912/07/30", "1926/12/24");
 			Date.Era.SHOWA = Date.Era.create("昭和", "昭", "S", "1926/12/25", "1989/01/07");
