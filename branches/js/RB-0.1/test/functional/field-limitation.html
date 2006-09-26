@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>入力制限とか</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/limit.js"></script>
+</head>
+<body>
+
+<label for="field1">NumericOnly</label><input type="text" id="field1" size="60" autocomplete="off"/><br/>
+<script language="javascript" type="text/javascript" ><!--
+Logger.setActiveOnLoad(true);
+new HTMLInputElement.KeyLimit( $("field1"), 
+    function(event){
+	    var charCode = Event.getCharCode(event);
+        return (!charCode) || String.Character.isNumeric(charCode);
+    });
+--></script>
+
+
+<label for="field2">Numeric and Alphabet</label><input type="text" id="field2" size="60" autocomplete="off"/><br/>
+<script language="javascript" type="text/javascript" ><!--
+new HTMLInputElement.KeyLimit( $("field2"), 
+    function(event){
+	    var charCode = Event.getCharCode(event);
+        return (!charCode) || String.Character.isNumeric(charCode) || String.Character.isAlphabet(charCode);
+    });
+--></script>
+
+<label for="field3">UpperCase</label><input type="text" id="field3" size="60" autocomplete="off"/><br/>
+<script language="javascript" type="text/javascript" ><!--
+new HTMLInputElement.CharConvertable($("field3"), function(c,event){return c.toUpperCase();});
+--></script>
+
+
+<label for="field4">Numeric and UpperCase Alphabet</label><input type="text" id="field4" size="60" autocomplete="off"/><br/>
+<script language="javascript" type="text/javascript" ><!--
+new HTMLInputElement.CharConvertable($("field4"), function(c,event){
+    if (String.Character.isNumeric(c)) return c; 
+    if ("-".indexOf(c) > -1) return c;
+    if (String.Character.isAlphabet(c)) return c.toUpperCase();
+    throw $break;
+});
+--></script>
+
+</body>
+</html>

@@ -302,3 +302,77 @@ Pane.Tip.prototype = {
         Element.hide(this.pane);
     }
 }
+
+Pane.RoundCorner = Class.create();
+Pane.RoundCorner.DefaultOptions = {
+	outerColor: "transparent",
+	size: 8
+}
+Pane.RoundCorner.prototype = {
+	initialize: function(element,options) {
+		this.element = element;
+		this.options = Object.fill(options||{}, Pane.RoundCorner.DefaultOptions);
+		this.options.innerColor = this.options.innerColor || Element.getStyle(element, "background-color");
+		this.size = this.options.size;
+		this.addTopPart();
+		this.addBottomPart();
+	},
+	
+	addTopPart: function() {
+		var d = document.createElement("b");
+		d.style.display="block";
+		this.element.parentNode.insertBefore(d, this.element);
+		var border = {
+		    width: Element.getStyle(this.element, "borderTopWidth")||"",
+		    style: Element.getStyle(this.element, "borderTopStyle")||"",
+		    color: Element.getStyle(this.element, "borderTopColor")||""
+		}
+		Element.setStyle(this.element, {"borderTopWidth": "0px"});
+		var borderWidth = (border.width.toNumeric() || border.width) * 1 || 1;
+		for(var i=this.size-1;i>-1;i--){
+		    var x = this.createLine(i, (i>(this.size-borderWidth-1))?border:null);
+		    d.appendChild(x);
+		}
+	},
+	
+	addBottomPart: function() {
+		var d = document.createElement("b");
+		d.style.display="block";
+		if (this.element.nextSibling)
+    		this.element.parentNode.insertBefore(d, this.element.nextSibling);
+        else
+    		this.element.parentNode.appendChild(d);
+		var border = {
+		    width: Element.getStyle(this.element, "borderBottomWidth")||"",
+		    style: Element.getStyle(this.element, "borderBottomStyle")||"",
+		    color: Element.getStyle(this.element, "borderBottomColor")||""
+		}
+		Element.setStyle(this.element, {"borderBottomWidth": "0px"});
+		var borderWidth = (border.width.toNumeric() || border.width) * 1 || 1;
+		for(var i=0;i<this.size;i++){
+		    var x = this.createLine(i, (i>(this.size-borderWidth-1))?border:null);
+		    d.appendChild(x);
+		}
+	},
+	
+	createLine: function(index, border){
+	    var x = document.createElement("div");
+		x.style.display="block";
+	    x.style.backgroundColor = (border) ? border.color : this.options.innerColor;
+	    x.style.overflow="hidden";
+	    x.style.height="1px";
+	    
+	    x.style.borderRightWidth = this.element.style.borderRightWidth
+	    x.style.borderRightStyle = this.element.style.borderRightStyle;
+	    x.style.borderRightColor = this.element.style.borderRightColor;
+	    
+	    x.style.borderLeftWidth = this.element.style.borderLeftWidth
+	    x.style.borderLeftStyle = this.element.style.borderLeftStyle;
+	    x.style.borderLeftColor = this.element.style.borderLeftColor;
+
+	    index += 1;
+	    x.style.margin = "0 " + Math.floor(this.size - Math.sqrt(this.size*this.size - index*index)) + "px";
+	    return x;
+	}
+}
+
