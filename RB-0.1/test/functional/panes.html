@@ -2,6 +2,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<title>Panes sample</title>
+
 <script language="javascript" type="text/javascript" src="../../lib/prototype.js" ></script>
 <script language="javascript" type="text/javascript" src="../../lib/effects.js" ></script>
 <script language="javascript" type="text/javascript" src="../../src/logger.js" ></script>
@@ -108,8 +109,7 @@
 	  }, false);
 --></script>
 	
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    <div style="height:500px;"></div>
     <a href="javascript:void(0);" id="centering">centering</a>
 <script language="javascript" type="text/javascript" ><!--
 	Event.observe($("centering"), "click", function(event) {
@@ -118,14 +118,53 @@
 	}, false);
 --></script>
     
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    <div style="height:500px;"></div>
     <a href="javascript:void(0);" id="log_body">log body</a>
 <script language="javascript" type="text/javascript" ><!--
 	Event.observe($("log_body"), "click", function(event) {
     	logger.debug("document.body", document.body, 2);
     }, false);
 --></script>
+
+
+
+
+<div id="pane4" style="position:absolute; top:200px;left:200px; width:300px;">
+	<div id="pane4_title" style="background-color:#567890;">
+		Draggable Pane
+	</div>
+	<div id="pane4_body" style="background-color:transparent;">
+	    <div id="pane4_content" style="background-color:#ABCDEF; width:100%; height:150px;">
+	      
+	    </div>
+	</div>
+</div>
+<script language="javascript" type="text/javascript" ><!--
+	new Pane.Draggable( "pane4_title", "pane4" );
+    new Pane.RoundCorner($("pane4_content"), {size:16});
+--></script>
+
+
+
+<div id="pane5" style="position:absolute; top:200px;left:200px; width:300px;">
+	<div id="pane5_title" style="background-color:#567890;">
+		Draggable Pane
+	</div>
+	<div id="pane5_body" style="background-color:transparent;">
+	    <div id="pane5_content" style="background-color:#ABCDEF; width:290px; height:134px; border:5px solid #456789;">
+    	    <div style="margin-left:50px; width:100px; height:80px;">
+        	    <div id="pane5_1" style="background-color:#CDEFAB; width:96px; height:80px; border:2px solid #678945;">
+        	    </div>
+    	    </div>
+	    </div>
+	</div>
+</div>
+<script language="javascript" type="text/javascript" ><!--
+	new Pane.Draggable( "pane5_title", "pane5" );
+    new Pane.RoundCorner($("pane5_content"), {size:16});
+    new Pane.RoundCorner($("pane5_1"), {size:12});
+    
+--></script>
+
 </body>
 </html>

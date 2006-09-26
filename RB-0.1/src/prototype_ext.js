@@ -366,28 +366,28 @@ Object.extend(String.Character, {
         return s.charCodeAt(0);
     },
     
-	isNumber: function(charCode) {
-	    charCode = this.toCharCode(charCode);
+	isNumeric: function(charCode) {
+	    charCode = String.Character.toCharCode(charCode);
 	    if (!charCode) return false;
 	    return (48 <=charCode && charCode <= 57);
 	},
 
 	isUpperAlphabet: function(charCode) {
-	    charCode = this.toCharCode(charCode);
+	    charCode = String.Character.toCharCode(charCode);
 	    if (!charCode) return false;
 		return (65 <=charCode && charCode <= 90);
 	},
 
 	isLowerAlphabet: function(charCode) {
-	    charCode = this.toCharCode(charCode);
+	    charCode = String.Character.toCharCode(charCode);
 	    if (!charCode) return false;
 		return (97 <=charCode && charCode <= 122);
 	},
 
 	isAlphabet: function(charCode) {
-	    charCode = this.toCharCode(charCode);
+	    charCode = String.Character.toCharCode(charCode);
 	    if (!charCode) return false;
-		return this.isUpperAlphabet(charCode) || this.isLowerAlphabet(charCode);
+		return String.Character.isUpperAlphabet(charCode) || String.Character.isLowerAlphabet(charCode);
 	}
 });
 
@@ -872,6 +872,9 @@ Object.extend(Element.Style, {
 });
 
 Element.Builder = Class.create();
+Element.Builder.DefaultIgnoreProperties = [
+    "tagName", "afterBuild", "body"
+];
 Element.Builder.prototype = {
 	initialize: function( bodyPropertyName,  baseDocument ) {
 		this.bodyPropertyName = bodyPropertyName || "body";
@@ -930,7 +933,7 @@ Element.Builder.prototype = {
 			if (ignoreProperties && this._array_contains(ignoreProperties, prop))
 				continue;
 			//IEのstyleは特別扱い
-			if ((prop == "style") &&  (navigator.appVersion.indexOf("MSIE") > -1)) {
+			if ((prop == "style") && (navigator.appVersion.indexOf("MSIE") > -1)) {
 				var style = attributeObj[prop];
 				var styleObj = Element.Style.toStyleObject( style );
 				for(var styleItemName in styleObj) {
@@ -971,6 +974,13 @@ Object.extend(Element, {
         if (!Element.Builder.instance)
             Element.Builder.instance = new Element.Builder();
         return Element.Builder.instance.execute(elementObj,parentNode);
+    },
+    
+    applyAttributes: function(node, attributeObj, ignoreProperties){
+        ignoreProperties = ignoreProperties || Element.Builder.DefaultIgnoreProperties;
+        if (!Element.Builder.instance)
+            Element.Builder.instance = new Element.Builder();
+        return Element.Builder.instance.applyAttributes(node, attributeObj, ignoreProperties);
     }
 });
 
@@ -1443,6 +1453,32 @@ Object.extend(HTMLElement, {
 
 if (!window["HTMLInputElement"]) HTMLInputElement = {};
 
+if (navigator.appVersion.indexOf("MSIE") > -1) {
+    Object.extend(HTMLInputElement, {
+        setSelectedText: function(field, value, keepSelection){
+    		var range = field.document.selection.createRange();
+    		var rangeLength = range.text.length;
+            range.text = value;
+    		range.select();
+        }
+    });
+}else{
+    Object.extend(HTMLInputElement, {
+        setSelectedText: function(field, value, keepSelection){
+            var str = field.value;
+			if (str.length < 1){
+                field.value = value;
+			}else{
+    			var head = str.substring(0, field.selectionStart);
+    			var tail = str.substring(field.selectionEnd, str.length);
+                field.value = head + value + tail;
+                var idx = head.length + value.length;
+                field.setSelectionRange(idx, idx);
+			}
+        }
+    });
+}
+
 HTMLInputElement.PullDown = Class.create();
 HTMLInputElement.PullDown.DefaultOptions = {
     hideTimeout: 500,
@@ -1547,11 +1583,15 @@ Object.extend(HTMLInputElement.PullDown.prototype, HTMLInputElement.PullDown.Met
 if (!window["HTMLIFrameElement"]) HTMLIFrameElement = {};
 HTMLIFrameElement.Shim = Class.create();
 HTMLIFrameElement.Shim.DefaultOptions = {
-	"scrolling": "no",
-	"frameborder": "1"
+	"frameBorder": "no",
+	//"frameSpacing": 0,
+	"scrolling": "no"
 };
 HTMLIFrameElement.Shim.DefaultStyle = {
 	"position": "absolute",
+	//"background-color": "transparent",
+	"border-style": "none",
+	"border-collapse": "collapse",
 	"top": "0px",
 	"left": "0px",
 	"display": "none",
@@ -1581,11 +1621,15 @@ HTMLIFrameElement.Shim.prototype = {
         this.pane = $(pane);
 		this.frame = document.createElement("IFRAME");
 		document.body.appendChild(this.frame);
-		Object.extend(this.frame, Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions));
+		
+		this.options = Object.fill(options || {}, HTMLIFrameElement.Shim.DefaultOptions);
+		Element.applyAttributes(this.frame, this.options);
+		
 		Element.setStyle(this.frame, Object.fill(style || {}, HTMLIFrameElement.Shim.DefaultStyle));
 		this.pane.style.zIndex = this.frame.style.zIndex + 1;
-		Event.observe(this.pane, "move", this.paneMoved.bindAsEventListener(this), true);
-		Event.observe(this.pane, "resize", this.paneResized.bindAsEventListener(this), true);
+		Event.observe(this.pane, "move", this.fit.bindAsEventListener(this), true);
+		Event.observe(this.pane, "resize", this.fit.bindAsEventListener(this), true);
+		this.fit();
     },
 	fit: function() {
 	    if (!this.frame)
@@ -1595,7 +1639,8 @@ HTMLIFrameElement.Shim.prototype = {
 		this.frame.style.top = this.pane.style.top;
 		this.frame.style.left = this.pane.style.left;
 		this.frame.style.zIndex = this.pane.style.zIndex - 1;
-		this.frame.style.position = "absolute";
+		this.frame.frameBorder="no";
+		
 	},
 	enableShim: function() {
 		this.fit();
@@ -1605,12 +1650,6 @@ HTMLIFrameElement.Shim.prototype = {
 	disableShim: function() {
 	    if (this.frame)
     		Element.hide(this.frame);
-	},
-	paneResized: function( e ) {
-		this.fit();
-	},
-	paneMoved: function( e ) {
-		this.fit();
 	}    
 }
 
