@@ -303,6 +303,92 @@ Pane.Tip.prototype = {
     }
 }
 
+Pane.Balloon = {
+    DefaultOptions: {
+        width:"200px", roundSize:12, borderWidth:"3px", borderStyle:"solid", width:"500px", padding: "15px", 
+        iconWidth:16, iconHeight:16,
+        closeMsg: (/ja/.test(navigator.language || navigator.userLanguage || navigator.systemLanguage || ""))?"閉じる":"close"
+    },
+    DefaultOptionsInfo: {title: "情報", backgroundColor: "#FFFFFF", borderColor:"#AAAAAA", closeAfter:10*1000,
+        iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/info.png"},
+    info: function(event, msg, options){
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
+        options = Object.fill(options, Pane.Balloon.DefaultOptionsInfo);
+        Pane.Balloon.show(event, msg, options)
+    },
+    DefaultOptionsWarn: {title: "警告", backgroundColor: "#FFFFCC", borderColor:"#AAAA55", closeAfter:20*1000,
+        iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/warning.png"},
+    warn: function(event, msg, options){
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
+        options = Object.fill(options, Pane.Balloon.DefaultOptionsWarn);
+        Pane.Balloon.show(event, msg, options)
+    },
+    DefaultOptionsError: {title: "エラー", backgroundColor: "#FFCCCC", borderColor:"#AA5555", closeAfter:0,
+        iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/error.png"},
+    error: function(event, msg, options){
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
+        options = Object.fill(options, Pane.Balloon.DefaultOptionsError);
+        Pane.Balloon.show(event, msg, options)
+    },
+    show: function(event, msg, options){
+        var target = options.target || Event.element(event);
+        var pos = Position.cumulativeOffset(target);
+        var left = options.left||(pos[0] + Math.round(target.offsetWidth/2))+"px";
+        var top = options.top||(pos[1] + target.offsetHeight)+"px";
+        var balloon = Element.build({
+            tagName: "div", 
+            style: "position:absolute; display:none;"+ "width:" + options.width +
+                ";left:" + left + ";top:" + top + ";",
+            body: {
+                tagName: "div", 
+                style: "border-width:" + options.borderWidth +
+                    ";border-color:" + options.borderColor +
+                    ";border-style:" + options.borderStyle +
+                    ";background-color:" + options.backgroundColor +
+                    ";padding:" + options.padding,
+                body:[
+                    { tagName:"div", style:"margin-bottom:10px;", body:[
+                        {tagName:"img", src: options.iconSrc, width: options.iconWidth, height: options.iconHeight},
+                        {tagName:"b", style:"margin-left:10px;", body: options.title}
+                    ]},
+                    msg,
+                    {tagName:"div", style:"margin-top:5px; text-align:right;", body:
+                        {tagName:"a", className: "closeButton", href:"javascript:void(0)", body: options.closeMsg}
+                    }
+                ]
+            }
+        }, document.body);
+        new Pane.RoundCorner(balloon.firstChild, {size: options.roundSize});
+        if (window["Effect"] && Effect.Appear){
+            new Effect.Appear(balloon);
+        }else{
+            Element.show(balloon);
+        }
+        setTimeout(function(){HTMLElement.bringToFront(balloon);}, 100);
+        Event.observe(balloon, "click", function(event){
+            HTMLElement.bringToFront(balloon);
+        });
+        var timeoutId = null;
+        var btn = document.getFirstElementByClassName("closeButton", balloon);
+        var close = function(){
+            if (window["Effect"] && Effect.Fade)
+                new Effect.Fade(balloon);
+            else
+                Element.hide(balloon);
+            setTimeout(function(){document.body.removeChild(balloon);},30*1000);
+        };
+        Event.observe(btn, "click", function(event){
+            if (timeoutId) clearTimeout(timeoutId);
+            close();
+        });
+        if (options.closeAfter>0){
+            timeoutId = setTimeout(close, options.closeAfter);
+        }
+        return balloon;
+    }
+};
+
+
 Pane.RoundCorner = Class.create();
 Pane.RoundCorner.DefaultOptions = {
 	outerColor: "transparent",

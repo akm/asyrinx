@@ -179,18 +179,16 @@
 		Draggable Pane
 	</div>
 	<div id="pane6_body" style="background-color:transparent;">
-	    <div id="pane6_content">
-    	    <div style="margin-left:50px; width:100px; height:80px;">
-        	    <div id="pane6_1" style="background-color:#CDEFAB; height:80px; border:2px solid #678945;">
-        	    </div>
-    	    </div>
+	    <div id="pane6_content" style="padding: 0 10px;">
+	       <a href="javascript:void(0)" onclick='Pane.Balloon.info(event, "バルーンはこんな感じで表示されます。"); return false;'>情報バルーンを表示</a><br/>
+	       <a href="javascript:void(0)" onclick='Pane.Balloon.warn(event, "何ミリ秒後に閉じるのかも指定できます。0以下なら閉じません。", {title:"警告バルーンデモ", closeAfter: 20*1000}); return false;'>警告バルーンを表示</a><br/>
+	       <a href="javascript:void(0)" onclick='Pane.Balloon.error(event, "オプションで幅を指定できます。", {width:"200px"}); return false;'>エラーバルーンを表示</a><br/>
 	    </div>
 	</div>
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane6_title", "pane6" );
     new Pane.RoundCorner($("pane6_content"), {size:50});
-    new Pane.RoundCorner($("pane6_1"), {size:10});
     
 --></script>
 

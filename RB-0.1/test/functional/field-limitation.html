@@ -6,6 +6,7 @@
 <script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../src/limit.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/pane.js"></script>
 </head>
 <body>
 
@@ -16,7 +17,7 @@ new HTMLInputElement.KeyLimit( $("field1"),
     function(event){
 	    var charCode = Event.getCharCode(event);
         return (!charCode) || String.Character.isNumeric(charCode);
-    });
+    }, {warnMsg: "数字のみ入力可"});
 --></script>
 
 
@@ -26,7 +27,7 @@ new HTMLInputElement.KeyLimit( $("field2"),
     function(event){
 	    var charCode = Event.getCharCode(event);
         return (!charCode) || String.Character.isNumeric(charCode) || String.Character.isAlphabet(charCode);
-    });
+    }, {warnMsg: "数字とアルファベットのみ入力可"});
 --></script>
 
 <label for="field3">UpperCase</label><input type="text" id="field3" size="60" autocomplete="off"/><br/>
@@ -41,6 +42,9 @@ new HTMLInputElement.CharConvertable($("field4"), function(c,event){
     if (String.Character.isNumeric(c)) return c; 
     if ("-".indexOf(c) > -1) return c;
     if (String.Character.isAlphabet(c)) return c.toUpperCase();
+    
+    Pane.Balloon.warn(event, "数字とアルファベットとハイフンのみ入力可です");
+    
     throw $break;
 });
 --></script>
