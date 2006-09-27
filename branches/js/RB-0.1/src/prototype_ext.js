@@ -1177,6 +1177,8 @@ Event.KeyHandler.prototype = {
             this.activate();
     },
     activate: function() {
+        if (this.active)
+            return;
         if (!this.handler)
             this.handler = this.handle.bindAsEventListener(this);
         for(var i = 0; i < this.handlingFields.length; i++) {
@@ -1189,6 +1191,8 @@ Event.KeyHandler.prototype = {
         this.active = true;
     },
     deactivate: function() {
+        if (!this.active)
+            return;
         if (!this.handler)
             return;
         for(var i = 0; i < this.handlingFields.length; i++) {
