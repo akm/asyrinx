@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>フォーカス ハイライト</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../lib/effects.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/focus.js"></script>
+</head>
+<body>
+    
+<table border="1">
+  <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>名前</th>
+    </tr>
+  </thead>
+  <tbody id="addable_body1">
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="name1" type="text" value="AAAAA"></td>
+    </tr>
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="name1" type="text" value="BBBBB"></td>
+    </tr>
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="name1" type="text" value="CCCCC"></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">
+        <a href="javascript:void(0)" id="add_row_button1">追加</a>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+<script language="javascript" type="text/javascript" ><!--
+Logger.setActiveOnLoad(true);
+
+Event.observe($("add_row_button1"), "click", function(event){
+    Element.build({tagName: "tr", body: [
+        {tagName: "td", body: {tagName:"input", className:"check1", type:"checkbox"} },
+        {tagName: "td", body: {tagName:"input", className:"check2", type:"checkbox"} },
+        {tagName: "td", body: "XXXXXXXX"}
+    ]}, $("addable_body1") );
+});
+
+Event.observe(window, "load", function(event){
+    new HTMLElement.Focus.Highlight();
+}, false);
+
+--></script>
+
+
+</body>
+</html>
