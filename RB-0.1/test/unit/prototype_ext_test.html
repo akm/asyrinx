@@ -52,74 +52,6 @@
     </table>
 </div>
 
-line00
-line01<span id="span0" class="level0">span0</span>
-line02<div id="div1" class="level0">
-line03    <span id="span1" class="level1">span1</span>
-line04    <div id="div1_1" class="level1">
-line05        <span id="span2" class="level2">span2</span>
-line06        <div id="div1_1_1" class="level2">
-line07            <span id="span3" class="level3">span3</span>
-line08        </div>
-line09        <span id="span4" class="level2">span4</span>
-line10        <div id="div1_1_2" class="level2">
-line11            <span id="span5" class="level3">span5</span>
-line12            <div id="div1_1_2_1" class="level3">
-line13                <span id="span6" class="level4">span6</span>
-line14            </div>
-line15            <span id="span7" class="level3">span7</span>
-line16            <div id="div1_1_2_2" class="level3">
-line17                <span id="span8" class="level4">span8</span>
-line18            </div>
-line19            <span id="span9" class="level3">span9</span>
-line20        </div>
-line21        <span id="span10" class="level2">span10</span>
-line22    </div>
-line23    <span id="span11" class="level1">span11</span>
-line24    <div id="div1_2" class="level1">
-line25        <span id="span12" class="level2">span12</span>
-line26        <div id="div1_2_1" class="level2">
-line27            <span id="span13" class="level3">span13</span>
-line28        </div>
-line29        <span id="span14" class="level2">span14</span>
-line20        <div id="div1_2_2" class="level2">
-line31            <span id="span15" class="level3">span15</span>
-line32        </div>
-line33        <span id="span16" class="level2">span16</span>
-line34    </div>
-line35    <span id="span17" class="level1">span17</span>
-line36</div>
-line37<span id="span18" class="level0">span18</span>
-line38
-<div id="div2" class="level0">
-    <div id="div2_1" class="level1">
-        <div id="div2_1_1" class="level2">
-            <div id="div2_1_1_1" class="level3">
-            </div>
-        </div>
-    </div>
-    <div id="div2_2" class="level1">
-        <div id="div2_2_1" class="level2">
-            <div id="div2_2_1_1" class="level3">
-            </div>
-            <div id="div2_2_1_2" class="level3">
-            </div>
-        </div>
-        <div id="div2_2_2" class="level2">
-        </div>
-        <div id="div2_2_3" class="level2">
-        </div>
-    </div>
-</div>
-<div id="div3" class="level0">
-    <div id="div3_1" class="level1"><!-- comment node --></div>
-	<div id="div3_2" class="level1"><script><!-- IE6:not exists, Fx1.5:TEXT_NODE --></script></div>
-    <div id="div3_3" class="level1">TEXT_NODE</div>
-    <div id="div3_4" class="level1"><![CDATA[ IE6:not exists, Fx1.5:COMMENT_NODE ]]></div>
-    <div id="div3_5" class="level1"></div>
-</div>
-            
-
 <script language="JavaScript" type="text/javascript"><!--
 function test_document_getFirstElementByClassName() {
     assertEquals(null, document.getFirstElementByClassName("unexists"));
@@ -518,7 +450,77 @@ function test_Number_commify() {
     assertEquals("-123.12345", (-123.12345).commify());
     assertEquals("-12,345.12345", (-12345.12345).commify());
 }
+--></script>
 
+line00
+line01<span id="span0" class="level0">span0</span>
+line02<div id="div1" class="level0">
+line03    <span id="span1" class="level1">span1</span>
+line04    <div id="div1_1" class="level1">
+line05        <span id="span2" class="level2">span2</span>
+line06        <div id="div1_1_1" class="level2">
+line07            <span id="span3" class="level3">span3</span>
+line08        </div>
+line09        <span id="span4" class="level2">span4</span>
+line10        <div id="div1_1_2" class="level2">
+line11            <span id="span5" class="level3">span5</span>
+line12            <div id="div1_1_2_1" class="level3">
+line13                <span id="span6" class="level4">span6</span>
+line14            </div>
+line15            <span id="span7" class="level3">span7</span>
+line16            <div id="div1_1_2_2" class="level3">
+line17                <span id="span8" class="level4">span8</span>
+line18            </div>
+line19            <span id="span9" class="level3">span9</span>
+line20        </div>
+line21        <span id="span10" class="level2">span10</span>
+line22    </div>
+line23    <span id="span11" class="level1">span11</span>
+line24    <div id="div1_2" class="level1">
+line25        <span id="span12" class="level2">span12</span>
+line26        <div id="div1_2_1" class="level2">
+line27            <span id="span13" class="level3">span13</span>
+line28        </div>
+line29        <span id="span14" class="level2">span14</span>
+line20        <div id="div1_2_2" class="level2">
+line31            <span id="span15" class="level3">span15</span>
+line32        </div>
+line33        <span id="span16" class="level2">span16</span>
+line34    </div>
+line35    <span id="span17" class="level1">span17</span>
+line36</div>
+line37<span id="span18" class="level0">span18</span>
+line38
+<div id="div2" class="level0">
+    <div id="div2_1" class="level1">
+        <div id="div2_1_1" class="level2">
+            <div id="div2_1_1_1" class="level3">
+            </div>
+        </div>
+    </div>
+    <div id="div2_2" class="level1">
+        <div id="div2_2_1" class="level2">
+            <div id="div2_2_1_1" class="level3">
+            </div>
+            <div id="div2_2_1_2" class="level3">
+            </div>
+        </div>
+        <div id="div2_2_2" class="level2">
+        </div>
+        <div id="div2_2_3" class="level2">
+        </div>
+    </div>
+</div>
+<div id="div3" class="level0">
+    <div id="div3_1" class="level1"><!-- comment node --></div>
+	<div id="div3_2" class="level1"><script><!-- IE6:not exists, Fx1.5:TEXT_NODE --></script></div>
+    <div id="div3_3" class="level1">TEXT_NODE</div>
+    <div id="div3_4" class="level1"><![CDATA[ IE6:not exists, Fx1.5:COMMENT_NODE ]]></div>
+    <div id="div3_5" class="level1"></div>
+</div>
+
+
+<script language="JavaScript" type="text/javascript"><!--
 function test_Object_Predicate() {
     assertEquals(true, Object.Predicate.acceptAll(null));
     assertEquals(false, Object.Predicate.denyAll(null));
@@ -989,7 +991,88 @@ function test_Element_build() {
     assertEquals(Node.TEXT_NODE, div1.childNodes[3].nodeType);
     assertEquals("abcdefghijklmnopqrstuvwxyz", div1.childNodes[3].data);
 }
+--></script>
 
+
+<script language="JavaScript" type="text/javascript"><!--
+
+function test_Math_Rectangle_isIntersectedWith(){
+    var r = [];
+    r[0] = new Math.Rectangle(100,  50, 200, 150); 
+    r[1] = new Math.Rectangle(  0,  50, 200, 150); 
+    r[2] = new Math.Rectangle(210,  50, 200, 150); 
+    r[3] = new Math.Rectangle(100, -50, 200, 150);
+    r[4] = new Math.Rectangle(100, 150, 200, 150);
+    var checkBoth = function(expected, idx1, idx2){
+        assertEquals("r[" +idx1+ "].isIntersectedWith(r[" +idx2+ "])", expected, r[idx1].isIntersectedWith(r[idx2]));
+        assertEquals("r[" +idx2+ "].isIntersectedWith(r[" +idx1+ "])", expected, r[idx2].isIntersectedWith(r[idx1]));
+    }
+    checkBoth(true, 0, 0);
+    checkBoth(true, 0, 1);
+    checkBoth(true, 0, 2);
+    checkBoth(true, 0, 3);
+    checkBoth(true, 0, 4);
+    
+    checkBoth(true, 1, 1);
+    checkBoth(false, 1, 2);
+    checkBoth(true, 1, 3);
+    checkBoth(true, 1, 4);
+    
+    checkBoth(true, 2, 2);
+    checkBoth(true, 2, 3);
+    checkBoth(true, 2, 4);
+    
+    checkBoth(true, 3, 3);
+    checkBoth(false, 3, 4);
+    
+    checkBoth(true, 4, 4);
+}
+
+--></script>
+
+<div id="rect0" style="position:absolute; left:300px;top:100px; width:150px; height:100px; background-color:#FEDCBA;">rect0</div>
+<div id="rect1" style="position:absolute; left:300px;top:100px; width:150px; height:100px; background-color:#EDCBAF;">rect1</div>
+<div id="rect2" style="position:absolute; left:350px;top:100px; width:150px; height:100px; background-color:#DCBAFE;">rect2</div>
+<div id="rect3" style="position:absolute; left:300px;top:150px; width:150px; height:100px; background-color:#CBAFED;">rect3</div>
+<div id="rect4" style="position:absolute; left:250px;top:100px; width:150px; height:100px; background-color:#BAFEDC;">rect4</div>
+<div id="rect5" style="position:absolute; left:300px;top: 50px; width:150px; height:100px; background-color:#AFEDCB;">rect5</div>
+<div id="rect6" style="position:absolute; left:450px;top:100px; width:150px; height:100px; background-color:#ABCDEF;">rect6</div>
+<div id="rect7" style="position:absolute; left:300px;top:200px; width:150px; height:100px; background-color:#BCDEFA;">rect7</div>
+<div id="rect8" style="position:absolute; left:150px;top:100px; width:150px; height:100px; background-color:#CDEFAB;">rect8</div>
+<div id="rect9" style="position:absolute; left:300px;top:  0px; width:150px; height:100px; background-color:#DEFABC;">rect9</div>
+
+<div id="rect10" style="position:absolute; left:300px;top:  0px; width:500px; border:1px solid black;">
+    <div style="height:150px;">rect10のstyleにはheightが指定されていないが、その子ノードでheightが決まっている</div>
+</div>
+
+
+<script language="JavaScript" type="text/javascript"><!--
+
+function test_Math_toRect() {
+    var r = [];
+    for(var i = 0; i < 11; i++) {
+        r[i] = Math.toRect( $("rect"+i) );   
+    }
+    var checkRect = function(expLeft, expTop, expWidth, expHeight, rectIndex){
+        var rect = r[rectIndex];
+        assertEquals("r[" +rectIndex+ "].left"  , expLeft  , rect.left  );
+        assertEquals("r[" +rectIndex+ "].top"   , expTop   , rect.top   );
+        assertEquals("r[" +rectIndex+ "].width" , expWidth , rect.width );
+        assertEquals("r[" +rectIndex+ "].height", expHeight, rect.height);
+    }
+    checkRect(300, 100, 150, 100,   0);
+    checkRect(300, 100, 150, 100,   1);
+    checkRect(350, 100, 150, 100,   2);
+    checkRect(300, 150, 150, 100,   3);
+    checkRect(250, 100, 150, 100,   4);
+    checkRect(300,  50, 150, 100,   5);
+    checkRect(450, 100, 150, 100,   6);
+    checkRect(300, 200, 150, 100,   7);
+    checkRect(150, 100, 150, 100,   8);
+    checkRect(300,   0, 150, 100,   9); 
+    checkRect(300,   0, 502, 152,  10); //borderの幅の分、加算されている 
+    
+}
 
 
 --></script>
