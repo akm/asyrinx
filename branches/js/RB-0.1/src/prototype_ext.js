@@ -1307,7 +1307,7 @@ Math.toRect = function(obj) {
      	if (obj.nodeType){
      	    return new Math.Rectangle(
      	        obj.offsetLeft || obj.style.left.toNumeric()*1,
-     	        obj.offsetHeight || obj.style.top.toNumeric()*1, 
+     	        obj.offsetTop || obj.style.top.toNumeric()*1, 
      	        obj.offsetWidth || obj.style.width.toNumeric()*1,
      	        obj.offsetHeight || obj.style.height.toNumeric()*1);
      	}else{

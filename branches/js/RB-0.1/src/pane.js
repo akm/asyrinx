@@ -305,25 +305,26 @@ Pane.Tip.prototype = {
 
 Pane.Balloon = {
     DefaultOptions: {
-        width:"200px", roundSize:12, borderWidth:"3px", borderStyle:"solid", width:"500px", padding: "15px", 
-        iconWidth:16, iconHeight:16,
+        width:"500px", padding: "0 15px", borderWidth:"1px", borderStyle:"solid", 
+        backgroundColor: "#FFFFFF", borderColor:"#AAAAAA", 
+        roundSize:16, iconWidth:16, iconHeight:16,
         closeMsg: (/ja/.test(navigator.language || navigator.userLanguage || navigator.systemLanguage || ""))?"閉じる":"close"
     },
-    DefaultOptionsInfo: {title: "情報", backgroundColor: "#FFFFFF", borderColor:"#AAAAAA", closeAfter:10*1000,
+    DefaultOptionsInfo: {title: "情報", closeAfter:10*1000,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/info.png"},
     info: function(event, msg, options){
         options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
         options = Object.fill(options, Pane.Balloon.DefaultOptionsInfo);
         Pane.Balloon.show(event, msg, options)
     },
-    DefaultOptionsWarn: {title: "警告", backgroundColor: "#FFFFCC", borderColor:"#AAAA55", closeAfter:20*1000,
+    DefaultOptionsWarn: {title: "警告", closeAfter:20*1000,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/warning.png"},
     warn: function(event, msg, options){
         options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
         options = Object.fill(options, Pane.Balloon.DefaultOptionsWarn);
         Pane.Balloon.show(event, msg, options)
     },
-    DefaultOptionsError: {title: "エラー", backgroundColor: "#FFCCCC", borderColor:"#AA5555", closeAfter:0,
+    DefaultOptionsError: {title: "エラー", closeAfter:0,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/error.png"},
     error: function(event, msg, options){
         options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
