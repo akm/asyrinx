@@ -303,7 +303,8 @@ Pane.Tip.prototype = {
     }
 }
 
-Pane.Balloon = {
+Pane.Balloon = Class.create();
+Object.extend(Pane.Balloon, {
     DefaultOptions: {
         width:"500px", padding: "0 15px", borderWidth:"1px", borderStyle:"solid", 
         backgroundColor: "#FFFFFF", borderColor:"#AAAAAA", 
@@ -313,33 +314,74 @@ Pane.Balloon = {
     DefaultOptionsInfo: {title: "情報", closeAfter:10*1000,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/info.png"},
     info: function(event, msg, options){
-        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
-        options = Object.fill(options, Pane.Balloon.DefaultOptionsInfo);
-        Pane.Balloon.show(event, msg, options)
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptionsInfo);
+        return Pane.Balloon.show(event, msg, options);
     },
     DefaultOptionsWarn: {title: "警告", closeAfter:20*1000,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/warning.png"},
     warn: function(event, msg, options){
-        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
-        options = Object.fill(options, Pane.Balloon.DefaultOptionsWarn);
-        Pane.Balloon.show(event, msg, options)
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptionsWarn);
+        return Pane.Balloon.show(event, msg, options);
     },
     DefaultOptionsError: {title: "エラー", closeAfter:0,
         iconSrc: "http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/error.png"},
     error: function(event, msg, options){
-        options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
-        options = Object.fill(options, Pane.Balloon.DefaultOptionsError);
-        Pane.Balloon.show(event, msg, options)
+        options = Object.fill(options||{}, Pane.Balloon.DefaultOptionsError);
+        return Pane.Balloon.show(event, msg, options);
     },
     show: function(event, msg, options){
-        var target = options.target || Event.element(event);
-        var pos = Position.cumulativeOffset(target);
-        var left = options.left||(pos[0] + Math.round(target.offsetWidth/2))+"px";
-        var top = options.top||(pos[1] + target.offsetHeight)+"px";
-        var balloon = Element.build({
+        options = options||{};
+        options.target = Event.element(event);
+        if (options.target) {
+            var balloon = Pane.Balloon.Manager.find(options.target);
+            if (balloon){
+                balloon.setMessage(msg);
+                return balloon;
+            }
+        }
+        return new Pane.Balloon(msg, options);
+    }
+});
+Pane.Balloon.Manager = {
+    register: function(target, balloon){
+        if (!this.entries)
+            this.entries = [];
+        this.entries.push({target: target, balloon: balloon});
+    },
+    unregister: function(balloon){
+        if (!this.entries)
+            return;
+        var idx = this.indexOf(null, balloon);
+        if (idx > -1)
+            this.entries.splice(idx, 1);
+    },
+    find: function(target){
+        if (!this.entries)
+            return null;
+        var idx = this.indexOf(target);
+        return (idx > -1) ? this.entries[idx].balloon : null;
+    },
+    indexOf: function(target, balloon){
+        if (!this.entries)
+            return -1;
+        for(var i=0;i<this.entries.length;i++){
+            if (target && this.entries[i].target == target)
+                return i;
+            if (balloon && this.entries[i].balloon == balloon)
+                return i;
+        }
+        return -1;
+    }
+}
+Pane.Balloon.Methods = {
+    initialize: function(msg, options){
+        this.options = Object.fill(options||{}, Pane.Balloon.DefaultOptions);
+        this.create(msg, this.options);
+    },
+    create: function(msg, options){
+        this.element = Element.build({
             tagName: "div", 
-            style: "position:absolute; display:none;"+ "width:" + options.width +
-                ";left:" + left + ";top:" + top + ";",
+            style: "position:absolute; display:none;"+ "width:" + options.width,
             body: {
                 tagName: "div", 
                 style: "border-width:" + options.borderWidth +
@@ -352,43 +394,64 @@ Pane.Balloon = {
                         {tagName:"img", src: options.iconSrc, width: options.iconWidth, height: options.iconHeight},
                         {tagName:"b", style:"margin-left:10px;", body: options.title}
                     ]},
-                    msg,
+                    {tagName:"div", className: "balloon_msg", body:msg},
                     {tagName:"div", style:"margin-top:5px; text-align:right;", body:
                         {tagName:"a", className: "closeButton", href:"javascript:void(0)", body: options.closeMsg}
                     }
                 ]
             }
         }, document.body);
-        new Pane.RoundCorner(balloon.firstChild, {size: options.roundSize});
+        new Pane.RoundCorner(this.element.firstChild, {size: options.roundSize});
+        
+        HTMLElement.centering(this.element);
+        var target = options.target;
+        var pos = (target)?Position.cumulativeOffset(target):[0,0];
+        var left = options.left || (target) ? (pos[0] + Math.round(target.offsetWidth/2)) +"px" : null ;
+        var top = options.top || (target) ? (pos[1] + target.offsetHeight) +"px" : null ;
+        if (left) this.element.style.left = left;
+        if (top) this.element.style.top = top;
+        if (target)
+            Pane.Balloon.Manager.register(target, this);
+        
+        this.show();
+        var btn = document.getFirstElementByClassName("closeButton", this.element);
+        Event.observe(btn, "click", this.clickCloseButton.bindAsEventListener(this));
+        Event.observe(this.element, "click", this.clickBaloon.bindAsEventListener(this));
+    },
+    
+    show: function(){
         if (window["Effect"] && Effect.Appear){
-            new Effect.Appear(balloon);
+            new Effect.Appear(this.element);
         }else{
-            Element.show(balloon);
+            Element.show(this.element);
         }
-        setTimeout(function(){HTMLElement.bringToFront(balloon);}, 100);
-        Event.observe(balloon, "click", function(event){
-            HTMLElement.bringToFront(balloon);
-        });
-        var timeoutId = null;
-        var btn = document.getFirstElementByClassName("closeButton", balloon);
-        var close = function(){
-            if (window["Effect"] && Effect.Fade)
-                new Effect.Fade(balloon);
-            else
-                Element.hide(balloon);
-            setTimeout(function(){document.body.removeChild(balloon);},30*1000);
-        };
-        Event.observe(btn, "click", function(event){
-            if (timeoutId) clearTimeout(timeoutId);
-            close();
-        });
-        if (options.closeAfter>0){
-            timeoutId = setTimeout(close, options.closeAfter);
-        }
-        return balloon;
+        setTimeout(function(){HTMLElement.bringToFront(this.element);}.bind(this), 100);
+        if (this.options.closeAfter>0)
+            this.timeoutId = setTimeout(this.close.bind(this), this.options.closeAfter);
+    },
+    close: function(){
+        if (window["Effect"] && Effect.Fade)
+            new Effect.Fade(this.element);
+        else
+            Element.hide(this.element);
+        Pane.Balloon.Manager.unregister(this);
+        setTimeout(function(){
+            try{document.body.removeChild(this.element);}catch(ex){}
+        }.bind(this) ,30*1000);
+    },
+    clickBaloon: function(event){
+        HTMLElement.bringToFront(this.element);
+    },
+    clickCloseButton: function(event){
+        if (this.timeoutId) clearTimeout(this.timeoutId);
+        this.close();
+    },
+    setMessage: function(msg){
+        var div = document.getFirstElementByClassName("balloon_msg", this.element);
+        div.innerHTML = msg;
     }
 };
-
+Object.extend(Pane.Balloon.prototype, Pane.Balloon.Methods);
 
 Pane.RoundCorner = Class.create();
 Pane.RoundCorner.DefaultOptions = {
