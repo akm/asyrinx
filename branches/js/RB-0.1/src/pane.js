@@ -392,8 +392,9 @@ Pane.Balloon = {
 
 Pane.RoundCorner = Class.create();
 Pane.RoundCorner.DefaultOptions = {
-	outerColor: "transparent",
-	size: 8
+	//corners: "topLeft,topRight,bottomLeft,bottomRight"
+	size: 8,
+	outerColor: "transparent"
 }
 Pane.RoundCorner.prototype = {
 	initialize: function(element,options) {
@@ -406,6 +407,8 @@ Pane.RoundCorner.prototype = {
 	},
 	
 	addTopPart: function() {
+	    if (this.options.corners && !(/top/i).test(this.options.corners))
+	       return;
 		var d = document.createElement("b");
 		d.style.display="block";
 		this.element.parentNode.insertBefore(d, this.element);
@@ -417,12 +420,14 @@ Pane.RoundCorner.prototype = {
 		Element.setStyle(this.element, {"borderTopWidth": "0px"});
 		var borderWidth = (border.width.toNumeric() || border.width) * 1 || 0;
 		for(var i=this.size-1;i>-1;i--){
-		    var x = this.createLine(i, (i>(this.size-borderWidth-1))?border:null);
+		    var x = this.createLine(i, "top", (i>(this.size-borderWidth-1))?border:null);
 		    d.appendChild(x);
 		}
 	},
 	
 	addBottomPart: function() {
+	    if (this.options.corners && !(/bottom/i).test(this.options.corners))
+	       return;
 		var d = document.createElement("b");
 		d.style.display="block";
 		if (this.element.nextSibling)
@@ -437,12 +442,12 @@ Pane.RoundCorner.prototype = {
 		Element.setStyle(this.element, {"borderBottomWidth": "0px"});
 		var borderWidth = (border.width.toNumeric() || border.width) * 1 || 0;
 		for(var i=0;i<this.size;i++){
-		    var x = this.createLine(i, (i>(this.size-borderWidth-1))?border:null);
+		    var x = this.createLine(i, "bottom", (i>(this.size-borderWidth-1))?border:null);
 		    d.appendChild(x);
 		}
 	},
 	
-	createLine: function(index, border){
+	createLine: function(index, position, border){
 	    var x = document.createElement("b");
 		x.style.display="block";
 	    x.style.backgroundColor = (border) ? border.color : this.options.innerColor;
@@ -450,14 +455,34 @@ Pane.RoundCorner.prototype = {
 	    x.style.height="1px";
 	    //index += 1;
 	    var marginWidth = this.size - Math.sqrt(this.size*this.size - index*index);
-	    x.style.margin = "0 " + Math.floor(marginWidth) + "px";
-	    
-	    x.style.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
+	    var corners = this.options.corners || (position + "Left," + position + "Right");
+        var leftCorner = (corners.indexOf(position + "Left") > -1);
+        var rightCorner = (corners.indexOf(position + "Right") > -1);
+        if (leftCorner && rightCorner){
+    	    x.style.margin = "0 " + Math.floor(marginWidth) + "px";
+        } else if (rightCorner){
+    	    x.style.marginRight = Math.floor(marginWidth) + "px";
+        } else if (leftCorner){
+    	    x.style.marginLeft = Math.floor(marginWidth) + "px";
+        } else {
+            throw new Error("something wrong");
+        }
 	    x.style.borderRightStyle = Element.getStyle(this.element, "borderRightStyle");
 	    x.style.borderRightColor = Element.getStyle(this.element, "borderRightColor");
-	    x.style.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
 	    x.style.borderLeftStyle = Element.getStyle(this.element, "borderLeftStyle");
 	    x.style.borderLeftColor = Element.getStyle(this.element, "borderLeftColor");
+        if (leftCorner && rightCorner){
+    	    x.style.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
+    	    x.style.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
+        } else if (rightCorner){
+    	    x.style.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
+    	    x.style.borderLeftWidth = Element.getStyle(this.element, "borderLeftWidth");
+        } else if (leftCorner){
+    	    x.style.borderRightWidth = Element.getStyle(this.element, "borderRightWidth");
+    	    x.style.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
+        } else {
+            throw new Error("something wrong");
+        }
 	    return x;
 	},
 	calcBorderWidth: function(borderWidth, y){

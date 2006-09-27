@@ -149,29 +149,61 @@
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane4_title", "pane4" );
-    new Pane.RoundCorner($("pane4_content"), {size:16});
+    new Pane.RoundCorner($("pane4_content"), {size:16, corners:"bottomLeft,bottomRight"});
 --></script>
 
 
 
-<div id="pane5" style="position:absolute; top:200px;left:200px; width:300px;">
+<div id="pane5" style="position:absolute; top:500px;left:200px; width:400px;">
 	<div id="pane5_title" style="background-color:#567890;">
 		Draggable Pane
 	</div>
 	<div id="pane5_body" style="background-color:transparent;">
-	    <div id="pane5_content" style="background-color:#ABCDEF; height:134px; border:5px solid #456789;">
-    	    <div style="margin-left:50px; width:100px; height:80px;">
-        	    <div id="pane5_1" style="background-color:#CDEFAB; height:80px; border:2px solid #678945;">
-        	    </div>
+	    <div id="pane5_content" style="background-color:#ABCDEF; width:390px; height:250px; border:5px solid #456789;">
+    	    <div style="margin:20px;">
+    	        <table width="100%">
+    	           <tr>
+    	               <td><div id="pane5_1" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_2" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_3" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_4" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	           </tr>
+    	           <tr>
+    	               <td><div id="pane5_5" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_6" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_7" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_8" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_9" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	           </tr>
+    	           <tr>
+    	               <td><div id="pane5_10" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_11" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_12" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	               <td><div id="pane5_13" style="background-color:#CDEFAB; height:30px; border:2px solid #678945;"></div></td>
+    	           </tr>
+    	        </table>
     	    </div>
 	    </div>
 	</div>
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane5_title", "pane5" );
-    new Pane.RoundCorner($("pane5_content"), {size:50});
-    new Pane.RoundCorner($("pane5_1"), {size:10});
+    new Pane.RoundCorner($("pane5_content"), {size:50, corners:"bottomLeft,bottomRight"});
+    new Pane.RoundCorner($("pane5_1"), {size:20, corners:"topLeft"});
+    new Pane.RoundCorner($("pane5_2"), {size:20, corners:"topRight"});
+    new Pane.RoundCorner($("pane5_3"), {size:20, corners:"bottomLeft"});
+    new Pane.RoundCorner($("pane5_4"), {size:20, corners:"bottomRight"});
     
+    new Pane.RoundCorner($("pane5_5"), {size:20, corners:"topLeft,topRight"});
+    new Pane.RoundCorner($("pane5_6"), {size:20, corners:"topRight,bottomRight"});
+    new Pane.RoundCorner($("pane5_7"), {size:20, corners:"bottomRight,bottomLeft"});
+    new Pane.RoundCorner($("pane5_8"), {size:20, corners:"bottomRight,topLeft"});
+    new Pane.RoundCorner($("pane5_9"), {size:20, corners:"bottomLeft,topRight"});
+
+    new Pane.RoundCorner($("pane5_10"), {size:20, corners:"topRight,bottomRight,bottomLeft"});
+    new Pane.RoundCorner($("pane5_11"), {size:20, corners:"topLeft,bottomRight,bottomLeft"});
+    new Pane.RoundCorner($("pane5_12"), {size:20, corners:"topLeft,topRight,bottomRight"});
+    new Pane.RoundCorner($("pane5_13"), {size:20, corners:"topLeft,topRight,bottomLeft"});
 --></script>
 
 <div id="pane6" style="position:absolute; top:200px;left:200px; width:300px;">
@@ -188,7 +220,7 @@
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane6_title", "pane6" );
-    new Pane.RoundCorner($("pane6_content"), {size:50});
+    new Pane.RoundCorner($("pane6_content"), {size:50, corners:"bottomLeft,bottomRight"});
     
 --></script>
 
