@@ -846,6 +846,18 @@ Object.extend(Element, {
 	   return Node.Finder.first(node, 
 	       Element.Walk.ancestor, 
 	       Element.Predicate.className(className));
+	},
+	
+	getElementsProvider: function( obj ) {
+        if (obj) {
+            if (obj.constructor==Array)
+                return function(){return obj;};
+            else if (obj.constructor==String)
+                return function(){return document.getElementsByClassName(obj);};
+            else if (obj.constructor==Function)
+                return obj;
+        }
+        throw new Error("require array of [Element or String], function{return array of [Element or String]} or string(which means className)");
 	}
 	
 });

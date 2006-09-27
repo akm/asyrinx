@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>入力制限とか</title>
+<script language="JavaScript" type="text/javascript" src="../../lib/prototype.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/checkbox.js"></script>
+</head>
+<body>
+    
+<table border="1">
+  <thead>
+    <tr>
+      <th><input id="whole_check1" type="checkbox"/></th>
+      <th><input id="whole_check2" type="checkbox"/></th>
+      <th>名前</th>
+    </tr>
+  </thead>
+  <tbody id="addable_body1">
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="check2" type="checkbox"/></td>
+      <td>AAAAA</td>
+    </tr>
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="check2" type="checkbox"/></td>
+      <td>BBBBB</td>
+    </tr>
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="check2" type="checkbox"/></td>
+      <td>CCCCC</td>
+    </tr>
+    <tr>
+      <td><input class="check1" type="checkbox"/></td>
+      <td><input class="check2" type="checkbox"/></td>
+      <td>DDDDD</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">
+        <a href="javascript:void(0)" id="add_row_button1">追加</a>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+<script language="javascript" type="text/javascript" ><!--
+Logger.setActiveOnLoad(true);
+
+Event.observe($("add_row_button1"), "click", function(event){
+    Element.build({tagName: "tr", body: [
+        {tagName: "td", body: {tagName:"input", className:"check1", type:"checkbox"} },
+        {tagName: "td", body: {tagName:"input", className:"check2", type:"checkbox"} },
+        {tagName: "td", body: "XXXXXXXX"}
+    ]}, $("addable_body1") );
+});
+
+new HTMLInputElement.WholeCheck( $("whole_check1"), document.getElementsByClassName("check1") );
+new HTMLInputElement.WholeCheck( $("whole_check2"), document.getElementsByClassName("check2") );
+--></script>
+
+<br/>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th><input id="whole_check3" type="checkbox"/></th>
+      <th><input id="whole_check4" type="checkbox"/></th>
+      <th>名前</th>
+    </tr>
+  </thead>
+  <tbody id="addable_body2">
+    <tr>
+      <td><input class="check3" type="checkbox"/></td>
+      <td><input class="check4" type="checkbox"/></td>
+      <td>AAAAA</td>
+    </tr>
+    <tr>
+      <td><input class="check3" type="checkbox"/></td>
+      <td><input class="check4" type="checkbox"/></td>
+      <td>BBBBB</td>
+    </tr>
+    <tr>
+      <td><input class="check3" type="checkbox"/></td>
+      <td><input class="check4" type="checkbox"/></td>
+      <td>CCCCC</td>
+    </tr>
+    <tr>
+      <td><input class="check3" type="checkbox"/></td>
+      <td><input class="check4" type="checkbox"/></td>
+      <td>DDDDD</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3">
+        <a href="javascript:void(0)" id="add_row_button2">追加</a>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+<script language="javascript" type="text/javascript" ><!--
+Event.observe($("add_row_button2"), "click", function(event){
+    Element.build({tagName: "tr", body: [
+        {tagName: "td", body: {tagName:"input", className:"check3", type:"checkbox"} },
+        {tagName: "td", body: {tagName:"input", className:"check4", type:"checkbox"} },
+        {tagName: "td", body: "XXXXXXXX"}
+    ]}, $("addable_body2") );
+});
+new HTMLInputElement.WholeCheck( $("whole_check3"), function(event){
+    return document.getElementsByClassName("check3");   
+});
+new HTMLInputElement.WholeCheck( $("whole_check4"), "check4" );
+--></script>
+
+<form id="form1" onsubmit="return false;">
+    本来なら隠されているフィールド<input name="checked_values1" id="checked_values1" type="hidden_checkbox_values" type="text"/>
+    <input type="checkbox" class="check_group1" value="a"/>a &nbsp;&nbsp;
+    <input type="checkbox" class="check_group1" value="b"/>b &nbsp;&nbsp;
+    <input type="checkbox" class="check_group1" value="c"/>c &nbsp;&nbsp;
+    <input type="checkbox" class="check_group1" value="d"/>d &nbsp;&nbsp;
+    <input type="submit"/>
+</form>
+<script language="javascript" type="text/javascript" ><!--
+new HTMLInputElement.CheckboxText( $("checked_values1"), function(event){
+    return document.getElementsByClassName("check_group1");
+}, {separator:";"});
+Event.observe($("form1"), "submit", function(event){
+    alert( Form.serialize( $("form1") ) );
+});
+--></script>
+
+
+<div>
+    フォーム外でもOK<input id="checked_values2" type="hidden_checkbox_values" type="text"/>
+    <input type="checkbox" class="check_group2" value="a"/>a &nbsp;&nbsp;
+    <input type="checkbox" class="check_group2" value="b"/>b &nbsp;&nbsp;
+    <input type="checkbox" class="check_group2" value="c"/>c &nbsp;&nbsp;
+    <input type="checkbox" class="check_group2" value="d"/>d &nbsp;&nbsp;
+</div>
+<script language="javascript" type="text/javascript" ><!--
+new HTMLInputElement.CheckboxText( $("checked_values2"), "check_group2");
+--></script>
+
+</body>
+</html>
