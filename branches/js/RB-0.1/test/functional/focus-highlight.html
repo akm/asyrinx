@@ -10,6 +10,8 @@
 </head>
 <body>
     
+すんません、いまのところIEでしか動かないんです。
+    
 <table border="1">
   <thead>
     <tr>
@@ -39,6 +41,10 @@
     </tr>
   </tfoot>
 </table>
+
+<input type="button" id="deactivate_focusHighlight" value="フォーカスハイライト 無効"/><br/>
+<input type="button" id="activate_focusHighlight1" value="フォーカスハイライト 有効１"/><br/>
+
 <script language="javascript" type="text/javascript" ><!--
 Logger.setActiveOnLoad(true);
 
@@ -50,8 +56,29 @@ Event.observe($("add_row_button1"), "click", function(event){
     ]}, $("addable_body1") );
 });
 
-Event.observe(window, "load", function(event){
-    new HTMLElement.Focus.Highlight();
+var focusHighlight = null;
+focusHighlight = new HTMLElement.Focus.Highlight(null, {
+        focusEffect: function(event){
+            var element = Event.element(event);
+            element.style.backgroundColor = "#ffffaa";
+        },
+        blurEffect: function(event){
+            var element = Event.element(event);
+            element.style.backgroundColor = "";
+        }
+    });
+
+Event.observe($("deactivate_focusHighlight"), "click", function(event){
+    if (!focusHighlight)
+        return;
+    focusHighlight.deactivate();
+    focusHighlight = null;
+}, false);
+
+Event.observe($("activate_focusHighlight1"), "click", function(event){
+    if (focusHighlight)
+        focusHighlight.deactivate();
+    focusHighlight = new HTMLElement.Focus.Highlight();
 }, false);
 
 --></script>
