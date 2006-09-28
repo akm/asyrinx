@@ -6,6 +6,9 @@
  *     effects.js 
  *     prototype_ext.js
  *
+ * optional
+ *     effects.js
+ *
  * @author T.Akima
  * @copyright T.Akima
  * @license LGPL
@@ -245,7 +248,12 @@ Pane.PositionKeeper.prototype = {
         this.rememberPosition();
     },
     keepPosition: function(x, y) {
-	   new Effect.Move( this.target, {x:x, y:y, mode:"absolute"});
+        if (window["Effect"] && Effect.Move){
+    	    new Effect.Move( this.target, {x:x, y:y, mode:"absolute"});
+        }else{
+            this.target.style.left = x + "px";
+            this.target.style.top = y + "px";
+        }
     }
 }
 
