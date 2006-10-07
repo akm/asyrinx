@@ -1,0 +1,46 @@
+ActsAsUserstamp
+===============
+
+acts_as_userstamp plugin extends userstamp plugin.
+
+= Installing
+
+1. Create your Rails application, set up your databases, grab the Userstamp plugin, and install them.
+
+2. Install LoginEngine plugin by using script/plugin install. Or install AuthGenerator by using gem and generate code.
+
+3. Install the ActsAsUserstamp into your vendor/plugins directory
+
+
+= Usage
+
+1. Add "acts_as_userstamp" in the class that is used as user. if you use LoginEngine or UserEngine, copy $RAILS_ROOT/vendor/plugins/login_engine/app/models/user.rb or vendor/plugins/user_engine/app/models/user.rb to $RAILS_ROOT/app/models at first.
+   Then modify $RAILS_ROOT/app/models/user.rb like this:
+
+	class User < ActiveRecord::Base
+	  include LoginEngine::AuthenticatedUser
+	  include UserEngine::AuthorizedUser
+	  
+	  acts_as_userstamp
+	  
+	  # Returns the full name of this user.
+	  def fullname
+	    "#{self.firstname} #{self.lastname}"
+	  end
+	end   
+
+2. Add "include UserstampController" to ApplicationController like this:
+
+	class ApplicationController < ActionController::Base
+	  include LoginEngine
+	  include UserEngine
+	  
+	  include UserstampController
+	  
+	  helper :user
+	  model :user
+	
+	  before_filter :authorize_action
+	end
+
+That's all! You don't need to write belongs_to for each created_by and updated_by. They will be declared automatically.
