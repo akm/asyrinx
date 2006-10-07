@@ -1,0 +1,11 @@
+admin_user:
+  id: 1
+  name: 'admin'
+  created_at: '2006-08-12 12:30:45'
+  updated_at: '2006-08-12 12:30:45'
+
+normal_user:
+  id: 2
+  name: 'joe'
+  created_at: '2006-08-31 18:30:05'
+  updated_at: '2006-08-31 18:30:05'
