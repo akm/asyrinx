@@ -1,0 +1,36 @@
+alphabetical:
+  id: 1
+  name: 'admin'
+  name_kana: 'アドミン'
+  tel: '03-1234-5678'
+  
+japanese_person:
+  id: 2
+  name: '山田太郎'
+  name_kana: 'ヤマダタロウ'
+  tel: '0123-45-6789'
+
+japanese_person2:
+  id: 3
+  name: 'つのだ☆ひろ'
+  name_kana: 'ツノダヒロ'
+  tel: '090-0987-6543'
+
+
+half_person:
+  id: 4
+  name: 'デーモン小暮'
+  name_kana: 'デーモンコグレ'
+  tel: '070-1234-5678'
+
+half_person:
+  id: 5
+  name: 'Tiger JET Shin'
+  name_kana: 'タイガー　"ジェット" シン'
+  tel: '+1-234-555-234'
+
+half_person:
+  id: 6
+  name: 'Bruiser Brody'
+  name_kana: 'ブルーザー・ブロディ'
+  tel: '+81-999-999-999'
