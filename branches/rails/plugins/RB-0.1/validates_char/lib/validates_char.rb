@@ -7,6 +7,33 @@ require 'jp_char'
 
 ActiveRecord::Base.class_eval do
   
+  # Validates String attribute of character type in Japanese.
+  # 
+  # validates_char :name_kana, :deny => [:kanji, :alphabet], 
+  #   :conversions => {
+  #     :hankaku_katakana => :zenkaku_katakana,
+  #     :zenkaku_hiragana => :zenkaku_katakana }
+  # 
+  # Configuration options:
+  # accept/deny - array of (acceptable or denied character type symbols, String or Regexp)
+  #   :hankaku_numeric, :hankaku_alphabet, :hankaku_sign, :hankaku_katakana
+  #   :zenkaku_numeric, :zenkaku_alphabet, :zenkaku_sign, :zenkaku_katakana, :zenkaku_hiragana, :zenkaku_kanji 
+  #   
+  #   :numeric - :hankaku_numeric or :zenkaku_numeric
+  #   :alphabet - :hankaku_alphabet or :zenkaku_alphabet
+  #   :sign - :hankaku_sign or :zenkaku_sign
+  #   :katakana - :hankaku_katakana or :zenkaku_katakana
+  #   :hiragana - :zenkaku_hiragana
+  #   :kanji  - :zenkaku_kanji
+  #   
+  #   you can use symbol like this:
+  #   	:hankaku_alphabet_sign, :hankaku_alphabet_numeric, :zenkaku_katakana_sign, :hiragana_sign
+  #   
+  # ignore_nil - no validation if it's true. default true
+  # message - A custom error message (default is: "accepts only %s" if :accept, "denies %s" if :deny)
+  # conversions - declare auto converting setter method for attr_name if conversions is specified.
+  # 	conversions must be a hash, key is searching character type symbol and value is replacing character type symbol.
+  # 
   def self.validates_char(*attr_names)
     configuration = { :ignore_nil => true }
     configuration.update(attr_names.pop) if attr_names.last.is_a?(Hash)
