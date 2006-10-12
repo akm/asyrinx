@@ -34,7 +34,7 @@ ActiveRecord::Base.class_eval do
   # conversions - declare auto converting setter method for attr_name if conversions is specified.
   # 	conversions must be a hash, key is searching character type symbol and value is replacing character type symbol.
   # 
-  def self.validates_char(*attr_names)
+  def self.validates_jp_char(*attr_names)
     configuration = { :ignore_nil => true }
     configuration.update(attr_names.pop) if attr_names.last.is_a?(Hash)
     
