@@ -30,7 +30,7 @@ module JpChar
     end
     
     def caption
-      TYPE_NAMES[@symbol]
+      TYPE_NAMES[@type]
     end
     
     def type
