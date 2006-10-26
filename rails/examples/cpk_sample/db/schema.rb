@@ -2,6 +2,60 @@
 # migrations feature of ActiveRecord to incrementally modify your database, and
 # then regenerate this schema definition.
 
-ActiveRecord::Schema.define() do
+ActiveRecord::Schema.define(:version => 10) do
+
+  create_table "cpk1_date", :id => false, :force => true do |t|
+    t.column "pk1", :datetime
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk1_int", :id => false, :force => true do |t|
+    t.column "pk1", :integer
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk1_str", :id => false, :force => true do |t|
+    t.column "pk1", :string, :limit => 10, :default => "", :null => false
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk2_int_int", :id => false, :force => true do |t|
+    t.column "pk1", :integer, :default => 0, :null => false
+    t.column "pk2", :integer, :default => 0, :null => false
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk2_int_str", :id => false, :force => true do |t|
+    t.column "pk1", :integer, :default => 0, :null => false
+    t.column "pk2", :string, :limit => 10, :default => "", :null => false
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk2_str_int", :id => false, :force => true do |t|
+    t.column "pk1", :string, :limit => 10, :default => "", :null => false
+    t.column "pk2", :integer, :default => 0, :null => false
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "cpk2_str_str", :id => false, :force => true do |t|
+    t.column "pk1", :string, :limit => 10, :default => "", :null => false
+    t.column "pk2", :string, :limit => 10, :default => "", :null => false
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "pk1_date", :id => false, :force => true do |t|
+    t.column "pk1", :datetime
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "pk1_int", :id => false, :force => true do |t|
+    t.column "pk1", :integer
+    t.column "name", :string, :limit => 30
+  end
+
+  create_table "pk1_str", :id => false, :force => true do |t|
+    t.column "pk1", :string, :limit => 10, :default => "", :null => false
+    t.column "name", :string, :limit => 30
+  end
 
 end
