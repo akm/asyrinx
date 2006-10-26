@@ -1,0 +1,13 @@
+CPK(Composite Primary Key) サンプル
+
+●setup
+1. $RAILS_ROOT（プロジェクトのルートディレクトリ）で
+$ mysql -u root -p < db/create_databases.sql
+
+2. マイグレーション
+$ rake migrate
+$ rake migrate RAILS_ENV=test
+
+3. テスト実行
+$ rake test
+実際のSQLはlog/test.logに出力されています。

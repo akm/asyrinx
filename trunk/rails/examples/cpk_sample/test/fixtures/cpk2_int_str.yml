@@ -1,0 +1,9 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+first:
+  pk1: 1
+  pk2: 弐
+  name: レコード-1
+second:
+  pk1: 2
+  pk2: よん
+  name: レコード-2

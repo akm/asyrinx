@@ -1,0 +1,18 @@
+Composite Migrations
+
+PJ Hyett - pjhyett@gmail.com
+ 
+You don't actually need the composite_primary_keys gem, but if you're using
+composite keys I can't imagine you wouldn't want to, hence the require.
+
+Usage
+=====
+create_table :index_queue, :primary_key => [:content_id, :content_type, :action] do |t|
+  t.column :content_id,   :integer
+  t.column :content_type, :string
+  t.column :action,       :string
+end
+
+...will create the following SQL:
+
+CREATE TABLE index_queue (PRIMARY KEY (content_id,content_type,action), `content_id` int(11), `content_type` varchar(255), `action` varchar(255)) ENGINE=InnoDB
