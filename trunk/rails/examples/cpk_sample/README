@@ -8,6 +8,11 @@ $ mysql -u root -p < db/create_databases.sql
 $ rake migrate
 $ rake migrate RAILS_ENV=test
 
-3. テスト実行
+3. マイグレーションの不備をフォロー
+$ mysql -u cpk_sample_development < db/fix_pks.sql
+$ mysql -u cpk_sample_test < db/fix_pks.sql
+
+
+4. テスト実行
 $ rake test
 実際のSQLはlog/test.logに出力されています。
