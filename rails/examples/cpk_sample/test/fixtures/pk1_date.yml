@@ -1,0 +1,7 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+first:
+  pk1: <%= Date.parse('1999/08/28') %>
+  name: レコード-1
+second:
+  pk1: <%= Date.parse('2006/02/11') %>
+  name: レコード-2
