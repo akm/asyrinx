@@ -142,24 +142,28 @@
 		Draggable Pane
 	</div>
 	<div id="pane4_body" style="background-color:transparent;">
-	    <div id="pane4_content" style="background-color:#ABCDEF; width:100%; height:150px;">
+	    <div id="pane4_content" style="background-color:#ABCDEF; width:100%; height:250px; text-align:center;">
+    	  <input type="checkbox" id="check_pane4_1_round_rect" onclick='toggle_pane4_1_round_rect();'>
+    	  <label for="check_pane4_1_round_rect">toggle</label>
 	      <div style="padding:30px;">
-	        <div id="pane4_1_round_rect" style="display:none; height:100px; background-color:#CDEFAB; height:30px; border:2px solid #678945;">&nbsp;</div>
+	        <div id="pane4_1_round_rect1" style="display:none; height:100px; background-color:#CDEFAB; height:30px; border:2px solid #678945;">&nbsp;</div>
+	      </div>
+
+	      <div style="padding:30px;">
+	        <div id="pane4_1_round_rect2" style="width:100px; height:100px; background-color:#CDEFAB; height:30px; border:2px solid #678945;">&nbsp;</div>
 	      </div>
 	    </div>
-	    <input type="checkbox" id="check_pane4_1_round_rect" onclick='toggle_pane4_1_round_rect();'>
-	    <label for="check_pane4_1_round_rect">toggle</label>
 	</div>
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane4_title", "pane4" );
     new Pane.RoundCorner($("pane4_content"), {size:16, corners:"bottomLeft,bottomRight"});
-    var pane4_1_round_rect = new Pane.RoundCorner($("pane4_1_round_rect"), {size:16});
-    
+    var pane4_1_round_rect1 = new Pane.RoundCorner($("pane4_1_round_rect1"), {size:16});
     function toggle_pane4_1_round_rect(){
-        //$("pane4_1_round_rect").style.display = $("check_pane4_1_round_rect").checked ? "" : "none";
-        pane4_1_round_rect.toggle();
+        //$("pane4_1_round_rect1").style.display = $("check_pane4_1_round_rect").checked ? "" : "none";
+        pane4_1_round_rect1.toggle();
     }
+    new Pane.RoundCorner($("pane4_1_round_rect2"), {size:16});
 --></script>
 
 
