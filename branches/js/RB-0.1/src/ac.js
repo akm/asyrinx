@@ -180,7 +180,7 @@ ACFields.DefaultOptions = {
     "keyup_delay": 500,
     "ignoreTriggerKeyRanges": ACFields.Mapping.DefaultOptions.ignoreTriggerKeyRanges
 };
-ACFields.prototype = {
+ACFields.InstanceMethods = {
     initialize: function(mappings, options) {
 		this.searching = false;
 		this.options = Object.fill( options || {}, ACFields.DefaultOptions );
@@ -255,7 +255,9 @@ ACFields.prototype = {
             mapping.clearField();
         }
     }
-}
+} 
+Object.extend(ACFields.prototype, ACFields.InstanceMethods);
+
 
 ACFields.BasicTable = Class.create();
 ACFields.BasicTable.Column = {};
@@ -454,9 +456,10 @@ ACFields.BasicTable.prototype = {
 ACFields.PullDown = Class.create();
 ACFields.PullDown.DefaultOptions = {
     activateSoon: true,
+    searchOnShow: false,
+    showOnSearch: true,
     closeOnSelect: true,
     toggleOnDblClick: true,
-    searchOnShow: true,
     searchingHTML: "searching・・・"
 };
 ACFields.PullDown.DefaultTableOptions = {
@@ -478,9 +481,17 @@ Object.extend(ACFields.PullDown.Methods, {
         this.mappings = mappings;
         this.queryMethod = queryMethod;
         this.acFields = new ACFields(this.mappings, {"query": this.invokeQuery.bind(this) });
+        this.acFields.search = this.acFields_search.bind(this);
         if (this.options.activateSoon)
             this.activate();
     },
+    
+    acFields_search: function(sender) {
+        if (this.options["showOnSearch"] && !this.visible)
+            this.show( {target: sender.getField() } );
+        ACFields.InstanceMethods.search.call(this.acFields, sender);
+    },
+    
     activate: function() {
         var suggestives = this.mappings.
             select( function(mapping){return mapping.suggestive;}).
