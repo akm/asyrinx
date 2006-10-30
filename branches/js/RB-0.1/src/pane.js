@@ -476,15 +476,15 @@ Pane.RoundCorner.prototype = {
 		this.options = Object.fill(options||{}, Pane.RoundCorner.DefaultOptions);
 		this.options.innerColor = this.options.innerColor || Element.getStyle(element, "background-color");
 		this.size = this.options.size;
-		this.addTopPart();
-		this.addBottomPart();
+		this.topPart = this.addTopPart();
+		this.bottomPart = this.addBottomPart();
 	},
 	
 	addTopPart: function() {
 	    if (this.options.corners && !(/top/i).test(this.options.corners))
 	       return;
 		var d = document.createElement("b");
-		d.style.display="block";
+		d.style.display=this.element.style.display;
 		this.element.parentNode.insertBefore(d, this.element);
 		var border = {
 		    width: Element.getStyle(this.element, "borderTopWidth")||"",
@@ -497,13 +497,14 @@ Pane.RoundCorner.prototype = {
 		    var x = this.createLine(i, "top", (i>(this.size-borderWidth-1))?border:null);
 		    d.appendChild(x);
 		}
+		return d;
 	},
 	
 	addBottomPart: function() {
 	    if (this.options.corners && !(/bottom/i).test(this.options.corners))
 	       return;
 		var d = document.createElement("b");
-		d.style.display="block";
+		d.style.display=this.element.style.display;
 		if (this.element.nextSibling)
     		this.element.parentNode.insertBefore(d, this.element.nextSibling);
         else
@@ -519,41 +520,43 @@ Pane.RoundCorner.prototype = {
 		    var x = this.createLine(i, "bottom", (i>(this.size-borderWidth-1))?border:null);
 		    d.appendChild(x);
 		}
+		return d;
 	},
 	
 	createLine: function(index, position, border){
 	    var x = document.createElement("b");
-		x.style.display="block";
-	    x.style.backgroundColor = (border) ? border.color : this.options.innerColor;
-	    x.style.overflow="hidden";
-	    x.style.height="1px";
+	    var xStyle = x.style;
+		xStyle.display="block";
+	    xStyle.backgroundColor = (border) ? border.color : this.options.innerColor;
+	    xStyle.overflow="hidden";
+	    xStyle.height="1px";
 	    //index += 1;
 	    var marginWidth = this.size - Math.sqrt(this.size*this.size - index*index);
 	    var corners = this.options.corners || (position + "Left," + position + "Right");
         var leftCorner = (corners.indexOf(position + "Left") > -1);
         var rightCorner = (corners.indexOf(position + "Right") > -1);
         if (leftCorner && rightCorner){
-    	    x.style.margin = "0 " + Math.floor(marginWidth) + "px";
+    	    xStyle.margin = "0 " + Math.floor(marginWidth) + "px";
         } else if (rightCorner){
-    	    x.style.marginRight = Math.floor(marginWidth) + "px";
+    	    xStyle.marginRight = Math.floor(marginWidth) + "px";
         } else if (leftCorner){
-    	    x.style.marginLeft = Math.floor(marginWidth) + "px";
+    	    xStyle.marginLeft = Math.floor(marginWidth) + "px";
         } else {
             throw new Error("something wrong");
         }
-	    x.style.borderRightStyle = Element.getStyle(this.element, "borderRightStyle");
-	    x.style.borderRightColor = Element.getStyle(this.element, "borderRightColor");
-	    x.style.borderLeftStyle = Element.getStyle(this.element, "borderLeftStyle");
-	    x.style.borderLeftColor = Element.getStyle(this.element, "borderLeftColor");
+	    xStyle.borderRightStyle = Element.getStyle(this.element, "borderRightStyle");
+	    xStyle.borderRightColor = Element.getStyle(this.element, "borderRightColor");
+	    xStyle.borderLeftStyle = Element.getStyle(this.element, "borderLeftStyle");
+	    xStyle.borderLeftColor = Element.getStyle(this.element, "borderLeftColor");
         if (leftCorner && rightCorner){
-    	    x.style.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
-    	    x.style.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
+    	    xStyle.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
+    	    xStyle.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
         } else if (rightCorner){
-    	    x.style.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
-    	    x.style.borderLeftWidth = Element.getStyle(this.element, "borderLeftWidth");
+    	    xStyle.borderRightWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderRightWidth"), index);
+    	    xStyle.borderLeftWidth = Element.getStyle(this.element, "borderLeftWidth");
         } else if (leftCorner){
-    	    x.style.borderRightWidth = Element.getStyle(this.element, "borderRightWidth");
-    	    x.style.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
+    	    xStyle.borderRightWidth = Element.getStyle(this.element, "borderRightWidth");
+    	    xStyle.borderLeftWidth = this.calcBorderWidth(Element.getStyle(this.element, "borderLeftWidth"), index);
         } else {
             throw new Error("something wrong");
         }
@@ -568,6 +571,15 @@ Pane.RoundCorner.prototype = {
         if (r2<=0) r2 = -r2
         var x1 = Math.sqrt( r*r - y*y ) ;
 	    return Math.abs(Math.round( Math.sqrt(r2) - x1)) + borderWidth.gsub(/\d/, "");
-	}
+	},
+	
+	_setVisible: function(visible){
+	   this.element.style.display = visible ? "" : "none";
+	   this.topPart.style.display = visible ? "" : "none";
+	   this.bottomPart.style.display = visible ? "" : "none";
+	},
+	show: function(){ this._setVisible(true) },
+	hide: function(){ this._setVisible(false) },
+	toggle: function(){ this._setVisible( this.element.style.display != "" ) }
 }
 
