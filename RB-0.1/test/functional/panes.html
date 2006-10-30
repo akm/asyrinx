@@ -137,24 +137,34 @@
 
 
 
-<div id="pane4" style="position:absolute; top:200px;left:200px; width:300px;">
+<div id="pane4" style="position:absolute; top:400px;left:500px; width:300px;">
 	<div id="pane4_title" style="background-color:#567890;">
 		Draggable Pane
 	</div>
 	<div id="pane4_body" style="background-color:transparent;">
 	    <div id="pane4_content" style="background-color:#ABCDEF; width:100%; height:150px;">
-	      
+	      <div style="padding:30px;">
+	        <div id="pane4_1_round_rect" style="display:none; height:100px; background-color:#CDEFAB; height:30px; border:2px solid #678945;">&nbsp;</div>
+	      </div>
 	    </div>
+	    <input type="checkbox" id="check_pane4_1_round_rect" onclick='toggle_pane4_1_round_rect();'>
+	    <label for="check_pane4_1_round_rect">toggle</label>
 	</div>
 </div>
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane4_title", "pane4" );
     new Pane.RoundCorner($("pane4_content"), {size:16, corners:"bottomLeft,bottomRight"});
+    var pane4_1_round_rect = new Pane.RoundCorner($("pane4_1_round_rect"), {size:16});
+    
+    function toggle_pane4_1_round_rect(){
+        //$("pane4_1_round_rect").style.display = $("check_pane4_1_round_rect").checked ? "" : "none";
+        pane4_1_round_rect.toggle();
+    }
 --></script>
 
 
 
-<div id="pane5" style="position:absolute; top:500px;left:200px; width:400px;">
+<div id="pane5" style="position:absolute; top:500px;left:100px; width:400px;">
 	<div id="pane5_title" style="background-color:#567890;">
 		Draggable Pane
 	</div>
@@ -221,8 +231,11 @@
 <script language="javascript" type="text/javascript" ><!--
 	new Pane.Draggable( "pane6_title", "pane6" );
     new Pane.RoundCorner($("pane6_content"), {size:50, corners:"bottomLeft,bottomRight"});
-    
 --></script>
+
+
+
+
 
 </body>
 </html>
