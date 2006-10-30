@@ -16,6 +16,14 @@
 
 </head>
 <body>
+
+
+<div id="clock" style="margin:10px; border:1px solid black;">now?</div>
+<script language="javascript"    type="text/javascript" ><!--
+setInterval(function(){ $("clock").innerHTML = (new Date()).toString(); }, 1000);
+--></script>
+
+
 <script language="javascript"    type="text/javascript" ><!--
 var products = [
     {id: 1, category:1, name: "Debian 辞典", asin:"4798109088", price: 2940 },
@@ -36,7 +44,11 @@ var products = [
     {id:16, category:2, name: "CUBE", asin:"B0000DJWJE", price: 2963 },
     {id:17, category:2, name: "となりのトトロ", asin:"B00005NJLP", price: 3664 }
 ];
-function selectProducts(params) {
+function selectProducts(params, waitMsec) {
+    if (waitMsec) {
+        var d = new Date();
+        while(new Date().getTime() - d < waitMsec) {}
+    }
     var result = [];
     for(var i = 0; i < products.length; i++) {
         var p = products[i];
@@ -48,6 +60,13 @@ function selectProducts(params) {
     }
     return result;
 }
+
+function selectProductsWithCb(params, callback){
+    setTimeout(function(){
+        callback( selectProducts(params) );
+    }, 2 * 1000);
+}
+
 
 --></script>
 
@@ -107,10 +126,17 @@ var mappings = [
 ];
 var rowGenerator = new ACFields.BasicTable($("amazon_products"), mappings);
 
+function refreshTable(result){
+    rowGenerator.execute(result);
+}
+
 var acFields = new ACFields(mappings, {
+    "keyup_delay": 1000,
     query: function(parameters, sender) {
-        var result = selectProducts(parameters);
-        rowGenerator.execute(result);
+        //var result = selectProducts(parameters, 3000);
+        //rowGenerator.execute(result);
+        
+        selectProductsWithCb(parameters, refreshTable);
     }
 });
 rowGenerator.execute(products.slice(0, 10));
@@ -172,9 +198,7 @@ var mappings2 = [
 ];
 var pullDown = new ACFields.PullDown(mappings2, 
     function(parameters, callback) {
-        var result = selectProducts(parameters);
-        setTimeout(function(){ callback(result); }, 500);
-        //return result; 
+        selectProductsWithCb(parameters, callback);
     },
     {
         searchingHTML: '<img src="./spinner.gif">検索中・・・',
