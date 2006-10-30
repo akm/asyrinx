@@ -142,11 +142,12 @@ ACFields.Mapping.InstanceMethods = {
         this.activateListeners();
     },
     activateListeners: function() {
+        if (this.fieldKeyupHandler)
+            return;
         var field = this.getField();
-        if (!field) 
+        if (!field || !this.suggestive) 
             return;
         this.fieldKeyupHandler = this.fieldKeyup.bindAsEventListener(this);
-        var field = this.getField();
         Event.observe(field, "keyup", this.fieldKeyupHandler, false);
     },
     deactivateListeners: function() {
