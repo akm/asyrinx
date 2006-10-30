@@ -404,7 +404,9 @@ Pane.Balloon.Methods = {
                     ]},
                     {tagName:"div", className: "balloon_msg", body:msg},
                     {tagName:"div", style:"margin-top:5px; text-align:right;", body:
-                        {tagName:"a", className: "closeButton", href:"javascript:void(0)", body: options.closeMsg}
+                        {tagName:"a", className: "closeButton", href:"javascript:void(0)", body: options.closeMsg,
+        	               afterBuild: function(element){ this.closeButton = element; }.bind(this)
+                        }
                     }
                 ]
             }
@@ -420,7 +422,6 @@ Pane.Balloon.Methods = {
         if (top) this.element.style.top = top;
         if (target)
             Pane.Balloon.Manager.register(target, this);
-        
         this.show();
         var btn = document.getFirstElementByClassName("closeButton", this.element);
         Event.observe(btn, "click", this.clickCloseButton.bindAsEventListener(this));
@@ -429,9 +430,11 @@ Pane.Balloon.Methods = {
     
     show: function(){
         if (window["Effect"] && Effect.Appear){
-            new Effect.Appear(this.element);
+            new Effect.Appear(this.element, {
+                'afterFinish': function(){ this.closeButton.focus(); }.bind(this) });
         }else{
             Element.show(this.element);
+            this.closeButton.focus();
         }
         setTimeout(function(){HTMLElement.bringToFront(this.element);}.bind(this), 100);
         if (this.options.closeAfter>0)
