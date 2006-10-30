@@ -158,7 +158,11 @@ ACFields.Mapping.InstanceMethods = {
         if (!this.isQueryTrigger(event))
             return;
         this.acFields.searching = false;
-        setTimeout(this.acFields.search.bind(this.acFields, this), this.options["keyup_delay"]);
+        if (this.lastKeyupTimeout) {
+            clearTimeout(this.lastKeyupTimeout)
+            this.lastKeyupTimeout = null;
+        }
+        this.lastKeyupTimeout = setTimeout(this.acFields.search.bind(this.acFields, this), this.options["keyup_delay"]);
     },
     isQueryTrigger: function(event) {
         if (!this.options.ignoreTriggerKeyRanges)
@@ -522,11 +526,7 @@ Object.extend(ACFields.PullDown.Methods, {
     invokeQuery: function(parameters, sender) {
         if (!this.queryMethod)
             throw new Error("no queryMethod specified");
-        if (this.searchingDiv) {
-            Element.show(this.searchingDiv);
-            if (this.table)
-                Element.hide(this.table);
-        }
+        this.showSearchingDiv();
         this.queryCallbackBind = this.queryCallbackBind || this.queryCallback.bind(this); 
         var result = this.queryMethod.apply(null, [parameters, this.queryCallbackBind]);
         if (result && result.constructor == Array)
@@ -535,12 +535,21 @@ Object.extend(ACFields.PullDown.Methods, {
     queryCallback: function(result) {
         this.showQueryResult(result);
     },
-    showQueryResult: function(result) {
+    showSearchingDiv: function(){
+        if (this.searchingDiv)
+            Element.show(this.searchingDiv);
+        if (this.table)
+            Element.hide(this.table);
+    },
+    hideSearchingDiv: function(){
         if (this.searchingDiv)
             Element.hide(this.searchingDiv);
         if (!this.table)
             this.createPane();
         Element.show(this.table);
+    },
+    showQueryResult: function(result) {
+        this.hideSearchingDiv();
         this.rowGenerator.execute(result);
     },
     rowUp: function(event) {
