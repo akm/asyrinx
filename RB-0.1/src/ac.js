@@ -457,7 +457,7 @@ ACFields.BasicTable.prototype = {
 ACFields.PullDown = Class.create();
 ACFields.PullDown.DefaultOptions = {
     activateSoon: true,
-    searchOnShow: false,
+    searchOnShow: true,
     showOnSearch: true,
     closeOnSelect: true,
     toggleOnDblClick: true,
