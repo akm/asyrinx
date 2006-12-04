@@ -52,7 +52,7 @@ ActiveRecord::Base.class_eval do
         original = "#{attr_name.to_s}_without_conv="
         alias_method(original, method_name) if method_defined?(method_name)
         define_method(method_name){|value|
-          super(JpChar.convert(value, configuration[:conversions]))
+          super( (value.nil? && configuration[:ignore_nil]) ? value : JpChar.convert(value, configuration[:conversions]))
         }
       }
     end
