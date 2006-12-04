@@ -30,12 +30,14 @@ module ActiveRecord
       end
     end
     
-    def self.inherited(subclass)
-      if @@userstamp_options[:belongs_to]
-        self.belongs_to_user(subclass, @@userstamp_options[:name_created_by])
-        self.belongs_to_user(subclass, @@userstamp_options[:name_updated_by])
-      end
-    end
+    # set_table_name で テーブル名が変更されている場合、
+    # belongs_to_userメソッドで呼び出す時点で、指定されたテーブルのcolumnsがちゃんと読めない
+    # def self.inherited(subclass)
+    #  if @@userstamp_options[:belongs_to]
+    #    self.belongs_to_user(subclass, @@userstamp_options[:name_created_by])
+    #    self.belongs_to_user(subclass, @@userstamp_options[:name_updated_by])
+    #  end
+    # end
     
     def self.belongs_to_user(klass, name_sym, options = {})
       options[:foreign_key] ||= name_sym.to_s
@@ -50,23 +52,21 @@ module ActiveRecord
     end
     
     def self.method_added( method_name )
-      if @@userstamp_options[:ignore_empty]
-        @@setter_names ||= [
-          (@@userstamp_options[:name_created_by].to_s + '=').to_sym,
-          (@@userstamp_options[:name_updated_by].to_s + '=').to_sym
-        ]
-        if @@setter_names.include?(method_name)
-          original = "default_#{method_name.to_s}"
-          filtered = "ignore_empty_#{method_name.to_s}"
-          return if self.method_defined? original
-          alias_method(original, method_name)
-          define_method(filtered){ |value|
-            value = nil if value.respond_to?(:empty?) && value.empty?
-            self.__send__(original, value)
-          }
-          alias_method(method_name, filtered);
-        end
-      end
+      return unless @@userstamp_options[:ignore_empty]
+      @@setter_names ||= [
+       (@@userstamp_options[:name_created_by].to_s + '=').to_sym,
+       (@@userstamp_options[:name_updated_by].to_s + '=').to_sym
+      ]
+      return unless @@setter_names.include?(method_name)
+      original = "default_#{method_name.to_s}"
+      filtered = "ignore_empty_#{method_name.to_s}"
+      return if self.method_defined? original
+      alias_method(original, method_name)
+      define_method(filtered){ |value|
+        value = nil if value.respond_to?(:empty?) && value.empty?
+        self.__send__(original, value)
+      }
+      alias_method(method_name, filtered);
     end
     
   end
