@@ -316,10 +316,12 @@ ACFields.BasicTable.Column.InstanceMethods = {
 		}
     },
     to_cell_html: function(tr, values) {
-        this.initializeColumnOptions();
         var field = this.getField();
+        if (field){
+        this.initializeColumnOptions();
         if (!this.options["masters"] && field.tagName.toLowerCase() == "select")
             this.prepareMastersFrom(field);
+        }
         var value = values[this.property];
         if (this.options.masterValueToText) {
             keys = (value.constructor == Array) ? value : [value];
@@ -342,14 +344,16 @@ ACFields.BasicTable.Column.InstanceMethods = {
 		values[this.property] = this.to_cell_value(tr, td);
     },
     to_cell_value: function(tr, td, values) {
-        this.initializeColumnOptions();
         var field = this.getField();
-        if (!this.options["masters"] && field.tagName.toLowerCase() == "select")
-            this.prepareMastersFrom(field);
+        if (field) {
+            this.initializeColumnOptions();
+            if (!this.options["masters"] && field.tagName.toLowerCase() == "select")
+                this.prepareMastersFrom(field);
+        }
         var value = HTMLElement.getValue(td);
         if (this.options.masterTextToValue) {
             texts = value.split(this.options.arraySeparator);
-            if (field.type && field.type == "select-multiple") {
+            if (field && field.type && field.type == "select-multiple") {
                 var result = [];
                 for(var i = 0; i < texts.length; i++) {
                     var value = this.options.masterTextToValue[ texts[i] ]; 
