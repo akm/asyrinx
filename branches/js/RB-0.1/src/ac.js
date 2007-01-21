@@ -49,7 +49,7 @@ ACFields.Mapping = {
         var value = HTMLElement.getValue(field);
         var mappingType = ACFields.Mapping.Types[mapping.type];
         if (!mappingType)
-            return new Error("no type for mapping.type: " + mapping.type);
+            throw new Error("no type for mapping.type: " + mapping.type);
         if (value == undefined || value == null) {
             value = (mapping.nullable) ? null : mappingType.noneNullValue;
         } else {
@@ -60,7 +60,7 @@ ACFields.Mapping = {
     to_string: function(mapping, value){
         var mappingType = ACFields.Mapping.Types[mapping.type];
         if (!mappingType)
-            return new Error("no type for mapping.type: " + mapping.type);
+            throw new Error("no type for mapping.type: " + mapping.type);
         return mappingType.to_string(value, mapping);
     }
 };
