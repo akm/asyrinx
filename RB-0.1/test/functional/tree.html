@@ -1,0 +1,542 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<?xml version="1.0" encoding="Shift_JIS"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title></title>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+* {
+    margin: 0px;
+    padding: 0px;
+}
+.pane {
+    border: solid 1px #aaa; 
+    overflow-y: auto;
+    margin: 5px;
+}
+#header { height: 100px; width: 95%; overflow-x: none; }
+#tree   { height: 250px; width: 44%; overflow-x: none; float: left;}
+#main   { height: 250px; width: 54%; overflow-x: auto; }
+#body   { width: 95%; overflow-x: auto; }
+#body:after { content: " "; clear: both; height: 0; display: block; visibility: hidden;}
+#footer { height: 200px; width: 95%; overflow-x: none; }
+--></style>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+.node_children { 
+    margin-left: 32px; 
+    margin-bottom: 5px; 
+}
+.loading { 
+    width: 160px;
+    height: 16px;
+    background-position: left center;
+    background-image: url(./spinner.gif);
+    background-repeat: no-repeat;
+    padding-left: 20px;
+}
+.loading:after { content: "Loading..." }
+
+a.node_button_open {
+    width: 16px;
+    height: 16px;
+    display: block;
+    float: left;
+    background-position: center center;
+    background-image: url(./plus2_16.png);
+}
+a.node_button_close {
+    width: 16px;
+    height: 16px;
+    display: block;
+    float: left;
+    background-position: center center;
+    background-image: url(./minus2_16.png);
+}
+a.node_button_leaf {
+    width: 16px;
+    height: 16px;
+    display: block;
+    float: left;
+    background-position: center center;
+    background-image: url(./dot2_16.png);
+}
+
+.node_command { font-size: small; }
+
+--></style>
+<script language="javascript" type="text/javascript" src="../../lib/railties/prototype.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/logger.js" ></script>
+<script language="javascript" type="text/javascript" src="../../src/prototype_ext.js" ></script>
+<script language="javascript" type="text/javascript"><!--
+
+TreeView = Class.create();
+TreeView.Node = Class.create();
+TreeView.Node.default_options = $H({
+});
+TreeView.Node.prototype = {
+    /**
+     * attributes:
+     *  parent, container
+     */
+    initialize: function(id, parent, elements, caption, options){
+        this.id = id;
+        this.parent = parent;
+        this.children = [];
+        this.closed = true;
+        this.elements = elements || {};
+        this.caption = caption;
+        this.options = Object.fill(options||{}, TreeView.Node.default_options);
+    },
+    
+    has_children: function(){
+        return this.children.length > 0
+    },
+    
+    visible_children: function(){
+        return this.has_children() && !this.closed;
+    },
+    
+    show_loading_children: function(){
+        this.elements.children.innerHTML = '<div class="loading"></div>';
+        Element.show(this.elements.children);
+    },
+    
+    update_elements: function(){
+        if (this.elements.frame){
+            this.update_frame_content();
+        } else if (this.elements.children){
+            this.update_children_content();
+        }
+    },
+    update_frame_content: function(){
+        this.elements.frame.innerHTML = '';
+        this.elements.caption = null;
+        this.elements.children = null;
+        this.build_element_caption();
+        this.build_element_children();
+        this.update_children_content();
+    },
+    update_children_content: function(){
+        this.elements.children.innerHTML = '';
+        if (!this.children)
+            return;
+        for(var i = 0; i < this.children.length; i++) {
+            var child = this.children[i];
+            child.build_element_frame();
+            child.update_frame_content();
+        }
+    },
+    build_element_frame: function(){
+        this.elements.frame = this.builder.create_node_frame(this);
+    },
+    build_element_caption: function(){
+        this.elements.caption = this.builder.create_node_caption(this);
+    },
+    build_element_children: function(){
+        this.elements.children = this.builder.create_node_children(this);
+    },
+    click_button_open: function(event){
+        this.open_child();
+    },
+    click_button_close: function(event){
+        this.close_child();
+    },
+    click_button_leaf: function(event){
+    },
+    
+    click_remove_myself: function(event){
+        this.remove_myself_begin(this, this.remove_myself_commit);
+    },
+    click_append_child: function(event){
+        this.append_child_begin(this, this.append_child_commit);
+    },
+    
+    /**
+     * enhanced by controller
+    refresh: function(){},
+    append_child_begin: function(){},
+    append_child_commit: function(){},
+    remove_myself_begin: function(){},
+    remove_myself_commit: function(){},
+     */
+    
+    open_child: function(){
+        this.update_visible(true);
+        this.refresh();
+        this.update_children_content();
+    },
+    close_child: function(){
+        this.update_visible(false);
+    },
+    update_visible: function(visible){
+        this.closed = !visible;
+        var open_button_func = (this.closed) ? Element.show : Element.hide;
+        var close_button_func = (this.closed) ? Element.hide : Element.show;
+        open_button_func(this.elements.open_button);
+        close_button_func(this.elements.close_button);
+        close_button_func(this.elements.children);
+    }
+}
+TreeView.default_options = $H({
+    show_root_node: false
+});
+TreeView.prototype = {
+    initialize: function(el, options){
+        this.element = $(el)
+        this.options = Object.fill(options||{}, TreeView.default_options); 
+        this.controller = this.options['controller'] || new TreeView.Controller(this, options)
+        this.node_builder = new TreeView.NodeBuilder();
+        this.root_node = this.options['root_node'] || this.controller.create_root_node(options);
+        this.enhance_node(this.root_node);
+    },
+    enhance_node: function(node){
+        this.controller.enhance_node(this.root_node);
+    },
+    refresh: function(){
+        this.root_node.refresh();
+    },
+    update_node: function(){
+        
+    }
+}
+TreeView.NodeBuilder = Class.create();
+TreeView.NodeBuilder.default_options = $H({
+    open_button_img: './plus2_16.png',
+    close_button_img: './minus2_16.png'
+});
+TreeView.NodeBuilder.prototype = {
+    initialize: function(options){
+        this.options = Object.fill(options||{}, TreeView.NodeBuilder.default_options);
+    },
+    display_of_children: function(node, inverse){
+        inverse = inverse || false;
+        return 'display: ' + ((!node.visible_children() == inverse) ? ';' : 'none;' );
+    },
+    display_of_button: function(node, inverse){
+        inverse = inverse || false;
+        var visible = !node.has_children() ? false : (!node.visible_children() == inverse);
+        return 'display: ' + (visible ? ';' : 'none;' );
+    },
+    display_of_leaf: function(node){
+        var visible = !node.has_children();
+        return 'display: ' + (visible ? ';' : 'none;' );
+    },
+    
+    build_element: function(dest, src){
+        this.builder = this.builder || new Element.Builder();
+        return this.builder.execute(src, dest);
+    },
+    create_node_frame: function(node){
+        return this.build_element(node.parent.elements.children, 
+            {tagName: 'div', className: 'node_frame', id: 'node_frame_' + node.id});
+    },
+    create_node_children: function(node){
+        return this.build_element(node.elements.frame, 
+            {tagName: 'div', className: 'node_children', id: 'node_children_' + node.id,
+                style: this.display_of_children(node),
+            } );
+    },
+    create_node_caption: function(node){
+        var caption_container = 
+            {tagName: 'div', className: 'node_caption_container', id: 'node_caption_container_' + node.id, body: [
+                {tagName: 'a', href:'javascript:void(0)', className: 'node_button_close', id: 'node_button_close_' + node.id, 
+                    style: this.display_of_button(node),
+                    afterBuild: function(element, builder, src){
+                        Event.observe(element, 'click', node.click_button_close.bindAsEventListener(node));
+                        node.elements.close_button = element;
+                    }
+                },
+                {tagName: 'a', href:'javascript:void(0)', className: 'node_button_open', id: 'node_button_open_' + node.id, 
+                    style: this.display_of_button(node, true),
+                    afterBuild: function(element, builder, src){
+                        Event.observe(element, 'click', node.click_button_open.bindAsEventListener(node));
+                        node.elements.open_button = element;
+                    }
+                },
+                {tagName: 'a', href:'javascript:void(0)', className: 'node_button_leaf', id: 'node_button_leaf_' + node.id, 
+                    style: this.display_of_leaf(node),
+                    afterBuild: function(element, builder, src){
+                        Event.observe(element, 'click', node.click_button_leaf.bindAsEventListener(node));
+                        node.elements.leaf_button = element;
+                    }
+                }
+            ]};
+        if (node.options.link){
+            caption_container.body.push(
+                Object.fill( node.options.link,
+                    { tagName: 'a', className: 'node_caption_link', id: 'node_caption_link_' + node.id, 
+                        body: node.caption })
+            );
+        } else {
+            caption_container.body.push(
+                { tagName: 'span', className: 'node_caption', id: 'node_caption_' + node.id, 
+                    body: node.caption }
+            );
+        }
+        if (node.options.command_append){
+            caption_container.body.push(
+                Object.fill(
+                    Object.extend({}, node.options.command_append),
+                    { tagName: 'a', className: 'node_command node_command_append', id: 'node_command_append_' + node.id, href: 'javascript:void(0)',
+                        afterBuild: function(element, builder, src){
+                            Event.observe(element, 'click', node.click_append_child.bindAsEventListener(node));
+                            node.elements.leaf_button = element;
+                        }
+                    })
+            );
+        }
+        if (node.options.command_remove){
+            caption_container.body.push(
+                Object.fill(
+                    Object.extend({}, node.options.command_remove),
+                    { tagName: 'a', className: 'node_command node_command_remove', id: 'node_command_remove_' + node.id, href: 'javascript:void(0)',
+                        afterBuild: function(element, builder, src){
+                            Event.observe(element, 'click', node.click_remove_myself.bindAsEventListener(node));
+                            node.elements.leaf_button = element;
+                        }
+                    })
+            );
+        }
+        return this.build_element(node.elements.frame, caption_container)
+    }
+}
+
+TreeView.Translator = {};
+TreeView.Translator.Simple = Class.create();
+TreeView.Translator.Simple.default_options = $H({
+});
+TreeView.Translator.Simple.prototype = {
+    initialize: function(controller, options){
+        this.controller = controller;
+        this.options = Object.fill(options||{}, TreeView.Controller.default_options);
+    },
+    update_node: function(node, node_object){
+        var src_obj = this.find_node_object_by_id(node_object, node.id);
+        if (src_obj) {
+            node.caption = src_obj.caption;
+            this.update_children(node, src_obj);
+        }
+    },
+    update_children: function(parent_node, parent_node_object){
+        parent_node.children = []
+        if (!parent_node_object.children)
+            return;
+        for(var i = 0; i < parent_node_object.children.length; i++){
+            var child_node_obj = parent_node_object.children[i];
+            var child_node = this.controller.create_node(parent_node, child_node_obj);
+            parent_node.children.push(child_node);
+            this.update_children(child_node, child_node_obj);
+        }
+    },
+    find_node_object_by_id: function(node_object, id){
+        if (node_object.id == id)
+            return node_object;
+        if (!node_object.children)
+            return null;
+        for(var i = 0; i < node_object.children.length; i++){
+            var obj = node_object.children[i];
+            var result = this.find_node_object_by_id(obj, id);
+            if (result)
+                return result;
+        }
+        return null;
+    }
+}
+TreeView.Controller = Class.create();
+TreeView.Controller.default_options = $H({
+    default_command_append: {body: '追加'},
+    default_command_remove: {body: '削除'}
+});
+TreeView.Controller.prototype = {
+    initialize: function(view, options){
+        this.view = view;
+        this.translator = new TreeView.Translator.Simple(this, options);
+        this.options = Object.fill(options||{}, TreeView.Controller.default_options);
+        this.pending_creatings = [];
+        this.pending_removings = [];
+    },
+    create_node: function(parent, node_object){
+        var result = new TreeView.Node(node_object.id, parent, {}, node_object.caption, node_object.options);
+        this.enhance_node(result);
+        return result;
+    },
+    
+    create_root_node: function(options){
+        var result = new TreeView.Node(null, null, {
+                frame: null,
+                caption: null,
+                children: this.view.element
+            }, 
+            options['root_node_caption'] || 'root');
+        this.enhance_node(result);
+        return result;
+    },
+    
+    enhance_node: function(node){
+        Object.fill(node, {
+            refresh: function(after_refresh_function){
+                setTimeout(node.show_loading_children.bind(node), 10);
+                this.load_node(node, after_refresh_function);
+            }.bind(this),
+            
+            append_child_begin: function(node, callback){
+                var new_node_caption = prompt('子ノードの追加', '新しいノードの名前');
+                if (new_node_caption == null)
+                    return;
+                callback(node, {id: new Date(), caption: new_node_caption});
+            }.bind(this),
+            append_child_commit: function(node, node_obj){
+                node.refresh(function(){
+                    var new_node = this.create_node(node, node_obj);
+                    node.children.push(new_node);
+                    this.pending_creatings.push(new_node);
+                }.bind(this));
+            }.bind(this),
+            
+            remove_myself_begin: function(node, callback){
+                callback(node)
+            }.bind(this),
+            
+            remove_myself_commit: function(node){
+                this.remove_node(node);
+            }.bind(this)
+        });
+        node.builder = this.view.node_builder;
+        node.options['command_append'] = this.options['default_command_append'];
+        node.options['command_remove'] = this.options['default_command_remove'];
+    },
+    load_node: function(node, after_load_function) {
+        var f = this.options.load_node
+        f.apply(this, [node, this.load_node_callback.bind(this, node, after_load_function)]);
+    },
+    load_node_callback: function(node, after_load_function, node_object){
+        this.translator.update_node(node, node_object);
+        if (after_load_function)
+            after_load_function(node)
+        node.update_elements();
+    },
+    remove_node: function(node){
+        var f = this.options.remove_node
+        f.apply(this, [node]);
+        node.parent.children.remove(node);
+        node.parent.update_elements();
+    }
+}
+    
+
+
+//--></script>
+
+<script language="javascript" type="text/javascript"><!--
+
+var tree_data = [
+    { id: null, caption: 'root_node', children: [
+        {id: 1, caption: '要件', children: [
+            {id: 2, caption: 'セルをWebで使いたーい！'}
+        ]},
+        {id: 3, caption: '仕様', children: [
+            {id: 4, caption: 'ツリー構造をそのまま表現する'}
+        ]},
+        {id: 5, caption: '設計', children: [
+            {id: 6, caption: 'Ajaxなツリー', children: [
+                {id: 7, caption: 'ツリー構造をそのまま表現する', children:[
+                    {id: 11, caption: '一度のリクエストで孫まで取得する'},
+                    {id: 12, caption: 'ツリーに追加や削除ができるようにする'}
+                ]}
+            ]}
+        ]},
+        {id: 9, caption: 'リンク', children: [
+            {id: 10, caption: 'Zeeta', options: {link: {href: 'http://mm3991.qp.land.to/'} } }
+        ]}
+    ]}
+];
+function select(node_id, nodes) {
+    if (!node_id)
+        return tree_data[0];
+    nodes = nodes || tree_data;
+    if (!nodes) 
+        return null;
+    for(var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        if (node.id == node_id)
+            return node;
+        if (node.children){
+            var result = select(node_id, node.children);
+            if (result)
+                return result;
+        }
+    }
+    return null;
+}
+function copy_with_depth(node_obj, max_length){
+    var result = Object.extend({}, node_obj);
+    result.children = [];
+    if (max_length > 0 && node_obj && node_obj.children){
+        for(var i = 0; i < node_obj.children.length; i++){
+            result.children.push(
+                copy_with_depth(node_obj.children[i], max_length -1));
+        }
+    }
+    return result;
+}
+
+function select_with_callback(node_id, callback) {
+    var node_obj = select(node_id, null);
+    node_obj = copy_with_depth(node_obj, 2);
+    setTimeout(function(){
+        callback(node_obj);
+    }, 500);    
+}
+
+function remove_by_id(node_id, nodes){
+    if (!node_id)
+        return;
+    nodes = nodes || tree_data;
+    if (!nodes) 
+        return;
+    for(var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        if (node.id == node_id){
+            nodes.remove(node);
+            return;
+        }
+        if (node.children)
+            remove_by_id(node_id, node.children);
+    }
+    return null;
+}
+//--></script>
+
+</head>
+<body>
+
+
+<div id="header" class="pane">&nbsp;</div>
+<div id="body">
+    <div id="tree" class="pane">&nbsp;</div>
+    <div id="main" class="pane">&nbsp;</div>
+</div>
+<div id="footer" class="pane">&nbsp;</div>
+
+
+
+<script language="javascript" type="text/javascript"><!--
+
+Logger.setActiveOnLoad(true);
+
+var treeView = new TreeView($("tree"), {
+    load_node: function(node, callback){
+        logger.debug("loading node id:" + node.id);
+        select_with_callback(node.id, callback);
+    },
+    remove_node: function(node){
+        remove_by_id(node.id);
+    }
+});
+treeView.refresh();
+
+//--></script>
+
+
+</body>
+</html>
