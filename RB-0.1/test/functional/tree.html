@@ -64,9 +64,9 @@ a.node_button_leaf {
 .node_command { font-size: small; }
 
 --></style>
-<script language="javascript" type="text/javascript" src="../../lib/railties/prototype.js" ></script>
-<script language="javascript" type="text/javascript" src="../../src/logger.js" ></script>
-<script language="javascript" type="text/javascript" src="../../src/prototype_ext.js" ></script>
+<script language="javascript" type="text/javascript" src="http://dev.rubyonrails.org/svn/rails/branches/1-2-stable/railties/html/javascripts/prototype.js" ></script>
+<script language="javascript" type="text/javascript" src="http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/src/logger.js" ></script>
+<script language="javascript" type="text/javascript" src="http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/src/prototype_ext.js" ></script>
 <script language="javascript" type="text/javascript"><!--
 
 TreeView = Class.create();
@@ -233,7 +233,7 @@ TreeView.NodeBuilder.prototype = {
     create_node_children: function(node){
         return this.build_element(node.elements.frame, 
             {tagName: 'div', className: 'node_children', id: 'node_children_' + node.id,
-                style: this.display_of_children(node),
+                style: this.display_of_children(node)
             } );
     },
     create_node_caption: function(node){
@@ -440,6 +440,7 @@ var tree_data = [
             {id: 4, caption: 'ツリー構造をそのまま表現できる'},
             {id:13, caption: 'キーでツリー内の移動やノードの開閉ができる'},
             {id:14, caption: '複数ノードの選択とかできちゃったりして'},
+            {id:15, caption: 'ノードを開く度にサーバにリクエストしないオプションがあった方がいい'}
         ]},
         {id: 5, caption: '設計', children: [
             {id: 6, caption: 'Ajaxなツリー', children: [
@@ -462,7 +463,7 @@ function select(node_id, nodes) {
         return null;
     for(var i = 0; i < nodes.length; i++) {
         var node = nodes[i];
-        if (node.id == node_id)
+        if (node_id == node['id'])
             return node;
         if (node.children){
             var result = select(node_id, node.children);

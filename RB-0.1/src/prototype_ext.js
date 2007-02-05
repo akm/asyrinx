@@ -1366,7 +1366,8 @@ Math.Rectangle.prototype = {
 }
 
 
-if (!HTMLElement) HTMLElement = {};
+if (!window['HTMLElement']) 
+    window.HTMLElement = {};
 
 Object.extend(HTMLElement, {
     getValue: function(element) {
