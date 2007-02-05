@@ -30,7 +30,7 @@
     width: 160px;
     height: 16px;
     background-position: left center;
-    background-image: url(./spinner.gif);
+    background-image: url(http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/spinner.gif);
     background-repeat: no-repeat;
     padding-left: 20px;
 }
@@ -42,7 +42,7 @@ a.node_button_open {
     display: block;
     float: left;
     background-position: center center;
-    background-image: url(./plus2_16.png);
+    background-image: url(http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/plus2_16.png);
 }
 a.node_button_close {
     width: 16px;
@@ -50,7 +50,7 @@ a.node_button_close {
     display: block;
     float: left;
     background-position: center center;
-    background-image: url(./minus2_16.png);
+    background-image: url(http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/minus2_16.png);
 }
 a.node_button_leaf {
     width: 16px;
@@ -58,7 +58,7 @@ a.node_button_leaf {
     display: block;
     float: left;
     background-position: center center;
-    background-image: url(./dot2_16.png);
+    background-image: url(http://asyrinx.googlecode.com/svn/branches/js/RB-0.1/test/functional/dot2_16.png);
 }
 
 .node_command { font-size: small; }
@@ -428,14 +428,18 @@ TreeView.Controller.prototype = {
 //--></script>
 
 <script language="javascript" type="text/javascript"><!--
-
+/**
+ * これ以降が、本来サーバー側で行う部分です。
+ */
 var tree_data = [
     { id: null, caption: 'root_node', children: [
         {id: 1, caption: '要件', children: [
             {id: 2, caption: 'セルをWebで使いたーい！'}
         ]},
         {id: 3, caption: '仕様', children: [
-            {id: 4, caption: 'ツリー構造をそのまま表現する'}
+            {id: 4, caption: 'ツリー構造をそのまま表現できる'},
+            {id:13, caption: 'キーでツリー内の移動やノードの開閉ができる'},
+            {id:14, caption: '複数ノードの選択とかできちゃったりして'},
         ]},
         {id: 5, caption: '設計', children: [
             {id: 6, caption: 'Ajaxなツリー', children: [
@@ -521,7 +525,9 @@ function remove_by_id(node_id, nodes){
 
 
 <script language="javascript" type="text/javascript"><!--
-
+/**
+ * ここが本来クライアント側に記述される部分です。
+ */
 Logger.setActiveOnLoad(true);
 
 var treeView = new TreeView($("tree"), {
