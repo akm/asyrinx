@@ -221,7 +221,7 @@ class Select
     
     def parse_add_each(field, values, options = nil, &block)
       return unless values
-      options = {:delimeter => ',', 
+      options = {:delimeter => /\s/, 
         :strip_each_value => true,
         :connector => 'or', # as nest method option
         :operator => 'like' # as add_compare method option
