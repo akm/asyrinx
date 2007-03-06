@@ -11,21 +11,28 @@ div.calendarHeader button.nextMonth { padding: 0px 6px; }
 
 div.calendarBody th.weekNumberHead { text-align: left; }
 div.calendarBody th.weekDayHead { font-weight: bold; border-bottom: 1px solid WindowText; }
-div.calendarBody td.weekNumber {
-    text-align: right;
-    padding: 3px;
-    font-weight: normal; 
-    /* border-bottom: 1px solid WindowText; */
-    text-align: left;
-}
-div.calendarBody td.today { font-weight: bold; }
-div.calendarBody td.current { border: 1px dotted WindowText; }
 div.calendarBody table.grid {
+    border-collapse: separate;
+    border-spacing: 1px;
+    empty-cells: show;
     font: small-caption;
     font-weight: normal;
     text-align: center;
     color: WindowText;
     cursor: default;
+}
+div.calendarBody td.weekNumber {
+    width: 16px;
+    width: 15px;
+    padding: 3px;
+    text-align: right;
+    font-weight: normal; 
+    text-align: right;
+}
+div.calendarBody td.today { font-weight: bold; }
+div.calendarBody td.current { 
+    border: 1px dotted WindowText; 
+    padding: 2px;
 }
 div.calendarBody table.footerTable {
     font: small-caption;
