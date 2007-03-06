@@ -47,7 +47,6 @@ Date.Calendar.Model.prototype = {
 	
 	getValue: function(){ return this.value; },
 	setValue: function(date){
-		logger.debug("setValue");
 		this.value = date;
   	    this.eraGroup.updateEraAndYear(this.value);
 	},
@@ -483,7 +482,6 @@ Date.Calendar.View.prototype = {
 	updateBody: function() {
 		if (!this.element)
 			return ;
-	   logger.debug("updateBody");
 		// Calculate the number of days in the month for the selected date
 		var date = this.model.getValue()||new Date();
 		var firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -623,7 +621,6 @@ Date.Calendar.ViewController.Methods = {
     },
     
     paneClick: function(event){
-        logger.debug("paneClick");
         var element = Event.element(event);
         if (element == this.view.prevMonthButton)
             this.model.prevMonth();
@@ -650,7 +647,6 @@ Date.Calendar.ViewController.Methods = {
     },
     
     dateCellClicked: function(event, td, dateNumber){
-		logger.debug("dateCellClicked");
 		var d = (this.model.getValue())?new Date(this.model.getValue().getTime()):new Date();
 		d.setDate(dateNumber);
 		this.model.setValue(d);
