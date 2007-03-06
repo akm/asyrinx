@@ -47,6 +47,7 @@ Date.Calendar.Model.prototype = {
 	
 	getValue: function(){ return this.value; },
 	setValue: function(date){
+		logger.debug("setValue");
 		this.value = date;
   	    this.eraGroup.updateEraAndYear(this.value);
 	},
@@ -337,7 +338,7 @@ Date.Calendar.View.prototype = {
     },
 	
 	modelOnChange: function() {
-	    this.update();
+    	this.update();
 	},
 	
 	switchModel: function(newModel){
@@ -352,20 +353,26 @@ Date.Calendar.View.prototype = {
 	},
 	
 	update: function(){
-		this.updateBody();
-		this.updateHeader();
+	    if (this.updating)
+	        return;
+	    this.updating = true;
+	    try{
+    		this.updateBody();
+    		this.updateHeader();
+	    }finally{
+    	    this.updating = false;
+	    }
 	},
 	
 	createHeader: function(parentNode) {
 	   return Element.build({
 	       tagName:"div", className:"calendarHeader",
-	       style:"background:ActiveCaption; padding:0px; border-bottom: 1px solid WindowText;",
 	       body: [
 	           {tagName:"table", boder:0, cellSpacing:0, body:
 	               {tagName:"tbody", body:[
 	                   {tagName:"tr", body:[
     	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
-        	                   {tagName:"select", body:
+        	                   {tagName:"select", className:"era", body: 
     	                           this.eraGroup.collect(function(era, index){
     	                               return {
     	                                   tagName:"option", value:index, body: era["longName"], 
@@ -376,19 +383,19 @@ Date.Calendar.View.prototype = {
             	               }
         	               },
     	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
-        	                   {tagName:"input", value: this.model.getYear(), size:4,
+        	                   {tagName:"input", className: "year", value: this.model.getYear(), size:4,
         	                       afterBuild: function(element){ this.yearField = element; }.bind(this)
             	               }
         	               }
     	               ]},
 	                   {tagName:"tr", body:[
     	                   {tagName:"td", align:"right", body:
-        	                   {tagName:"button", className:"prevMonthButton", body:"<<",
+        	                   {tagName:"button", className:"prevMonth", body:"<<",
         	                       afterBuild:function(element){ this.prevMonthButton = element; }.bind(this)
             	               }
         	               },
     	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
-        	                   {tagName:"select", body:
+        	                   {tagName:"select", className:"month", body:
     	                           this.options.MonthNames.collect(function(monthName, index){
     	                               return {
     	                                   tagName:"option", value:index+1, body: monthName, 
@@ -399,7 +406,7 @@ Date.Calendar.View.prototype = {
             	               }
         	               },
     	                   {tagName:"td", align:"left", body:
-        	                   {tagName:"button", className:"nextMonthButton", body:">>",
+        	                   {tagName:"button", className:"nextMonth", body:">>",
         	                       afterBuild: function(element){ this.nextMonthButton = element; }.bind(this)
             	               }
         	               }
@@ -429,10 +436,9 @@ Date.Calendar.View.prototype = {
 		//
 	    var headerCells = [];
 		if (this.includeWeek)
-		    headerCells.push({ tagName: "th", className:"weekNumberHead", style:"text-align:left;", body: "w"});
+		    headerCells.push({ tagName: "th", className:"weekNumberHead", body: "w"});
 		for(i=0; i < 7; ++i)
 		    headerCells.push({ tagName: "th", className:"weekDayHead", 
-		      style:"font-weight:bold; border-bottom:1px solid WindowText;", 
 		      body: this.options.ShortWeekDayNames[(i + this.options.firstDayOfWeek)%7] });
 	    var bodyRows = [];
 		for(var week=0;week<6;++week) {
@@ -441,7 +447,6 @@ Date.Calendar.View.prototype = {
     		if (this.includeWeek){
     		    var td = {
     		        tagName: "td", className:"weekNumber", align:"center", body: String.fromCharCode(160),
-    		        style:"font-weight:normal; border-bottom:1px solid WindowText; text-align:left;", 
     		        afterBuild: function(element){ 
     		            var w = element.parentNode.rowIndex;
     		            this.weekSlot[w] = {tag:"WEEK", value:-1, textNode:element.firstChild}; 
@@ -452,7 +457,7 @@ Date.Calendar.View.prototype = {
 			for(var day=0; day<7; ++day) {
     		    var td = {
     		        tagName: "td", className:"weekNumber", align:"center", body:String.fromCharCode(160),
-    		        style:"font-weight:normal; cursor:" + ((/MSIE/.test(navigator.appVersion))?"hand":"pointer"),
+    		        style:"cursor:" + ((/MSIE/.test(navigator.appVersion))?"hand":"pointer"),
     		        afterBuild: function(element){
     		            var w = element.parentNode.rowIndex -1;
     		            var d = element.cellIndex - (this.includeWeek?1:0);
@@ -465,7 +470,6 @@ Date.Calendar.View.prototype = {
 		return Element.build(
 		    {tagName:"div", className:"calendarBody", body:
 	           {tagName:"table", className:"grid", boder:0, cellPadding:3, cellSpacing:0,
-	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", 
                    afterBuild: function(element){ this.calendarBodyTable = element; }.bind(this),
 	               body: [
     	               {tagName:"thead", body: {tagName:"tr", body: headerCells} },
@@ -479,6 +483,7 @@ Date.Calendar.View.prototype = {
 	updateBody: function() {
 		if (!this.element)
 			return ;
+	   logger.debug("updateBody");
 		// Calculate the number of days in the month for the selected date
 		var date = this.model.getValue()||new Date();
 		var firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -492,9 +497,8 @@ Date.Calendar.View.prototype = {
 			this.dateSlot[index].value = -1;
 			var textNode = this.dateSlot[index].textNode;
 			textNode.data = String.fromCharCode(160);
-			textNode.parentNode.className = "";
-			textNode.parentNode.style.fontWeight = "normal";
-			textNode.parentNode.style.border= "none";
+			Element.removeClassName(textNode.parentNode, "today");
+			Element.removeClassName(textNode.parentNode, "current");
 			index++;
 		}
 		var today = (new Date()).toISODate();
@@ -504,16 +508,13 @@ Date.Calendar.View.prototype = {
 			this.dateSlot[index].value = i;
 			var textNode = this.dateSlot[index].textNode;
 			textNode.data = i;
-			textNode.parentNode.className = "";
-			textNode.parentNode.style.fontWeight = "normal";
-			textNode.parentNode.style.border= "none";
+			Element.removeClassName(textNode.parentNode, "today");
+			Element.removeClassName(textNode.parentNode, "current");
 			if (firstDayOfMonthIsoDate == today) {
-				textNode.parentNode.className = "today";
-				textNode.parentNode.style.fontWeight = "bold";
+				Element.addClassName(textNode.parentNode, "today");
 			}
 			if (firstDayOfMonthIsoDate == current && this.model.getValue()) {
-				textNode.parentNode.className += " current";
-				textNode.parentNode.style.border= "1px dotted WindowText";
+				Element.addClassName(textNode.parentNode, "current");
 			}
 			firstDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth(), firstDayOfMonth.getDate()+1);
 		}
@@ -522,9 +523,8 @@ Date.Calendar.View.prototype = {
 			this.dateSlot[index].value = -1;
 			var textNode = this.dateSlot[index].textNode;
 			textNode.data = String.fromCharCode(160);
-			textNode.parentNode.className = "";
-			textNode.parentNode.style.fontWeight = "normal";
-			textNode.parentNode.style.border= "none";
+			Element.removeClassName(textNode.parentNode, "today");
+			Element.removeClassName(textNode.parentNode, "current");
 			++index;
 		}
 		// Week numbers
@@ -550,8 +550,7 @@ Date.Calendar.View.prototype = {
 		return Element.build({
 	        tagName:"div", className:"calendarFooter",
 	        body: [
-	           {tagName:"table", className:"footerTable", boder:0, cellSpacing:0,
-	               style:"font:small-caption; font-weight:normal; text-align:center; color:WindowText; cursor:default;", body:
+	           {tagName:"table", className:"footerTable", boder:0, cellSpacing:0, body:
 	               {tagName:"tbody", body: 
 	                   {tagName:"tr", body: [
     	                   {tagName:"td", body:
@@ -624,6 +623,7 @@ Date.Calendar.ViewController.Methods = {
     },
     
     paneClick: function(event){
+        logger.debug("paneClick");
         var element = Event.element(event);
         if (element == this.view.prevMonthButton)
             this.model.prevMonth();
@@ -643,13 +643,14 @@ Date.Calendar.ViewController.Methods = {
     		var dateNumber = Number(td.firstChild.data);
     		if (isNaN(dateNumber) || dateNumber <= 0 || dateNumber == null)
     			return;
-    		if (td.className == "weekNumber")
-    			return;
+    		//if (Element.hasClassName(td, "weekNumber"))
+    		//	return;
     	    this.dateCellClicked(event, td, dateNumber);
         }
     },
     
     dateCellClicked: function(event, td, dateNumber){
+		logger.debug("dateCellClicked");
 		var d = (this.model.getValue())?new Date(this.model.getValue().getTime()):new Date();
 		d.setDate(dateNumber);
 		this.model.setValue(d);

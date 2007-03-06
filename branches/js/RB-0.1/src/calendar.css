@@ -1,0 +1,36 @@
+div.calendarHeader {
+    background: ActiveCaption; 
+    padding: 0px; 
+    border-bottom: 1px solid WindowText;
+}
+div.calendarHeader select.era {padding: 0px; margin: 2px; width: 55px; height: 18px; }
+div.calendarHeader select.month {padding: 0px; margin: 2px; width: 55px; height: 18px; }
+div.calendarHeader input.year {padding: 1px 0px; margin: 2px; width: 32px; height: 14px; text-align: right;}
+div.calendarHeader button.prevMonth { padding: 0px 6px; }
+div.calendarHeader button.nextMonth { padding: 0px 6px; }
+
+div.calendarBody th.weekNumberHead { text-align: left; }
+div.calendarBody th.weekDayHead { font-weight: bold; border-bottom: 1px solid WindowText; }
+div.calendarBody td.weekNumber {
+    text-align: right;
+    padding: 3px;
+    font-weight: normal; 
+    /* border-bottom: 1px solid WindowText; */
+    text-align: left;
+}
+div.calendarBody td.today { font-weight: bold; }
+div.calendarBody td.current { border: 1px dotted WindowText; }
+div.calendarBody table.grid {
+    font: small-caption;
+    font-weight: normal;
+    text-align: center;
+    color: WindowText;
+    cursor: default;
+}
+div.calendarBody table.footerTable {
+    font: small-caption;
+    font-weight: normal;
+    text-align: center;
+    color: WindowText;
+    cursor: default;
+}
