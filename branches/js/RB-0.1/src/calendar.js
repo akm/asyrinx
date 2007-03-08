@@ -780,6 +780,8 @@ Object.extend(Date.Calendar.PullDown.Methods, {
         });
         if (this.options.closeOnDblClick)
             Event.observe(paneHolder.view.calendarBodyTable, "dblclick", this.hide.bindAsEventListener(this), false);
+		this.pane = result;
+		this.calendarBodyTable = paneHolder.view.calendarBodyTable
 		return result;
 	},
     activate: function() {
@@ -801,11 +803,14 @@ Object.extend(Date.Calendar.PullDown.Methods, {
     matchWhenVisible: function(action, event, keyCode, keyHandler) {
         return (this.visible && keyHandler.matchAction(action, event, keyCode));
     },
+    
     clickDocument: function(event) {
-        if (!this.options.closeOnClick) {
-            var element = Event.element(event);
-            if (Element.childOf(element, this.pane) || element == this.field)
-                return;
+        var element = Event.element(event);
+        if (Element.childOf(element, this.pane) || element == this.field) {
+            if (this.options.closeOnClick && Element.childOf(element, this.calendarBodyTable)){
+                this.hide();
+            }
+            return;
         }
         this.hide();
     },
