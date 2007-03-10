@@ -1,7 +1,6 @@
 require File.dirname(__FILE__) + "/test_helper"
 require File.dirname(__FILE__) + "/../init"
 
-require 'userstamp'
 ActiveRecord::Base.send(:include, ActiveRecord::Userstamp)
 
 class WithoutFilterTest < Test::Unit::TestCase
