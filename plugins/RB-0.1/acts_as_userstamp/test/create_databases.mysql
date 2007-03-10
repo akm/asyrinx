@@ -1,0 +1,2 @@
+create database acts_as_userstamp_plugin_test default character set utf8;
+grant all on acts_as_userstamp_plugin_test.* to 'rails'@'localhost';
