@@ -265,18 +265,29 @@ class ArFinderTest < Test::Unit::TestCase
   end
 
   def test_ComplexFinder6_options_to_find
-    assert_equal nil, ComplexFinder6.party_type_default_indexes
+    # assert_equal TextOptions, ComplexFinder6.party_type_options.class
+    
+    assert_equal [1,2,3], ComplexFinder6.party_type_default_indexes
     assert_equal 'person', ComplexFinder6.party_type_for(1)
     assert_equal 'company', ComplexFinder6.party_type_for(2)
     assert_equal 'government', ComplexFinder6.party_type_for(3)
     assert_equal ['company', 'government'], ComplexFinder6.party_types_for(2,3)
     assert_equal ['company', 'government'], ComplexFinder6.party_types_for([2,3])
+    assert_equal [['個人'], ['会社'], ['役所']], ComplexFinder6.party_type_option_names(:text)
     assert_equal [['個人', 1], ['会社', 2], ['役所', 3]], ComplexFinder6.party_type_option_names
     assert_equal [['個人', 1], ['会社', 2], ['役所', 3]], ComplexFinder6.party_type_option_names(:text, :index)
-    assert_equal [['個人'], ['会社'], ['役所']], ComplexFinder6.party_type_option_names(:text)
     assert_equal [['1: 個人', 1], ['2: 会社', 2], ['3: 役所', 3]], ComplexFinder6.party_type_option_names(:index_text, :index)
     assert_equal [['個人', 'person'], ['会社', 'company'], ['役所', 'government']], ComplexFinder6.party_type_option_names(:text, :value)
     assert_equal [[1, '個人', 'person'], [2, '会社', 'company'], [3, '役所', 'government']], ComplexFinder6.party_type_option_names(:index, :text, :value)
+    
+    f = ComplexFinder6.new
+    assert_equal [1,2,3], f.party_type_indexes
+    # assert_equal ['person', 'company', 'government'], f.party_types
+    assert_equal nil, f.party_types # すべて含まれているのでnil
+    assert_equal({
+      :select => 'people.*',
+      :order => 'name, id desc'
+    }, f.options_to_find)
     
     f = ComplexFinder6.new :name => '佐藤 健', :ids => '1,2,3,4', :tel => '03-', :party_type_indexes => '1,3'
     assert_equal [1,3], f.party_type_indexes

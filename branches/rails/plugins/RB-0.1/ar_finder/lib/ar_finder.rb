@@ -360,6 +360,7 @@ class ArFinder
       attr_default_indexes = "#{attr_singularized}_default_indexes"
       attr_for = "#{attr_singularized}_for"
       attrs_for = "#{attr_pluralized}_for"
+      attrs_all = "#{attr_pluralized}_all"
       attr_options = "#{attr_singularized}_options"
       attr_option_names = "#{attr_singularized}_option_names"
       var_options = "@#{attr_options}"
@@ -381,10 +382,11 @@ class ArFinder
           options_obj ? options_obj.to_array(*attrs) : []
         end
         define_method(attr_default_indexes) do |*values| 
+          opt = send(attr_options) # ここで実行しないとおかしい？
           value = values.empty? ? nil : values.flatten
           result = instance_variable_get(var_default_indexes)
           if value || result.nil?
-            value = value || (opt = send(attr_options); opt ? opt.indexes : nil)
+            value = value || (opt ? opt.indexes : nil)
             instance_variable_set(var_default_indexes, value)
           end
           result
@@ -397,6 +399,9 @@ class ArFinder
         define_method(attrs_for) do |*indexes| 
           indexes.flatten.collect{|idx| send(attr_for, idx) }
         end
+        define_method(attrs_all) do 
+          send(attr_options).values
+        end
       end
       klass.extend(class_methods)
       
@@ -404,7 +409,10 @@ class ArFinder
       var_attr = "@#{attr}"
       var_indexes = "@#{attr_indexes}"
       klass.class_eval do
-        define_method(attr){ instance_variable_get(var_attr) || klass.send(attrs_for, send(attr_indexes)) }
+        define_method(attr){ 
+          result = instance_variable_get(var_attr) || klass.send(attrs_for, send(attr_indexes)) 
+          (klass.send(attrs_all) - result).empty? ? nil : result # すべてが含まれていたらnilを返します
+        }
         define_method(attr_indexes){ instance_variable_get(var_indexes) || klass.send(attr_default_indexes) }
         define_method("#{attr_indexes}="){|v| 
           instance_variable_set(var_indexes, v.split(',').collect{|val|val.to_i}) 
