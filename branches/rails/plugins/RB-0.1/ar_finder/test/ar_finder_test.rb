@@ -164,7 +164,7 @@ class ArFinderTest < Test::Unit::TestCase
   end
   
   class ComplexFinder4 < ArFinder
-    parameter :ids, include_in(',')
+    parameter :ids, include_in(','){|v|v.to_i}
     parameter :name, like(' ')
     parameter :tel, like_include(' ')
     parameter :email, like_include(' ')
@@ -213,7 +213,7 @@ class ArFinderTest < Test::Unit::TestCase
   class ComplexFinder5 < ArFinder
     select 'people.*'
     
-    parameter :ids, include_in(',', :column => 'id')
+    parameter :ids, include_in(',', :column => 'id'){|v|v.to_i}
     parameter :name, like(' ')
     parameter :tel, like_include(' ', :column => 'tel.tel_number', :join => 'inner join telephones as tel on tel.person_id = people.id')
     parameter :email, like_include(' ')
@@ -233,6 +233,13 @@ class ArFinderTest < Test::Unit::TestCase
   end
 
   def test_ComplexFinder5_options_to_find
+    assert_equal nil, ComplexFinder5.deleted_default_index
+    assert_equal 1, ComplexFinder5.deleted_for(1)
+    assert_equal 2, ComplexFinder5.deleted_for(2)
+    assert_equal 3, ComplexFinder5.deleted_for(3)
+    assert_equal [['1: 削除された人を含めない', 1], ['2: 削除された人を含める', 2], ['3: 削除された人のみ', 3]], ComplexFinder5.deleted_option_names
+    assert_equal [['削除された人を含めない', 1], ['削除された人を含める', 2], ['削除された人のみ', 3]], ComplexFinder5.deleted_option_names(:text, :index)
+
     f = ComplexFinder5.new :name => '佐藤 健', :ids => '1,2,3,4', :tel => '03-', :deleted_index => 1
     assert_equal({
       :select => 'people.*',
@@ -242,5 +249,45 @@ class ArFinderTest < Test::Unit::TestCase
       :order => 'name, id desc'
     }, f.options_to_find)
     assert_equal({:order_index => 1, :name => '佐藤 健', :ids => '1,2,3,4', :tel => '03-', :deleted => 1}, f.to_params)
+  end
+
+  class ComplexFinder6 < ArFinder
+    select 'people.*'
+    
+    parameter :ids, include_in(',', :column => 'id'){|v|v.to_i}
+    parameter :name, like(' ')
+    parameter :tel, like_include(' ', :column => 'tel.tel_number', :join => 'inner join telephones as tel on tel.person_id = people.id')
+    parameter :email, like_include(' ')
+    parameter(:party_types, include_in(',', 
+      :checkables => {'1: 個人' => 'person', '2: 会社' => 'company', '3: 役所' => 'government'}) )
+    
+    order_options('1: 名前' => 'name, id desc', '2: 電話番号' => 'tel', '3: メール' => 'email')
+  end
+
+  def test_ComplexFinder6_options_to_find
+    assert_equal nil, ComplexFinder6.party_type_default_indexes
+    assert_equal 'person', ComplexFinder6.party_type_for(1)
+    assert_equal 'company', ComplexFinder6.party_type_for(2)
+    assert_equal 'government', ComplexFinder6.party_type_for(3)
+    assert_equal ['company', 'government'], ComplexFinder6.party_types_for(2,3)
+    assert_equal ['company', 'government'], ComplexFinder6.party_types_for([2,3])
+    assert_equal [['個人', 1], ['会社', 2], ['役所', 3]], ComplexFinder6.party_type_option_names
+    assert_equal [['個人', 1], ['会社', 2], ['役所', 3]], ComplexFinder6.party_type_option_names(:text, :index)
+    assert_equal [['個人'], ['会社'], ['役所']], ComplexFinder6.party_type_option_names(:text)
+    assert_equal [['1: 個人', 1], ['2: 会社', 2], ['3: 役所', 3]], ComplexFinder6.party_type_option_names(:index_text, :index)
+    assert_equal [['個人', 'person'], ['会社', 'company'], ['役所', 'government']], ComplexFinder6.party_type_option_names(:text, :value)
+    assert_equal [[1, '個人', 'person'], [2, '会社', 'company'], [3, '役所', 'government']], ComplexFinder6.party_type_option_names(:index, :text, :value)
+    
+    f = ComplexFinder6.new :name => '佐藤 健', :ids => '1,2,3,4', :tel => '03-', :party_type_indexes => '1,3'
+    assert_equal [1,3], f.party_type_indexes
+    
+    assert_equal({
+      :select => 'people.*',
+      :conditions => ['id in (:ids) and (name like :name1 and name like :name2) and tel.tel_number like :tel and party_types in (:party_types)', 
+        {:ids => [1,2,3,4], :name1 => '%佐藤%', :name2 => '%健%', :tel => '%03-%', :party_types => ['person','government']}],
+      :joins => 'inner join telephones as tel on tel.person_id = people.id',
+      :order => 'name, id desc'
+    }, f.options_to_find)
+    assert_equal({:order_index => 1, :name => '佐藤 健', :ids => '1,2,3,4', :tel => '03-', :party_types => ['person','government']}, f.to_params)
   end
 end
