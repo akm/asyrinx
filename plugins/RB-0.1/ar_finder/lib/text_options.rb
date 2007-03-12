@@ -55,6 +55,14 @@ class TextOptions
     @entries.collect{|entry| entry.to_array(*args)}
   end
   
+  def values
+    @entries.collect{|entry| entry.value}
+  end
+  
+  def indexes
+    @entries.collect{|entry| entry.index}
+  end
+  
   def [](index); @index[index]; end
   def length; @entries.length; end
   alias_method :size, :length

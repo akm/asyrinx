@@ -136,8 +136,12 @@ class ArFinder
       }
     end
     
+    def equal_with(delimeter = ' ', options = nil)
+      {:to_value => self.collect(delimeter, Proc.new{|v| v}), :operator => '=' }.merge(options || {})
+    end
+    
     def include_in(delimeter = ',', options = nil, &proc)
-      proc ||= Proc.new{|v| v ? v.to_i : nil}
+      proc ||= Proc.new{|v| v}
       {:to_value => self.collect(delimeter, proc), :condition => '"#{column} in (:#{name.to_s})"' }.merge(options || {})
     end
     
@@ -265,8 +269,8 @@ class ArFinder
     
     protected
     def extend_parameter(attr, attr_options)
-      OptionsMethods.extend_as_option(self, attr, attr_options[:options]) \
-        if attr_options.respond_to?(:[]) && attr_options[:options]
+      OptionsMethods.extend_as_selectable(self, attr, attr_options[:options]) if attr_options.respond_to?(:[]) && attr_options[:options]
+      OptionsMethods.extend_as_checkable(self, attr, attr_options[:checkables]) if attr_options.respond_to?(:[]) && attr_options[:checkables]
     end
     
     public
@@ -298,7 +302,7 @@ class ArFinder
   end
   
   module OptionsMethods
-    def self.extend_as_option(klass, attr, options)
+    def self.extend_as_selectable(klass, attr, options)
       attr_default_index = "#{attr.to_s}_default_index"
       attr_for = "#{attr.to_s}_for"
       attr_options = "#{attr.to_s}_options"
@@ -345,6 +349,66 @@ class ArFinder
         define_method(attr){ instance_variable_get(var_attr) || klass.send(attr_for, send(attr_index)) }
         define_method(attr_index){ instance_variable_get(var_index) || klass.send(attr_default_index) }
         define_method("#{attr_index}="){|v| instance_variable_set(var_index, v) }
+        define_method(attr_options){|*attrs| klass.send(attr_options, *attrs) }
+        define_method(attr_option_names){|*attrs| klass.send(attr_option_names, *attrs) }
+      end
+    end
+    def self.extend_as_checkable(klass, attr, options)
+      attr_singularized = attr.to_s.singularize
+      attr_pluralized = attr.to_s.pluralize
+      #
+      attr_default_indexes = "#{attr_singularized}_default_indexes"
+      attr_for = "#{attr_singularized}_for"
+      attrs_for = "#{attr_pluralized}_for"
+      attr_options = "#{attr_singularized}_options"
+      attr_option_names = "#{attr_singularized}_option_names"
+      var_options = "@#{attr_options}"
+      var_default_indexes = "@#{attr_default_indexes}"
+      class_methods = Module.new do
+        define_method(attr_options) do |*values|
+          result = instance_variable_get(var_options)
+          value = values.empty? ? nil : values.first
+          if value || result.nil?
+            result = TextOptions.create(value || options)
+            instance_variable_set(var_default_indexes, result.indexes)
+            instance_variable_set(var_options, result) 
+          end
+          result
+        end
+        define_method(attr_option_names) do |*attrs| 
+          attrs = attrs.empty? ? [:text, :index] : attrs
+          options_obj = send(attr_options)
+          options_obj ? options_obj.to_array(*attrs) : []
+        end
+        define_method(attr_default_indexes) do |*values| 
+          value = values.empty? ? nil : values.flatten
+          result = instance_variable_get(var_default_indexes)
+          if value || result.nil?
+            value = value || (opt = send(attr_options); opt ? opt.indexes : nil)
+            instance_variable_set(var_default_indexes, value)
+          end
+          result
+        end
+        define_method(attr_for) do |index| 
+          opt = send(attr_options)
+          opt.nil? ? nil : 
+            (option = opt[index]; option ? option.value : nil)
+        end
+        define_method(attrs_for) do |*indexes| 
+          indexes.flatten.collect{|idx| send(attr_for, idx) }
+        end
+      end
+      klass.extend(class_methods)
+      
+      attr_indexes = "#{attr_singularized}_indexes"
+      var_attr = "@#{attr}"
+      var_indexes = "@#{attr_indexes}"
+      klass.class_eval do
+        define_method(attr){ instance_variable_get(var_attr) || klass.send(attrs_for, send(attr_indexes)) }
+        define_method(attr_indexes){ instance_variable_get(var_indexes) || klass.send(attr_default_indexes) }
+        define_method("#{attr_indexes}="){|v| 
+          instance_variable_set(var_indexes, v.split(',').collect{|val|val.to_i}) 
+        }
         define_method(attr_options){|*attrs| klass.send(attr_options, *attrs) }
         define_method(attr_option_names){|*attrs| klass.send(attr_option_names, *attrs) }
       end
