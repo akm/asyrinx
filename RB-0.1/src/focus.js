@@ -13,7 +13,7 @@
  * @license LGPL
  */
  
-if (window["HTMLElement"]) HTMLElement = {};
+if (!window["HTMLElement"]) HTMLElement = {};
 
 HTMLElement.Focus = {};
 

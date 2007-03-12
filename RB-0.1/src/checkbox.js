@@ -10,7 +10,7 @@
  * @license LGPL
  */
  
-if (window["HTMLInputElement"]) HTMLInputElement = {};
+if (!window["HTMLInputElement"]) HTMLInputElement = {};
 
 HTMLInputElement.WholeCheck = Class.create();
 HTMLInputElement.WholeCheck.prototype = {
