@@ -1469,6 +1469,27 @@ Object.extend(HTMLElement, {
 		var scrollT = documentBody.scrollTop;
 		target.style.left = ((clientW-target.offsetWidth)/2+scrollL)+"px";
 		target.style.top = ((clientH-target.offsetHeight)/2+scrollT)+"px";
+	},
+	
+	adjustChild: function(parent, child){
+        var parentStyle = parent.style;
+        var childStyle = child.style;
+        var w = parent.clientWidth 
+            - parentStyle.paddingLeft.toNumeric()
+            - parentStyle.paddingRight.toNumeric()
+            - childStyle.borderLeftWidth.toNumeric()
+            - childStyle.borderRightWidth.toNumeric()
+            - childStyle.marginLeft.toNumeric()
+            - childStyle.marginRight.toNumeric();
+        var h = parent.clientHeight
+            - parentStyle.paddingTop.toNumeric()
+            - parentStyle.paddingBottom.toNumeric()
+            - childStyle.borderTopWidth.toNumeric()
+            - childStyle.borderBottomWidth.toNumeric()
+            - childStyle.marginTop.toNumeric()
+            - childStyle.marginBottom.toNumeric();
+        childStyle.width = w + "px";
+        childStyle.height = h + "px";
 	}
 });
 
