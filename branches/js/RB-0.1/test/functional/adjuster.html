@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>adjuster</title>
+    <script language="javascript" type="text/javascript" charset="UTF-8" src="../../lib/railties/prototype.js" ></script>
+    <script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/logger.js" ></script>
+    <script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/prototype_ext.js" ></script>
+</head>
+<body>
+    <div id="container" style="width: 300px; height: 200px; padding: 5px; border: 1px solid red;">
+        <textarea id="textarea1" style="margin: 5px; border: 1px solid black;">aaaaaaaaa</textarea>
+    </div>
+    <br/><br/><br/>
+    Width: <input type="text" id="setter_width"/>&nbsp;&nbsp;&nbsp;
+    Height: <input type="text" id="setter_height"/>
+    <input type="button" value="Resize" id="button_resize">
+    
+<script language="javascript" type="text/javascript" ><!--
+//Logger.setActiveOnLoad(true);
+
+var adjuster = HTMLElement.adjustChild.bind(null, $("container"), $("textarea1"));
+
+Event.observe($("button_resize"), "click", function(event){
+    $("container").style.width = $("setter_width").value + "px";
+    $("container").style.height = $("setter_height").value + "px";
+    adjuster.apply();
+});
+
+--></script>
+
+</body>
+</html>
