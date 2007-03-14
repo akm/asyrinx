@@ -1472,8 +1472,10 @@ Object.extend(HTMLElement, {
 	},
 	
 	adjustChild: function(parent, child){
-	   parent = $(parent); 
-	   child = $(child);
+	    parent = $(parent); 
+	    child = $(child);
+        if (!parent || !child)
+            return;
         var parentStyle = parent.style;
         var childStyle = child.style;
         var w = parent.clientWidth 
