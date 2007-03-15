@@ -92,7 +92,17 @@ module UserstampController
     end
   end
   
-  ADAPTORS = {'LoginEngine' => LoginEngineAdaptor, 'AccountSystem' => AuthGeneratorAdaptor }
+  module AuthenticatedSystemAdaptor
+    def userstamp
+      user_model = ActiveRecord::Base.user_model
+      user_model.current_user = self.current_user
+    end
+  end
+  
+  ADAPTORS = {
+    'LoginEngine' => LoginEngineAdaptor, 
+    'AccountSystem' => AuthGeneratorAdaptor,
+    'AuthenticatedSystem' => AuthenticatedSystemAdaptor }
   
   def self.included(controller_class)
     super
