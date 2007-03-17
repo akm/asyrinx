@@ -2,11 +2,11 @@
 	Date.EraGroup.ALL = new Date.EraGroup();
 	var userLanguage = navigator.language || navigator.userLanguage || navigator.systemLanguage || "";
 	if (userLanguage.indexOf("ja") > -1) {
-		Date.Era.MEIJI = Date.Era.create("–¾¡", "–¾", "M", "1868/01/01", "1912/07/29");
-		Date.Era.TAISHO = Date.Era.create("‘å³", "‘å", "T", "1912/07/30", "1926/12/24");
-		Date.Era.SHOWA = Date.Era.create("º˜a", "º", "S", "1926/12/25", "1989/01/07");
-		Date.Era.HEISEI = Date.Era.create("•½¬", "•½", "H", "1989/01/08", "2050/12/31" );
-		Date.Era.SEIREKI = new Date.Era.ADEra("¼—ï", "¼", "AD", "0001/01/01", "2050/12/31" );
+		Date.Era.MEIJI = Date.Era.create("æ˜æ²»", "æ˜", "M", "1868/01/01", "1912/07/29");
+		Date.Era.TAISHO = Date.Era.create("å¤§æ­£", "å¤§", "T", "1912/07/30", "1926/12/24");
+		Date.Era.SHOWA = Date.Era.create("æ˜­å’Œ", "æ˜­", "S", "1926/12/25", "1989/01/07");
+		Date.Era.HEISEI = Date.Era.create("å¹³æˆ", "å¹³", "H", "1989/01/08", "2050/12/31" );
+		Date.Era.SEIREKI = new Date.Era.ADEra("è¥¿æš¦", "è¥¿", "AD", "0001/01/01", "2050/12/31" );
 		//
 		Date.EraGroup.DEFAULT_WAREKI = new Date.EraGroup();
 		Date.EraGroup.DEFAULT_WAREKI.add(
