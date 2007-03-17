@@ -6,9 +6,8 @@
 <script language="JavaScript" type="text/javascript" src="../../lib/jsUnitCore.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../lib/test_helper.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../lib/railties/prototype.js"></script>
-<script language="JavaScript" type="text/javascript" src="../../src/logger.js"></script>
-<script language="JavaScript" type="text/javascript" src="../../src/prototype_ext.js"></script>
 <script language="JavaScript" type="text/javascript" src="../../src/date.js"></script>
+<script language="JavaScript" type="text/javascript" src="../../src/date_ja.js"></script>
 </head>
 <body>
 <h1>date.js Tests</h1>
@@ -98,9 +97,9 @@ function test_ObjectRange_of_Date() {
     var d2 = new Date(2007,0,3).toEndOfDate();
     var dateRange1 = new ObjectRange(d1,d2);
     
-    logger.debug("d1.getTime()=" + d1.getTime());
-    logger.debug("d2.getTime()=" + d2.getTime());
-    logger.debug("d3.getTime()=" + (new Date("2006/12/31")).getTime());
+    //logger.debug("d1.getTime()=" + d1.getTime());
+    //logger.debug("d2.getTime()=" + d2.getTime());
+    //logger.debug("d3.getTime()=" + (new Date("2006/12/31")).getTime());
     
     assertEquals("2006/12/29 in range", false, dateRange1.include(new Date("2006/12/29")));
     assertEquals("2006/12/30 in range", true , dateRange1.include(new Date("2006/12/30")));
