@@ -182,55 +182,14 @@ Object.extend(Date.Era.ADEra.prototype, {
 });
 
 Date.EraGroup = Class.create();
-Object.extend(Date.EraGroup, {
-	_createDefault: function() {
-		Date.EraGroup.ALL = new Date.EraGroup();
-		var userLanguage = navigator.language || navigator.userLanguage || navigator.systemLanguage || "";
-		if (userLanguage.indexOf("ja") > -1) {
-			Date.Era.MEIJI = Date.Era.create("明治", "明", "M", "1868/01/01", "1912/07/29");
-			Date.Era.TAISHO = Date.Era.create("大正", "大", "T", "1912/07/30", "1926/12/24");
-			Date.Era.SHOWA = Date.Era.create("昭和", "昭", "S", "1926/12/25", "1989/01/07");
-			Date.Era.HEISEI = Date.Era.create("平成", "平", "H", "1989/01/08", "2050/12/31");
-			Date.Era.SEIREKI = new Date.Era.ADEra("西暦", "西", "AD", "0001/01/01", "2050/12/31");
-			//
-			Date.EraGroup.DEFAULT_WAREKI = new Date.EraGroup();
-			this._addToEraGroup(Date.EraGroup.DEFAULT_WAREKI, [
-				Date.Era.MEIJI,Date.Era.TAISHO,Date.Era.SHOWA,Date.Era.HEISEI
-			]);
-			//
-			Date.EraGroup.DEFAULT_SEIREKI = new Date.EraGroup();
-			this._addToEraGroup(Date.EraGroup.DEFAULT_SEIREKI, [
-				Date.Era.SEIREKI
-			]);
-			//
-			Date.EraGroup.DEFAULT_WAREKI_SEIREKI = new Date.EraGroup();
-			this._addToEraGroup(Date.EraGroup.DEFAULT_WAREKI_SEIREKI, [
-				Date.Era.MEIJI,Date.Era.TAISHO,Date.Era.SHOWA,Date.Era.HEISEI,Date.Era.SEIREKI
-			]);
-			Date.EraGroup.DEFAULT_ja = Date.EraGroup.DEFAULT_WAREKI_SEIREKI;
-			Date.EraGroup.DEFAULT = Date.EraGroup.DEFAULT_ja;
-			//
-			this._addToEraGroup(Date.EraGroup.ALL, [
-				Date.Era.MEIJI,Date.Era.TAISHO,Date.Era.SHOWA,Date.Era.HEISEI,Date.Era.SEIREKI
-			]);
-		}
-		Date.Era.AD = new Date.Era.ADEra("AD", "AD", "AD", "0001/01/01", null);
-		Date.EraGroup.DEFAULT_en = Date.Era.AD;
-		if (!Date.EraGroup.DEFAULT)
-			Date.EraGroup.DEFAULT = Date.EraGroup.DEFAULT_en;
-		this._addToEraGroup(Date.EraGroup.ALL, [ Date.Era.AD ]);
-	},
-	
-	_addToEraGroup: function(group, eras) {
-		for(var i = 0; i < eras.length; i++) {
-			group.add(eras[i]);
-		}
-	}
-});
 Object.extend(Date.EraGroup.prototype, Enumerable);
 Object.extend(Date.EraGroup.prototype, {
 	initialize: function() {this.eras = [];},
-	add: function(dateEra) {this.eras.push(dateEra);},
+	add: function() {
+		for(var i = 0; i< arguments.length; i++){
+			this.eras.push(arguments[i]);
+		}
+	},
 	remove: function(dateEra) {this.eras.remove(dateEra);},
 	get: function(index) {return this.eras[index];},
 	indexOf: function(era) {return this.eras.indexOf(era);},
@@ -306,8 +265,6 @@ Object.extend(Date.EraGroup.prototype, {
 	   date.setEraAndYear(era,era.getEraYear(date));
 	}
 });
-
-Date.EraGroup._createDefault();
 
 
 Object.extend(Date.prototype, {
