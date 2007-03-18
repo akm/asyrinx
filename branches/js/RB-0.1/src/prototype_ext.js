@@ -1485,6 +1485,7 @@ Object.extend(HTMLElement, {
             - childStyle.borderRightWidth.toNumeric()
             - childStyle.marginLeft.toNumeric()
             - childStyle.marginRight.toNumeric();
+        childStyle.width = w + "px";
         var h = parent.clientHeight
             - parentStyle.paddingTop.toNumeric()
             - parentStyle.paddingBottom.toNumeric()
@@ -1492,8 +1493,18 @@ Object.extend(HTMLElement, {
             - childStyle.borderBottomWidth.toNumeric()
             - childStyle.marginTop.toNumeric()
             - childStyle.marginBottom.toNumeric();
-        childStyle.width = w + "px";
         childStyle.height = h + "px";
+	},
+	
+	sumAttributes: function(object, attrs){
+		var result = 0;
+		for(var i=0;i<attrs.length;i++){
+			var v = object[attrs[i]];
+			if (v['toNumeric'])
+				v = v.toNumeric();
+			result = result + v;
+		}
+		return result;		
 	}
 });
 
