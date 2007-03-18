@@ -145,7 +145,8 @@ Date.Calendar.KeyController.Methods = {
     initialize: function(field, model, options) {
         this.field = $(field);
         this.model = model;
-        this.options = Object.fill(options||{}, Date.Calendar.KeyController.DefaultOptions);
+        this.options = Object.extend({}, Date.Calendar.KeyController.DefaultOptions);
+        this.options = Object.extend(this.options, options||{});
         this.model.attachEvent(this.modelChanged.bind(this));
         if (this.options.activateSoon)
             this.activate();
@@ -170,19 +171,20 @@ Date.Calendar.KeyController.Methods = {
     
     getActions: function() {
         var actions = [
-            {ctrl: true , key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_UP  , method: this.prevMonth.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_DOWN, method: this.nextMonth.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_UP  , method: this.prevYear.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_DOWN, method: this.nextYear.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_LEFT , method: this.prevMonth.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_RIGHT, method: this.nextMonth.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_UP   , method: this.prevYear.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_DOWN , method: this.nextYear.bindAsEventListener(this) },
             {matchAll: true, method: this.keyup.bindAsEventListener(this), stopEvent: false }
         ];
         actions.each(function(action){
             action.event = "keydown";
-            action.shift = false;
+            action.ctrl = true;
+            // action.shift = false;
             action.alt = false;
         });
         return actions;
@@ -217,32 +219,33 @@ Date.Calendar.KeyController.Methods = {
 Object.extend(Date.Calendar.KeyController.prototype, Date.Calendar.KeyController.Methods);
 
 
-Date.Calendar.DefaultOptions = {};
-Date.Calendar.DefaultOptions.ja = {
-    MonthNames: [
-        "1月","2月","3月","4月","5月","6月",
-        "7月","8月","9月","10月","11月","12月"],
-    shortMonthNames: [
-        "1","2","3","4","5","6","7","8","9","10","11","12"],
-	WeekDayNames: [ "日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"  ],
-	ShortWeekDayNames: ["日", "月", "火", "水", "木", "金", "土" ],
-    firstDayOfWeek: 0, //Sunday
-	minimalDaysInFirstWeek: 1,
-	clearButtonCaption:"クリア"
-}
-Date.Calendar.DefaultOptions.en = {
-    MonthNames: [
-		"January", "February", "March",     "April"  , "May"     , "June",
-		"July",	   "August",   "September",	"October", "November",	"December"],
-    shortMonthNames: [
-    	"jan", "feb", "mar", "apr", "may", "jun", 
-    	"jul", "aug", "sep", "oct", "nov", "dec"],
-	WeekDayNames: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ],
-	ShortWeekDayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-    firstDayOfWeek: 0, //Monday
-	minimalDaysInFirstWeek: 4,
-	clearButtonCaption:"clear"
-}
+Date.Calendar.DefaultOptions = {
+	ja: {
+	    MonthNames: [
+	        "1月","2月","3月","4月","5月","6月",
+	        "7月","8月","9月","10月","11月","12月"],
+	    shortMonthNames: [
+	        "1","2","3","4","5","6","7","8","9","10","11","12"],
+		WeekDayNames: [ "日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"  ],
+		ShortWeekDayNames: ["日", "月", "火", "水", "木", "金", "土" ],
+	    firstDayOfWeek: 0, //Sunday
+		minimalDaysInFirstWeek: 1,
+		clearButtonCaption:"クリア"
+	},
+	en: {
+	    MonthNames: [
+			"January", "February", "March",     "April"  , "May"     , "June",
+			"July",	   "August",   "September",	"October", "November",	"December"],
+	    shortMonthNames: [
+	    	"jan", "feb", "mar", "apr", "may", "jun", 
+	    	"jul", "aug", "sep", "oct", "nov", "dec"],
+		WeekDayNames: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ],
+		ShortWeekDayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+	    firstDayOfWeek: 0, //Monday
+		minimalDaysInFirstWeek: 4,
+		clearButtonCaption:"clear"
+	}
+};
 
 Date.Calendar.View = Class.create();
 Date.Calendar.View.DefaultOptions = {
@@ -320,7 +323,8 @@ Object.extend(Date.Calendar.View, {
 Date.Calendar.View.prototype = {
     initialize: function(element, options){
         this.element = element;
-        this.options = Object.fill(options||{}, Date.Calendar.View.DefaultOptions);
+        this.options = Object.extend({}, Date.Calendar.View.DefaultOptions);
+        this.options = Object.extend(this.options, options||{});
         this.model = this.options["model"]||new Date.Calendar.Model();
         this.eraGroup = this.model["eraGroup"]||this.options["eraGroup"]||Date.EraGroup.DEFAULT_WAREKI;
         this.build();
@@ -578,7 +582,8 @@ Date.Calendar.ViewController.Methods = {
         this.active = false;
         this.view = view;
         this.model = this.view.model;
-        this.options = Object.fill(options||{}, Date.Calendar.ViewController.DefaultOptions);
+        this.options = Object.extend({}, Date.Calendar.ViewController.DefaultOptions);
+        this.options = Object.extend(this.options, options||{});
         if (this.options.activateSoon)
             this.activate();
     },
@@ -592,19 +597,20 @@ Date.Calendar.ViewController.Methods = {
     },
     getActions: function() {
         var actions = [
-            {ctrl: false, key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_UP  , method: this.prevMonth.bindAsEventListener(this) },
-            {ctrl: false, key: Event.KEY_PAGE_DOWN, method: this.nextMonth.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_UP  , method: this.prevYear.bindAsEventListener(this) },
-            {ctrl: true , key: Event.KEY_PAGE_DOWN, method: this.nextYear.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_LEFT , method: this.prevDate.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_RIGHT, method: this.nextDate.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_UP   , method: this.prevWeek.bindAsEventListener(this) },
+            {shift: false, key: Event.KEY_DOWN , method: this.nextWeek.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_LEFT , method: this.prevMonth.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_RIGHT, method: this.nextMonth.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_UP   , method: this.prevYear.bindAsEventListener(this) },
+            {shift: true , key: Event.KEY_DOWN , method: this.nextYear.bindAsEventListener(this) },
             {matchAll: true, method: this.keyup.bindAsEventListener(this), stopEvent: false }
         ];
         actions.each(function(action){
             action.event = "keydown";
-            action.shift = false;
+            action.ctrl = true;
+            // action.shift = false;
             action.alt = false;
         });
         return actions;
@@ -631,18 +637,13 @@ Date.Calendar.ViewController.Methods = {
         else if (element == this.view.clearButton)
             this.model.setValue(null);
         else { 
-            var td = Node.Finder.first(element, Node.Walk.parentNode,
-                Node.Predicate.and(
-                    Element.Predicate.tagName("TD"),
-                    Node.Predicate.childOf(this.view.calendarBodyTable)), true);
-            if (!td)
+            if (!Element.hasClassName(element, 'weekNumber')) {
                 return null;
-    		var dateNumber = Number(td.firstChild.data);
+			}
+    		var dateNumber = Number(element.firstChild.data);
     		if (isNaN(dateNumber) || dateNumber <= 0 || dateNumber == null)
     			return;
-    		//if (Element.hasClassName(td, "weekNumber"))
-    		//	return;
-    	    this.dateCellClicked(event, td, dateNumber);
+    	    this.dateCellClicked(event, element, dateNumber);
         }
     },
     
@@ -744,7 +745,7 @@ Object.extend(Date.Calendar.PullDown.Methods, HTMLInputElement.PullDown.Methods)
 Object.extend(Date.Calendar.PullDown.Methods, {
     initialize: function(field, options) {
         this.field = $(field);
-        options = Object.fill( options || {}, Date.Calendar.PullDown.DefaultOptions);
+        options = Object.extend( Object.extend( {}, Date.Calendar.PullDown.DefaultOptions), options || {});
         HTMLInputElement.PullDown.Methods.initialize.apply(this, [options]);
         this.eraGroup = this.options["eraGroup"]||Date.EraGroup.DEFAULT;
 	    var d = this.eraGroup.parse(this.field.value);
@@ -763,11 +764,11 @@ Object.extend(Date.Calendar.PullDown.Methods, {
             getActions: function() {
                 var result = Date.Calendar.ViewController.Methods.getActions.apply(paneHolder.viewController, arguments);
                 result.unshift({event:"keyup", ctrl: true , key: Event.KEY_SPACE , 
-                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "toggle") });
+                    method: paneHolder.invokeActivePullDown.bindAsEventListener(paneHolder, "toggle") });
                 result.unshift({event:"keyup", ctrl: false, key: Event.KEY_RETURN, 
-                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "hide") });
+                    method: paneHolder.invokeActivePullDown.bindAsEventListener(paneHolder, "hide") });
                 result.unshift({event:"keyup", ctrl: false, key: Event.KEY_ESC   ,
-                    method: paneHolder.invokeActivePullDown.bindWithArgsAsEventListener(paneHolder, "rollback") });
+                    method: paneHolder.invokeActivePullDown.bindAsEventListener(paneHolder, "rollback") });
                 return result;
             }.bind(this),
             
