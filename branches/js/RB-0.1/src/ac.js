@@ -510,10 +510,20 @@ Object.extend(ACFields.PullDown.Methods, {
             {event: "keydown", key: Event.KEY_RETURN, method: this.selectRow.bindAsEventListener(this), match: visibleHandlingMatcher}
         ]);
         for(var i = 0; i < suggestives.length; i++) {
-            Event.observe($(suggestives[i]), "blur", this.hide.bindAsEventListener(this) , false);
+            // Event.observe($(suggestives[i]), "blur", this.hide.bindAsEventListener(this) , false);
             if (this.options.toggleOnDblClick) 
                 Event.observe($(suggestives[i]), "dblclick", this.toggle.bindAsEventListener(this) , false);
         }
+        Event.observe(document, 'click', function(event){
+            var element = Event.element(event);
+            if (Element.childOf(element, this.pane))
+                return;
+            for(var i = 0; i < suggestives.length; i++){
+                if (element == suggestives[i])
+                    return;
+            }
+            this.hide();
+        }.bindAsEventListener(this));
     },
     matchWhenVisible: function(action, event, keyCode, keyHandler) {
         return (this.visible && keyHandler.matchAction(action, event, keyCode));
