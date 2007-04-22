@@ -1,0 +1,15 @@
+.spec_linker_container {
+    position: fixed;
+    right: 1em; bottom: 1em;
+    border: 3px dotted black;
+    width: 30em;
+    height: 20em;
+}
+
+.spec_linker_loading_msg {
+	background:url(../../images/spinner.gif) no-repeat;
+    padding-left: 20px;
+}
+.spec_linker_loading_msg:after {
+    content: "Now Loading...";
+}
