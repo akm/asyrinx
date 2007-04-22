@@ -1,0 +1,2 @@
+module SpecLinkHelper
+end

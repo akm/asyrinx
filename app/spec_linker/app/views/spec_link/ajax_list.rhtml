@@ -1,0 +1,13 @@
+<%- container ||= "spec_linker_container_main" -%>
+&laquo;<%= params[:url] %>&raquo;
+<div class="spec_link_list">
+    <%- @spec_links.each do |spec_link| -%>
+        <%= link_to_remote((spec_link.descriptions || "")[0, 100], 
+                :update => container, 
+                :url => { :action => "ajax_edit", :id => spec_link.id, :url => params[:url] } ) %>
+        <%- (spec_link.external_url || "").split("\n").each_with_index do |external_url, index| -%>
+            &nbsp;&#x25B7;<%= link_to "url_#{index}", external_url, :target => '_blank' %>
+        <%- end -%>
+    <%- end -%>    
+</div>
+&#x25B6;<%= link_to_remote "new spec", :update => container, :url => { :action => "ajax_new", :url => params[:url] } %>

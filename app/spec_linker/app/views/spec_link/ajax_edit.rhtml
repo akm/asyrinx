@@ -1,0 +1,7 @@
+<%- container ||= "spec_linker_container_main" -%>
+<div id="edit_spec_main" class="new_spec">
+    <%= render :partial => 'ajax_form', :locals => {:spec_link => @spec_link} %>
+</div>
+&#x25B6;<%= link_to_remote "save", :update => container, :submit => 'edit_spec_main', :url => {:action => 'ajax_save', :id => @spec_link.id} %>
+&nbsp;&nbsp;&nbsp;&nbsp;
+&#x25B6;<%= link_to_remote "list", :update => container, :url => {:action => 'ajax_list'} %>
