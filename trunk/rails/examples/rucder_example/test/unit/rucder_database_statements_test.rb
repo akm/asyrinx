@@ -9,7 +9,7 @@ conn.class.class_eval do
 end
 conn.rucder_enabled = true
 
-class RucderTest < Test::Unit::TestCase
+class RucderDatabaseStatementsTest < Test::Unit::TestCase
 
   fixtures :users
 
