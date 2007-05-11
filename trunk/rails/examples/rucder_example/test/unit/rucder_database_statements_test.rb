@@ -15,9 +15,7 @@ class RucderDatabaseStatementsTest < Test::Unit::TestCase
 
   def setup
     @service_args = []
-    ActiveRecord::Rucder.rucder_service = Proc.new{|*args|
-      @service_args << args
-    }
+    ActiveRecord::Rucder.rucder_service = Proc.new{|*args| @service_args << args }
   end
   
   def check_args(*expecteds)  # (event, klass, trace_level)
