@@ -1,1 +1,2 @@
-# Install hook code here
+require 'rubygems'
+require_gem 'rparsec'
