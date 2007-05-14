@@ -2,7 +2,35 @@
 # migrations feature of ActiveRecord to incrementally modify your database, and
 # then regenerate this schema definition.
 
-ActiveRecord::Schema.define(:version => 1) do
+ActiveRecord::Schema.define(:version => 2) do
+
+  create_table "rucder_columns", :force => true do |t|
+    t.column "table_id", :integer, :default => 0,  :null => false
+    t.column "name",     :string,  :default => "", :null => false
+  end
+
+  create_table "rucder_cruds", :force => true do |t|
+    t.column "table_id",      :integer, :default => 0,  :null => false
+    t.column "rucder_log_id", :integer, :default => 0,  :null => false
+    t.column "name",          :string,  :default => "", :null => false
+  end
+
+  create_table "rucder_iruns", :force => true do |t|
+    t.column "column_id",     :integer, :default => 0,  :null => false
+    t.column "rucder_log_id", :integer, :default => 0,  :null => false
+    t.column "name",          :string,  :default => "", :null => false
+  end
+
+  create_table "rucder_logs", :force => true do |t|
+    t.column "sql",         :text
+    t.column "parsed_sql",  :text
+    t.column "stack_trace", :text
+    t.column "created_at",  :datetime
+  end
+
+  create_table "rucder_tables", :force => true do |t|
+    t.column "name", :string, :default => "", :null => false
+  end
 
   create_table "users", :force => true do |t|
     t.column "login",                     :string

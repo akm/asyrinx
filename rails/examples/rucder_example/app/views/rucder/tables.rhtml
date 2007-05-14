@@ -1,0 +1,32 @@
+<table>
+    <thead>
+        <tr>
+            <th>table_id</th>
+            <th colspan="4">table name</th>
+        </tr>
+    </thead>
+    <tbody>
+<%- @tables.each do |table| -%>
+        <tr valign="top">
+            <th><%= table.id %></th>
+            <th colspan="4"><%=h table.name %></th>
+        </tr>
+        <tr>
+            <th>&nbsp;</th>
+            <th>log_id</th>
+            <th>type</th>
+            <th>sql</th>
+            <th>trace</th>
+        </tr>
+    <%- table.cruds.each do |crud| -%>
+        <tr valign="top">
+            <td>&nbsp;</td>
+            <td><%= crud.log.id %></td>
+            <td><%=h crud.name %></td>
+            <td><%=h(crud.log.sql) %></td>
+            <td><pre><%=h(crud.log.stack_trace) %></pre></td>
+        </tr>
+    <%- end -%>
+<%- end -%>
+    </tbody>
+</table>
