@@ -40,32 +40,160 @@ end
 
 require 'sql'
 
+class LiteralExpr < Expr
+  def to_hash_with_ignore_values(*vargs)
+    result = to_hash_without_ignore_values(*vargs)
+    result[:lit] = '?' if vargs.last.is_a?(Hash) && vargs.last[:ignore_values]
+    return result
+  end
+  alias :to_hash_without_ignore_values :to_hash
+  alias :to_hash :to_hash_with_ignore_values
+end
+
+class ComparePredicate < Predicate
+  def to_hash_with_ignore_values(*vargs)
+    result = to_hash_without_ignore_values(*vargs)
+    if vargs.last.is_a?(Hash) && vargs.last[:ignore_values] and result[:right] and result[:right][:name] == 'NULL'
+      result[:right] = {:lit => '?'}
+    end
+    return result
+  end
+  alias :to_hash_without_ignore_values :to_hash
+  alias :to_hash :to_hash_with_ignore_values
+end
+
+
 require 'sql_parser'
 module ActiveRecord
   module Rucder
     class SqlParser
       include ::SqlParser
-      def call(sql)
-        sql = sql.strip
+      
+      def call(sql, options = nil)
         @select_parser ||= make(relation)
         case(sql)
         when /^select /i
-          parse_select(sql)
+          parse_select(sql, options)
         when /^insert /i
-          parse_insert(sql)
+          parse_insert(sql, options)
         when /^update /i
-          parse_update(sql)
+          parse_update(sql, options)
         when /^delete /i
-          parse_delete(sql)
+          parse_delete(sql, options)
+        else
+          nil
         end
       end
       
-      def parse_select(sql)
-        @select_parser.parse(sql).to_hash
+      SPACE_IN_BRACKET = /\(([^)]*?)\s([^(]*?)\)/
+      
+      def parse_select(sql, options = nil)
+        sql = sql.dup.gsub('`', '')
+        sql.gsub!(SPACE_IN_BRACKET){ "(#{$1}#{$2})" } while SPACE_IN_BRACKET =~ sql
+        options ||= {}
+        escape_field_name(sql, field_mapping = {})
+        sql, limit = escape_limit(sql)
+        result = retry_parse(sql, options)
+        result = unescape_limit(result, limit)
+        unescape_field_name(result, field_mapping)
+        gsub_retry_marks(result) if options[:gsub_retry_marks]
+        return result
       end
       
-      def parse_insert(sql)
-        table_name = sql.scan(/insert into (.*) \(/i).flatten.join('')
+      def retry_parse(sql, options)
+        result = @select_parser.parse(sql).to_hash(options)
+        return result
+      rescue
+        retry_sql = sql.sub( /\(([^()]*?)\)/ ){'_BB_' << $1.gsub(/\s/, '').gsub('.', '_DT_') << '_BE_'}
+        raise if retry_sql == sql
+        options[:gsub_retry_marks] = true
+        return retry_parse(retry_sql, options)
+      end
+      
+      def gsub_retry_marks(result)
+        if result.is_a?(Hash)
+          result.each do |k, v|
+            if v.is_a?(Hash) or v.is_a?(Array)
+              gsub_retry_marks(v)
+            elsif v.is_a?(String)
+              result[k] = gsub_marks(v)
+            end
+          end
+        elsif result.is_a?(Array)
+          result.each do |v|
+            if v.is_a?(Hash) or v.is_a?(Array)
+              gsub_retry_marks(v)
+            end
+          end
+        end
+      end
+      
+      def gsub_marks(str)
+        str.gsub('_BB_', '(').gsub('_BE_', ')').gsub('_CM_', ',').gsub('_DT_', '.').gsub('_AL_', '*')
+      end
+      
+      ALL_IN_BRACKET = /\((.*?)\)/
+      
+      def escape_field_name(sql, field_mapping)
+        select_phases = sql.scan(/select\s(.*)\sfrom/i)
+        select_phases.flatten.each do |phase|
+          dest = phase.dup
+          dest.gsub!(ALL_IN_BRACKET){ 
+            '_BB_' << $1.gsub(',', '_CM_').gsub('.', '_DT_').gsub('*', '_AL_') << '_BE_'
+          } while ALL_IN_BRACKET =~ dest
+
+          parsing_fields = []
+          fields = dest.split(',')
+          fields.each do |f|
+            words = f.split(' ')
+            parsing_fields << words[0]
+            next if words.length < 2
+            field_mapping[ words[0] ] = 
+              { :name => gsub_marks(words[0]), 
+                :as => (words.length == 2) ? words[1] : words[2] }
+          end
+          sql.gsub!(phase, parsing_fields.join(','))
+        end
+      end
+      
+      def unescape_field_name(result, field_mapping)
+        if result.is_a?(Hash) 
+          name = result[:name]
+          if name && field_mapping[name]
+            result.update( field_mapping[name] )
+          else
+            result.each{|k, v| unescape_field_name(v, field_mapping) }
+          end
+        elsif result.is_a?(Array)
+          result.each{|v| unescape_field_name(v, field_mapping) }
+        end
+      end
+      
+      def escape_limit(sql)
+        if /limit\s*\d*\s*,\s*\d*$/i =~ sql
+          idx = sql.rindex(/limit\s*\d*\s*,\s*\d*$/i)
+          sql, limit = sql[0..idx-1], sql[idx+5..-1]
+        end
+        return sql, limit
+      end
+      
+      def unescape_limit(result, limit)
+        if limit
+          limits = limit.split(',', 2)
+          return {
+            :rel => result,
+            :offset => limits[0].to_i,
+            :limit => limits[1].to_i
+          }
+        else
+          return result
+        end
+      end
+      
+      
+      
+      def parse_insert(sql, options = nil)
+        table_name = sql.scan(/insert into (.*?) \(/i).flatten.join('')
         insert_blocks = sql.sub(/insert into .* \(/i, '').split(')', 2).map{|block|block.strip}
         result = {
           :insert => {
@@ -76,19 +204,19 @@ module ActiveRecord
         case insert_blocks[1]
         when /^values/i 
           values = insert_blocks[1].sub(/^values/i, '').strip
-          result[:insert][:values] = values.gsub(Regexp.union(/^\(/,/\)$/), '').split(',').map{|val|val.strip}
+          result[:insert][:values] = values.gsub(Regexp.union(/^\(/, /\)$/), '').split(',').map{|val| options && options[:ignore_values] ? '?' : val.strip}
         when /^select/i
-          result[:insert][:select] = parse_select(insert_blocks[1])
+          result[:insert][:select] = parse_select(insert_blocks[1], options)
         else
           raise "unsupported insert: #{sql}"
         end
         return result
       end
       
-      def parse_update(sql)
+      def parse_update(sql, options = nil)
         sqls = sql.split(/ where /i, 2)
         select = sqls[0].gsub(/^update/i, 'select * from').gsub(/ set /i, ' where ').gsub(/`/, '').gsub(/,/, ' and ')
-        result = @select_parser.parse(select).to_hash
+        result = @select_parser.parse(select).to_hash(options)
         result.delete(:select)
         result[:update] = result[:from]; result.delete(:from)
 
@@ -97,7 +225,7 @@ module ActiveRecord
 
         if sqls[1]
           where = "select * from xxxxx where " + sqls[1]
-          where_hash = @select_parser.parse(where).to_hash
+          where_hash = @select_parser.parse(where).to_hash(options)
           raise "Unsupported update #{sql}" unless where_hash[:select]
           where_hash.delete(:select)
           where_hash.delete(:from)
@@ -117,9 +245,9 @@ module ActiveRecord
         end
       end
       
-      def parse_delete(sql)
+      def parse_delete(sql, options = nil)
         sql = sql.gsub(/delete/i, 'select *')
-        result = @select_parser.parse(sql).to_hash
+        result = @select_parser.parse(sql).to_hash(options)
         result.delete(:select)
         result[:delete] = result[:from]; result.delete(:from)
         result

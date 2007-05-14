@@ -9,7 +9,7 @@ module ActiveRecord
     end
 
     def self.notify_evnet(event, context)
-      ActiveRecord::Rucder.rucder_service ||= LogService.new
+      ActiveRecord::Rucder.rucder_service ||= DatabaseLogService.new
       ActiveRecord::Rucder.rucder_service.call(event, context)
     end
     
@@ -29,6 +29,12 @@ module ActiveRecord
       def call(event, context)
         # ActiveRecord::Base.logger.debug("#{event.to_s} #{context.inspect}\n  " << caller(trace_level).join("\n  "))
         ActiveRecord::Base.logger.debug("#{event.to_s} #{context.inspect}")
+      end
+    end
+    
+    class DatabaseLogService
+      def call(event, context)
+        RucderLog.service(event, context[:arguments])
       end
     end
   end

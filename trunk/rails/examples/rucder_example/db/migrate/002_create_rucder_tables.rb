@@ -8,7 +8,8 @@ class CreateRucderTables < ActiveRecord::Migration
       t.column :name, :string, :null => false
     end
     create_table :rucder_logs do |t|
-      t.column :sql, :string, :null => false
+      t.column :sql, :text
+      t.column :parsed_sql, :text
       t.column :stack_trace, :text
       t.column :created_at, :datetime
     end
