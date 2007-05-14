@@ -15,8 +15,7 @@
             <th>&nbsp;</th>
             <th>log_id</th>
             <th>type</th>
-            <th>sql</th>
-            <th>trace</th>
+            <th>sql and trace</th>
         </tr>
     <%- table.cruds.each do |crud| -%>
         <tr valign="top">
@@ -24,6 +23,9 @@
             <td><%= crud.log.id %></td>
             <td><%=h crud.name %></td>
             <td><%=h(crud.log.sql) %></td>
+        </tr>
+        <tr valign="top">
+            <td colspan="3">&nbsp;</td>
             <td><pre><%=h(crud.log.stack_trace) %></pre></td>
         </tr>
     <%- end -%>
