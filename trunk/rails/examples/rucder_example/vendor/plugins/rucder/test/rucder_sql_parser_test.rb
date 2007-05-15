@@ -220,6 +220,111 @@ class RucderSqlParserTest < Test::Unit::TestCase
       },
       parser.call("DELETE FROM users WHERE id = 1", :ignore_values => true) )
   end
+  
+  
+  def test_parse_select_oracle
+    parser = ActiveRecord::Rucder::SqlParser.new
+    sql = <<-EOS
+    select 
+    	column_name, 
+    	data_type, 
+    	data_default, 
+    	nullable, 
+    	decode(data_type, 'NUMBER', data_precision, 'VARCHAR2', data_length, null) as length,
+    	decode(data_type, 'NUMBER', data_scale, null) as scale
+    from 
+    	all_tab_columns
+    where 
+    	owner = 'ANOTHER_SCHEMA' and table_name = 'SOME_TABLE'
+    order by column_id
+    EOS
 
+    assert_equal( {
+        :select => [
+          {:name => 'column_name'},
+          {:name => 'data_type'},
+          {:name => 'data_default'},
+          {:name => 'nullable'},
+          {:name => "decode(data_type,'NUMBER',data_precision,'VARCHAR2',data_length,null)", :as => 'length'},
+          {:name => "decode(data_type,'NUMBER',data_scale,null)", :as => 'scale'}
+        ],
+        :from => {:table => 'all_tab_columns'},
+        :where=>{
+          :left=>
+            {:left=>{:name=>"owner"},
+             :right=>{:lit=>"'ANOTHER_SCHEMA'"},
+             :op=>:"="},
+          :right=>
+            {:left=>{:name=>"table_name"},
+             :right=>{:lit=>"'SOME_TABLE'"},
+             :op=>:"="},
+           :op=>:and},
+        :orderby => [{:expr => {:name => 'column_id'}, :asc => true}]
+      }, parser.call(sql) )
+  
+    sql = <<-EOS
+      SELECT * FROM user_options
+      WHERE ((user_options.user_id) = (10795) AND (user_type_cd is null))
+      ORDER BY created_at desc
+    EOS
+    
+    assert_equal( {
+        :select => ['*'],
+        :from => {:table => 'user_options'},
+        :where=>
+          {:left=>{:name=>"((user_options.user_id)"},
+           :right=>{:name=>"(10795)AND(user_type_cdisnull))"},
+           :op=>:"="},
+        :orderby => [{:expr => {:name => 'created_at'}}]
+      }, parser.call(sql) )
+      
+    sql = <<-EOS
+      select * from (
+        select raw_sql_.*, rownum raw_rnum_ from (
+          SELECT * FROM user_options
+          WHERE ((user_options.user_id) = (10795) AND (user_type_cd is null))
+          ORDER BY created_at desc
+        ) raw_sql_ where rownum <= 1
+      ) where raw_rnum_ > 0
+    EOS
+    
+    assert_equal( {
+        :limit => 1,
+        :offset => 0,
+        :rel => {
+          :select => ['*'],
+          :from => {:table => 'user_options'},
+          :where=>
+            {:left=>{:name=>"((user_options.user_id)"},
+             :right=>{:name=>"(10795)AND(user_type_cdisnull))"},
+             :op=>:"="},
+          :orderby => [{:expr => {:name => 'created_at'}}]
+        }
+      }, parser.call(sql) )
+      
+      
+    sql = <<-EOS
+      select * from (
+        select raw_sql_.*, rownum raw_rnum_ from (
+          SELECT * FROM users WHERE (users.id = '16443')
+        ) raw_sql_ where rownum <= 70
+      ) where raw_rnum_ > 40
+    EOS
+    
+    assert_equal( {
+        :limit => 30,
+        :offset => 40,
+        :rel => {
+          :select => ['*'],
+          :from => {:table => 'users'},
+          :where=>
+            {:left=>{:owner => 'users', :col => 'id' },
+             :right=>{:lit=>"'16443'"},
+             :op=>:"="}
+        }
+      }, parser.call(sql) )
+  
+  
+  end
 
 end

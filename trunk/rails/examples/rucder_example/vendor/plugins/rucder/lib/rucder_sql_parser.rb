@@ -70,6 +70,7 @@ module ActiveRecord
       include ::SqlParser
       
       def call(sql, options = nil)
+        sql = sql.gsub(/\n/, '').strip
         @select_parser ||= make(relation)
         case(sql)
         when /^select /i
@@ -90,31 +91,39 @@ module ActiveRecord
       def parse_select(sql, options = nil)
         sql = sql.dup.gsub('`', '')
         sql.gsub!(SPACE_IN_BRACKET){ "(#{$1}#{$2})" } while SPACE_IN_BRACKET =~ sql
-        options ||= {}
-        escape_field_name(sql, field_mapping = {})
-        sql, limit = escape_limit(sql)
-        result = retry_parse(sql, options)
-        result = unescape_limit(result, limit)
-        unescape_field_name(result, field_mapping)
-        gsub_retry_marks(result) if options[:gsub_retry_marks]
-        return result
+        context = {:sql => sql}.update(options ||  {})
+        process_parse_select(context)
+        return context[:result]
       end
       
-      def retry_parse(sql, options)
-        result = @select_parser.parse(sql).to_hash(options)
+      def process_parse_select(context)
+        escape_field_name(context)
+        escape_limit(context)
+        context[:result] = retry_parse(context[:sql], context)
+        unescape_limit(context)
+        unescape_field_name(context)
+        gsub_retry_marks(context)
+      end
+      
+      def retry_parse(sql, context)
+        result = @select_parser.parse(sql).to_hash(context)
         return result
       rescue
         retry_sql = sql.sub( /\(([^()]*?)\)/ ){'_BB_' << $1.gsub(/\s/, '').gsub('.', '_DT_') << '_BE_'}
         raise if retry_sql == sql
-        options[:gsub_retry_marks] = true
-        return retry_parse(retry_sql, options)
+        context[:gsub_retry_marks] = true
+        return retry_parse(retry_sql, context)
       end
       
-      def gsub_retry_marks(result)
+      def gsub_retry_marks(context)
+        gsub_retry_marks_impl(context[:result], context) if context[:gsub_retry_marks]
+      end
+      
+      def gsub_retry_marks_impl(result, context)
         if result.is_a?(Hash)
           result.each do |k, v|
             if v.is_a?(Hash) or v.is_a?(Array)
-              gsub_retry_marks(v)
+              gsub_retry_marks_impl(v, context)
             elsif v.is_a?(String)
               result[k] = gsub_marks(v)
             end
@@ -122,24 +131,26 @@ module ActiveRecord
         elsif result.is_a?(Array)
           result.each do |v|
             if v.is_a?(Hash) or v.is_a?(Array)
-              gsub_retry_marks(v)
+              gsub_retry_marks_impl(v, context)
             end
           end
         end
       end
       
       def gsub_marks(str)
-        str.gsub('_BB_', '(').gsub('_BE_', ')').gsub('_CM_', ',').gsub('_DT_', '.').gsub('_AL_', '*')
+        str.gsub('_BB_', '(').gsub('_BE_', ')').gsub('_CM_', ',').gsub('_DT_', '.').gsub('_SQ_', "'").gsub('_AL_', '*')
       end
       
       ALL_IN_BRACKET = /\((.*?)\)/
       
-      def escape_field_name(sql, field_mapping)
+      def escape_field_name(context)
+        sql = context[:sql]
+        field_mapping = (context[:field_mapping] ||= {})
         select_phases = sql.scan(/select\s(.*)\sfrom/i)
         select_phases.flatten.each do |phase|
           dest = phase.dup
           dest.gsub!(ALL_IN_BRACKET){ 
-            '_BB_' << $1.gsub(',', '_CM_').gsub('.', '_DT_').gsub('*', '_AL_') << '_BE_'
+            '_BB_' << $1.gsub(',', '_CM_').gsub('.', '_DT_').gsub("'", '_SQ_').gsub('*', '_AL_') << '_BE_'
           } while ALL_IN_BRACKET =~ dest
 
           parsing_fields = []
@@ -154,39 +165,45 @@ module ActiveRecord
           end
           sql.gsub!(phase, parsing_fields.join(','))
         end
+        context[:sql] = sql
       end
       
-      def unescape_field_name(result, field_mapping)
+      def unescape_field_name(context)
+        unescape_field_name_impl(context[:result], context)
+      end
+      
+      def unescape_field_name_impl(result, context)
+        field_mapping = (context[:field_mapping] || {})
         if result.is_a?(Hash) 
           name = result[:name]
           if name && field_mapping[name]
             result.update( field_mapping[name] )
           else
-            result.each{|k, v| unescape_field_name(v, field_mapping) }
+            result.each{|k, v| unescape_field_name_impl(v, context) }
           end
         elsif result.is_a?(Array)
-          result.each{|v| unescape_field_name(v, field_mapping) }
+          result.each{|v| unescape_field_name_impl(v, context) }
         end
       end
       
-      def escape_limit(sql)
+      def escape_limit(context)
+        sql = context[:sql]
         if /limit\s*\d*\s*,\s*\d*$/i =~ sql
           idx = sql.rindex(/limit\s*\d*\s*,\s*\d*$/i)
           sql, limit = sql[0..idx-1], sql[idx+5..-1]
+          context[:sql] = sql
+          context[:limit] = limit
         end
-        return sql, limit
       end
       
-      def unescape_limit(result, limit)
-        if limit
-          limits = limit.split(',', 2)
-          return {
-            :rel => result,
+      def unescape_limit(context)
+        if context[:limit]
+          limits = context[:limit].split(',', 2)
+          context[:result] = {
+            :rel => context[:result],
             :offset => limits[0].to_i,
             :limit => limits[1].to_i
           }
-        else
-          return result
         end
       end
       
@@ -252,6 +269,56 @@ module ActiveRecord
         result[:delete] = result[:from]; result.delete(:from)
         result
       end
+
+      module OracleFilter
+        def self.append_features(base) #:nodoc:
+          super
+          base.class_eval do
+            alias_method :process_parse_select_without_oracle, :process_parse_select
+            alias_method :process_parse_select, :process_parse_select_with_oracle
+          end
+        end
+        
+        # sql.replace "select * from (select raw_sql_.*, rownum raw_rnum_ from (#{sql}) raw_sql_ where rownum <= #{offset+limit}) where raw_rnum_ > #{offset}"
+        # sql.replace "select * from (select raw_sql_.*, rownum raw_rnum_ from (#{sql}) raw_sql_) where raw_rnum_ > #{offset}"
+        PRE_SQL = /^select \* from \(\s*select raw_sql_\.\*, rownum raw_rnum_ from \(\s*/
+        POST_SQL_OFFSET_LIMIT = /\s*\) raw_sql_ where rownum <= (\d*?)\s*\) where raw_rnum_ > (\d*?)$/
+        POST_SQL_OFFSET = /\s*\) raw_sql_\s*\) where raw_rnum_ > (\d*?)$/
+
+        
+        def process_parse_select_with_oracle(context)
+          sql = context[:sql]
+          if PRE_SQL =~ sql
+            if POST_SQL_OFFSET_LIMIT =~ sql
+              offset_limit = sql.scan(POST_SQL_OFFSET_LIMIT).flatten
+              offset = offset_limit[1].to_i
+              limit = offset_limit[0].to_i - offset
+              context[:sql] = sql.gsub(PRE_SQL, '').gsub(POST_SQL_OFFSET_LIMIT, '')
+              process_parse_select_without_oracle(context)
+              context[:result] = {
+                :offset => offset, :limit => limit,
+                :rel => context[:result]
+              }
+            elsif POST_SQL_OFFSET =~ sql
+              offset = sql.scan(POST_SQL_OFFSET)
+              offset = offset[0].to_i
+              context[:sql] = sql.gsub(PRE_SQL, '').gsub(POST_SQL_OFFSET, '')
+              process_parse_select_without_oracle(context)
+              context[:result] = {
+                :offset => offset,
+                :rel => context[:result]
+              }
+            else
+              raise "unsupported oracle sql: #{sql}"
+            end
+          else
+            process_parse_select_without_oracle(context)
+          end
+        end
+      end
+        
+      include OracleFilter
     end
+
   end
 end
