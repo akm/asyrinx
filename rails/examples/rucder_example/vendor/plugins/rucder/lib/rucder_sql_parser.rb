@@ -86,52 +86,65 @@ module ActiveRecord
         end
       end
       
-      SPACE_IN_BRACKET = /\(([^)]*?)\s([^(]*?)\)/
+      SPACE_IN_BRACKET = /([^ ()])\(([^)]*?)\s([^(]*?)\)/
+      IGNOREABLE_BRACKET = /([\s()])\(([\d\w\.]*)\)/
+      WHERE_BRACKET = /where\s*\(\s*([^()]*)\s*\)\s*(group by|order by|having|union|limit|$|\z)/i
       
       def parse_select(sql, options = nil)
         sql = sql.dup.gsub('`', '')
-        sql.gsub!(SPACE_IN_BRACKET){ "(#{$1}#{$2})" } while SPACE_IN_BRACKET =~ sql
+        sql.gsub!(IGNOREABLE_BRACKET){ "#{$1}#{$2}" } while IGNOREABLE_BRACKET =~ sql
+        sql.gsub!(WHERE_BRACKET){ "where #{$1} #{$2}" } while WHERE_BRACKET =~ sql
+        sql.gsub!(/\sis\s/i, ' = ')
+        sql.gsub!(SPACE_IN_BRACKET){ "#{$1}(#{$2}#{$3})" } while SPACE_IN_BRACKET =~ sql
+        
         context = {:sql => sql}.update(options ||  {})
         process_parse_select(context)
         return context[:result]
       end
       
       def process_parse_select(context)
+        escape_schema_name(context)
         escape_field_name(context)
         escape_limit(context)
         context[:result] = retry_parse(context[:sql], context)
         unescape_limit(context)
         unescape_field_name(context)
+        unescape_schema_name(context)
         gsub_retry_marks(context)
       end
       
       def retry_parse(sql, context)
+        puts "retry_parse #{sql}"
         result = @select_parser.parse(sql).to_hash(context)
         return result
       rescue
-        retry_sql = sql.sub( /\(([^()]*?)\)/ ){'_BB_' << $1.gsub(/\s/, '').gsub('.', '_DT_') << '_BE_'}
+        retry_sql = sql.sub( /([\d\w])\(([^()]*?)\)/ ){$1.dup << '_BB_' << $2.gsub(/\s/, '').gsub("'", '_SQ_').gsub('.', '_DT_') << '_BE_'}
         raise if retry_sql == sql
         context[:gsub_retry_marks] = true
         return retry_parse(retry_sql, context)
       end
       
       def gsub_retry_marks(context)
-        gsub_retry_marks_impl(context[:result], context) if context[:gsub_retry_marks]
+        return unless context[:gsub_retry_marks]
+        walk_around_tree(context[:result], context) do |result, k, v|
+          result[k] = gsub_marks(v) if v.is_a?(String)
+        end
       end
       
-      def gsub_retry_marks_impl(result, context)
+      private
+      def walk_around_tree(result, context, &proc)
         if result.is_a?(Hash)
           result.each do |k, v|
             if v.is_a?(Hash) or v.is_a?(Array)
-              gsub_retry_marks_impl(v, context)
-            elsif v.is_a?(String)
-              result[k] = gsub_marks(v)
+              walk_around_tree(v, context, &proc)
+            else
+              proc.call(result, k, v)
             end
           end
         elsif result.is_a?(Array)
           result.each do |v|
             if v.is_a?(Hash) or v.is_a?(Array)
-              gsub_retry_marks_impl(v, context)
+              walk_around_tree(v, context, &proc)
             end
           end
         end
@@ -141,6 +154,7 @@ module ActiveRecord
         str.gsub('_BB_', '(').gsub('_BE_', ')').gsub('_CM_', ',').gsub('_DT_', '.').gsub('_SQ_', "'").gsub('_AL_', '*')
       end
       
+      public
       ALL_IN_BRACKET = /\((.*?)\)/
       
       def escape_field_name(context)
@@ -207,6 +221,19 @@ module ActiveRecord
         end
       end
       
+      FROM_CLAUSE = /from(.*?)\s(left|right|inner|outer|join|where|group by|order by|having|union|limit|$)/i
+      JOIN_CLAUSE = /join(.*?)\s(on|left|right|inner|outer|join|where|group by|order by|having|union|limit|$)/i
+      def escape_schema_name(context)
+        sql = context[:sql]
+        sql.gsub!(FROM_CLAUSE){w = $2; "from " << $1.gsub('.', '_DT_') << " " << (w || '')}
+        sql.gsub!(JOIN_CLAUSE){w = $2; "join " << $1.gsub('.', '_DT_') << " " << (w || '')}
+      end
+      
+      def unescape_schema_name(context)
+        walk_around_tree(context[:result], context) do |result, k, v|
+          result[k] = v.gsub('_DT_', '.') if k == :table
+        end
+      end
       
       
       def parse_insert(sql, options = nil)
