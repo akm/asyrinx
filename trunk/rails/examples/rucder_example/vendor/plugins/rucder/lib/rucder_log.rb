@@ -47,32 +47,23 @@ class RucderLog < ActiveRecord::Base
     }.reverse.map{|line|line.gsub(/:\d*:in /, ':in ')}
   end
   
-  FILTER_DENY = Regexp.union(
-    /\/vendor\/plugins\/rucder/,
-    /\/vendor\/rails\/actionmailer/,
-    /\/vendor\/rails\/actionpack/,
-    /\/vendor\/rails\/actionwebservice/,
-    /\/vendor\/rails\/activerecord/,
-    /\/vendor\/rails\/activesupport/,
-    /\/vendor\/rails\/railities/,
-    /\/vendor\/rails\/rails/,
-    /\/gems\/actionmailer/,
-    /\/gems\/actionpack/,
-    /\/gems\/actionwebservice/,
-    /\/gems\/activerecord/,
-    /\/gems\/activesupport/,
-    /\/gems\/railities/,
-    /\/gems\/rails/,
-    /\/lib\/commands\/servers/,
-    /\/benchmark.rb/,
-    /\/thread.rb/,
-    /\/pstore.rb/,
-    /\/cgi\/session.rb/,
-    /\/webrick\//,
-    /\/gems\/mongrel/,
-    /\/rubygems\/custom_require.rb/,
-    /^script\/server/
-  )
+  RAILS_PACKAGES = %w(actionmailer actionpack actionwebservice activerecord activesupport railities rails)
+
+  FILTER_DENY = Regexp.union( *(
+    RAILS_PACKAGES.map{|package| "\/vendor\/plugins\/#{package}"} +
+    RAILS_PACKAGES.map{|package| "/gems/#{package}"} + [
+      "/vendor/rails/",
+      "/vendor/plugins/rucder/",
+      "/lib/commands/servers",
+      "/benchmark.rb",
+      "/thread.rb",
+      "/pstore.rb",
+      "/cgi\/session.rb",
+      "/webrick/",
+      "/gems/mongrel",
+      "/rubygems/custom_require.rb",
+      /^script\/server/
+  ] ) )
   
   def self.match_line(line)
     return !(FILTER_DENY =~ line)
