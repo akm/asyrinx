@@ -1,4 +1,6 @@
-class RucderController < ApplicationController
+class RucderController < ActionController::Base
+  
+  layout 'rucder'
   
   before_filter :begin_rucder_service
   after_filter :end_rucder_service
