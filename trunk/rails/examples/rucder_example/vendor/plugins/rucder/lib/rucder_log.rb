@@ -49,6 +49,13 @@ class RucderLog < ActiveRecord::Base
   
   FILTER_DENY = Regexp.union(
     /\/vendor\/plugins\/rucder/,
+    /\/vendor\/rails\/actionmailer/,
+    /\/vendor\/rails\/actionpack/,
+    /\/vendor\/rails\/actionwebservice/,
+    /\/vendor\/rails\/activerecord/,
+    /\/vendor\/rails\/activesupport/,
+    /\/vendor\/rails\/railities/,
+    /\/vendor\/rails\/rails/,
     /\/gems\/actionmailer/,
     /\/gems\/actionpack/,
     /\/gems\/actionwebservice/,
@@ -56,10 +63,13 @@ class RucderLog < ActiveRecord::Base
     /\/gems\/activesupport/,
     /\/gems\/railities/,
     /\/gems\/rails/,
-    /\/gems\/mongrel/,
     /\/lib\/commands\/servers/,
     /\/benchmark.rb/,
     /\/thread.rb/,
+    /\/pstore.rb/,
+    /\/cgi\/session.rb/,
+    /\/webrick\//,
+    /\/gems\/mongrel/,
     /\/rubygems\/custom_require.rb/,
     /^script\/server/
   )
