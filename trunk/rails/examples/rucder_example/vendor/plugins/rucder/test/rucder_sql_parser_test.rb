@@ -73,6 +73,30 @@ class RucderSqlParserTest < Test::Unit::TestCase
 
     assert_equal( {
         :select => [
+          {:name => 'sum(mgpnt)', :as => 'sum_mgpnt'},
+        ],
+        :from => {:table => 'some_schema.some_table'},
+        :where => {
+          :left => {
+            :left => {:left=>{:name=>"ownerno"},
+             :right=>{:lit=>"1"},
+             :op=>:"="},
+            :right => {:left=>{:name=>"itemno"},
+             :right=>{:lit=>"'99999'"},
+             :op=>:"="},
+            :op=>:'and'
+          },
+          :right => {:left=>{:name=>"userno"},
+           :right=>{:lit=>"111"},
+           :op=>:"="},
+          :op=>:'and'
+        }
+      },
+      parser.call("SELECT sum(mgpnt) AS sum_mgpnt FROM some_schema.some_table WHERE (ownerno = 1 and itemno = '99999' and userno = 111)") )
+ 
+
+    assert_equal( {
+        :select => [
           {:name => 'user_id'},
           {:name => 'count(*)', :as => 'item_count'},
           {:name => 'max(lineno)', :as => 'max_lineno'}
@@ -271,10 +295,16 @@ class RucderSqlParserTest < Test::Unit::TestCase
     assert_equal( {
         :select => ['*'],
         :from => {:table => 'user_options'},
-        :where=>
-          {:left=>{:name=>"((user_options.user_id)"},
-           :right=>{:name=>"(10795)AND(user_type_cdisnull))"},
-           :op=>:"="},
+        :where=> {
+          :left=> {
+            :left=>{:owner=>"user_options", :col =>"user_id"},
+            :right=>{:lit=>"10795"},
+            :op=>:"="},
+          :right => {
+            :left=>{:name=>"user_type_cd"},
+            :right=>{:name=>"null"},
+            :op=>:"="},
+          :op=>:"and"},
         :orderby => [{:expr => {:name => 'created_at'}}]
       }, parser.call(sql) )
       
@@ -294,10 +324,16 @@ class RucderSqlParserTest < Test::Unit::TestCase
         :rel => {
           :select => ['*'],
           :from => {:table => 'user_options'},
-          :where=>
-            {:left=>{:name=>"((user_options.user_id)"},
-             :right=>{:name=>"(10795)AND(user_type_cdisnull))"},
-             :op=>:"="},
+          :where=> {
+            :left=> {
+              :left=>{:owner=>"user_options", :col =>"user_id"},
+              :right=>{:lit=>"10795"},
+              :op=>:"="},
+            :right => {
+              :left=>{:name=>"user_type_cd"},
+              :right=>{:name=>"null"},
+              :op=>:"="},
+            :op=>:"and"},
           :orderby => [{:expr => {:name => 'created_at'}}]
         }
       }, parser.call(sql) )
@@ -323,8 +359,6 @@ class RucderSqlParserTest < Test::Unit::TestCase
              :op=>:"="}
         }
       }, parser.call(sql) )
-  
-  
   end
 
 end
