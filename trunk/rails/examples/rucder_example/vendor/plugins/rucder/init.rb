@@ -8,4 +8,11 @@ if ENV["RAILS_ENV"] == "development"
     include ActiveRecord::Rucder::DatabaseStatements
   end
   conn.rucder_enabled = true
+  
+  directory = File.dirname(__FILE__)
+  config.controller_paths << File.join(directory, 'app', 'controllers')
+  $LOAD_PATH << File.join(directory, 'app', 'controllers')
+  $LOAD_PATH << File.join(directory, 'app', 'models')
+  $LOAD_PATH << File.join(directory, 'app', 'helpers')
+  
 end
