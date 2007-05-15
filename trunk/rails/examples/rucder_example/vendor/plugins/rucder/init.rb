@@ -9,10 +9,10 @@ if ENV["RAILS_ENV"] == "development"
   end
   conn.rucder_enabled = true
   
-  directory = File.dirname(__FILE__)
-  config.controller_paths << File.join(directory, 'app', 'controllers')
   $LOAD_PATH << File.join(directory, 'app', 'controllers')
-  $LOAD_PATH << File.join(directory, 'app', 'models')
   $LOAD_PATH << File.join(directory, 'app', 'helpers')
   
+  config.controller_paths << File.join(directory, 'app', 'controllers')
+  require 'rucder_controller'
+  RucderController.template_root = File.join(directory, 'app', 'views')
 end
