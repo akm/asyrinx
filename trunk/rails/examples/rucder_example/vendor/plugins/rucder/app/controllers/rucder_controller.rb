@@ -43,4 +43,16 @@ class RucderController < ActionController::Base
     render :text => '<ul>' << trace_lines.map{|tl|"<li>#{tl.line.strip}</li>"}.join('') << '</ul>'
   end
   
+  def complete_sqls
+    logs = RucderLog.find(:all, 
+      :conditions => ["sql like ?", "%#{params[:sql]}%"], :order => 'sql asc', :group => 'sql')
+    render :text => '<ul>' << logs.map{|log|"<li>#{log.sql.strip}</li>"}.join('') << '</ul>'
+  end
+  
+  def ajax_show_table
+    table = RucderTable.find(params[:id])
+    @logs = RucderLog.find(:all, RucderLog.options_to_find(:table => table.name))
+    render :partial => 'logs'
+  end
+  
 end
