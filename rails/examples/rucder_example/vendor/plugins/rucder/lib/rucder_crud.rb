@@ -1,10 +1,10 @@
 class RucderCrud < ActiveRecord::Base
   belongs_to :table, :class_name => "RucderTable", :foreign_key => "table_id"
-  belongs_to :log, :class_name => "RucderLog", :foreign_key => "rucder_log_id"
+  belongs_to :log, :class_name => "RucderLog", :foreign_key => "log_id"
 
   TYPE_ABBREVIATIONS = {'c' => 'create', 'r' => 'read', 'u' => 'update', 'd' => 'delete'}
 
-  INNER_JOIN_LOGS_TO_CRUDS = "inner join rucder_cruds on rucder_cruds.rucder_log_id = rucder_log.id"
+  INNER_JOIN_LOGS_TO_CRUDS = "inner join rucder_cruds on rucder_cruds.log_id = rucder_log.id"
   INNER_JOIN_CRUDS_TO_TABLES = "inner join rucder_tables on rucder_tables.id = rucder_cruds.table_id"
 
   def self.service(log, parsed_sql)

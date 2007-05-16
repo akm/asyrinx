@@ -37,4 +37,10 @@ class RucderController < ActionController::Base
     render :text => '<ul>' << tables.map{|t|"<li>#{t.name}</li>"}.join('') << '</ul>'
   end
   
+  def complete_trace_lines
+    trace_lines = RucderTraceLine.find(:all, 
+      :conditions => ["line like ?", "%#{params[:trace_line]}%"], :order => 'line asc')
+    render :text => '<ul>' << trace_lines.map{|tl|"<li>#{tl.line.strip}</li>"}.join('') << '</ul>'
+  end
+  
 end

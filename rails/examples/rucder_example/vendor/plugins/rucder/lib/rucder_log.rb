@@ -1,6 +1,6 @@
 require 'rucder_sql_parser'
 class RucderLog < ActiveRecord::Base
-  has_many :cruds, :dependent => :destroy, :class_name => "RucderCrud", :foreign_key => "rucder_log_id", :order => 'name asc, table_id asc'
+  has_many :cruds, :dependent => :destroy, :class_name => "RucderCrud", :foreign_key => "log_id", :order => 'name asc, table_id asc'
 
   def self.service_begin
     @rucder_in_service = true
@@ -25,7 +25,11 @@ class RucderLog < ActiveRecord::Base
         logger.debug("\n" * 10)
       end
       key_sql = parsed ? parsed.inspect : nil
-      key_caller = filter_caller.join("\n")
+      trace_lines = filter_caller
+      trace_lines.each do |trace_line|
+        RucderTraceLine.find_or_create_by_line(trace_line.strip)
+      end
+      key_caller = trace_lines.join("\n")
       if key_sql
         log = RucderLog.find(:first, :conditions => [
           "parsed_sql = ? and stack_trace = ?", key_sql, key_caller
@@ -39,7 +43,6 @@ class RucderLog < ActiveRecord::Base
         log = RucderLog.create(:sql => sql, :parsed_sql => key_sql, :stack_trace => key_caller)
         if parsed
           RucderCrud.service(log, parsed)
-          RucderIrun.service(log, parsed)
         end
       end
     ensure
@@ -80,18 +83,19 @@ class RucderLog < ActiveRecord::Base
   end
   
   
-  INNER_JOIN_LOGS_TO_CRUDS = "inner join rucder_cruds on rucder_cruds.rucder_log_id = rucder_log.id"
+  INNER_JOIN_LOGS_TO_CRUDS = "inner join rucder_cruds on rucder_cruds.log_id = rucder_log.id"
   INNER_JOIN_CRUDS_TO_TABLES = "inner join rucder_tables on rucder_tables.id = rucder_cruds.table_id"
   
   def self.options_to_find(params)
     table = (params[:table] || '').downcase
     types = (params[:types] || '').downcase
+    trace_line = (params[:trace_line] || '').strip
     joins = []
     where = []
     parameters = []
     unless table.blank?
       if table == "null"
-        log_ids = RucderLog.connection.select_values("select rucder_logs.id from rucder_logs left outer join rucder_cruds on rucder_cruds.rucder_log_id = rucder_logs.id having count(rucder_cruds.id) < 1")
+        log_ids = RucderLog.connection.select_values("select rucder_logs.id from rucder_logs left outer join rucder_cruds on rucder_cruds.log_id = rucder_logs.id having count(rucder_cruds.id) < 1")
         where << "rucder_logs.id in (?)"
         parameters << log_ids.compact.map{|id|id.to_i}
       else
@@ -110,6 +114,10 @@ class RucderLog < ActiveRecord::Base
         parameters << types.split(//).map{|ch|RucderCrud::TYPE_ABBREVIATIONS[ch]}.compact
       end
       joins << INNER_JOIN_LOGS_TO_CRUDS unless joins.include?(INNER_JOIN_LOGS_TO_CRUDS)
+    end
+    unless trace_line.blank?
+      where << "rucder_logs.stack_trace like ?"
+      parameters << "%#{trace_line}%"
     end
     
     result = {

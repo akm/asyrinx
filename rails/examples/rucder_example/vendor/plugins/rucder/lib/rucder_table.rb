@@ -1,6 +1,5 @@
 class RucderTable < ActiveRecord::Base
-  has_many :columns, :dependent => :destroy, :class_name => "RucderColumn", :foreign_key => "table_id"
-  has_many :cruds, :dependent => :destroy, :class_name => "RucderCrud", :foreign_key => "table_id", :order => 'name asc, rucder_log_id asc'
+  has_many :cruds, :dependent => :destroy, :class_name => "RucderCrud", :foreign_key => "table_id", :order => 'name asc, log_id asc'
 
   INNER_JOIN_TABLES_TO_CRUDS = "inner join rucder_tables on rucder_tables.id = rucder_cruds.table_id"
 
