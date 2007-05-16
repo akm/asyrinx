@@ -26,7 +26,6 @@ class RucderTable < ActiveRecord::Base
     end
     
     result = {
-      :include => {:cruds => :log},
       :order => 'rucder_tables.name asc'
     }
     result[:conditions] = [where.join(' and ')]+ parameters unless where.empty?
