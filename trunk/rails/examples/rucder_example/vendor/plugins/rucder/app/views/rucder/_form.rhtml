@@ -1,6 +1,7 @@
 <form method="GET" action="/<%= params[:controller] %>/<%= params[:action] %>">
+<div>
     <label for="field_table">table</label>
-    <input type="text" id="field_table" name="table" value="<%=h params[:table] %>" />
+    <input type="text" id="field_table" name="table" value="<%=h params[:table] %>" size="50"/>
     <div id="field_table_auto_complete" class="auto_complete"></div>
     <%= auto_complete_field("field_table", :min_chars => 1, :url=>{:action=>"complete_tables"}) %>
     <%- 
@@ -12,6 +13,7 @@
     <input type="checkbox" class="text_check" id="check_update" value="u" <%= checked_attr if types.include?('u') %>/> <label for="check_update">Update</label>
     <input type="checkbox" class="text_check" id="check_delete" value="d" <%= checked_attr if types.include?('d') %>/> <label for="check_delete">Delete</label>
     <input type="hidden" id="checked_values" name="types" value="<%= types %>" />
+</div>
 <script>
 (function(){
     var checks = document.getElementsByClassName("text_check");
@@ -23,5 +25,11 @@
 })();
 </script>
 
-    
+<div>
+    <label for="field_trace_line">trace</label>
+    <input type="text" id="field_trace_line" name="trace_line" value="<%=h params[:trace_line] %>" size="100"/>
+    <div id="field_trace_line_auto_complete" class="auto_complete"></div>
+    <%= auto_complete_field("field_trace_line", :min_chars => 0, :url=>{:action=>"complete_trace_lines"}) %>
+    <input type="submit" value="  find  "/>
+</div>
 </form>
