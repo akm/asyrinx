@@ -7,7 +7,22 @@ if ENV["RAILS_ENV"] == "development"
   conn.class.class_eval do
     include ActiveRecord::Rucder::DatabaseStatements
   end
-  conn.rucder_enabled = true
+
+  if caller.any?{|line| /(\(irb\)|\/irb)/ =~ line}
+    conn.rucder_enabled = false
+    puts <<EOS
+rucder is disabled but loaded.
+If you'd like to be enabled, type following:
+ActiveRecord::Base.connection.rucder_enabled = true
+EOS
+  else
+    conn.rucder_enabled = true
+    puts <<EOS
+rucder is loaded and enabled.
+If you'd like to be disabled, write following line after Rails::Initializer.run block in config/environment.rb:
+ActiveRecord::Base.connection.rucder_enabled = false
+EOS
+  end
   
   $LOAD_PATH << File.join(directory, 'app', 'controllers')
   $LOAD_PATH << File.join(directory, 'app', 'helpers')

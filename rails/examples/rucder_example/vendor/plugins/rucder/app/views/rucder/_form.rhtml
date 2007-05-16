@@ -1,0 +1,24 @@
+<form method="GET" action="/<%= params[:controller] %>/<%= params[:action] %>">
+    <label for="field_table">table</label><input type="text" id="field_table" name="table" value="<%=h params[:table] %>" />
+    <%- 
+        checked_attr = 'checked="checked"' 
+        types = (params[:types] || 'crud').downcase
+    -%>
+    <input type="checkbox" class="text_check" id="check_create" value="c" <%= checked_attr if types.include?('c') %> /> <label for="check_create">Create</label>
+    <input type="checkbox" class="text_check" id="check_read" value="r" <%= checked_attr if types.include?('r') %>/> <label for="check_read">Read</label>
+    <input type="checkbox" class="text_check" id="check_update" value="u" <%= checked_attr if types.include?('u') %>/> <label for="check_update">Update</label>
+    <input type="checkbox" class="text_check" id="check_delete" value="d" <%= checked_attr if types.include?('d') %>/> <label for="check_delete">Delete</label>
+    <input type="hidden" id="checked_values" name="types" value="<%= types %>" />
+<script>
+(function(){
+    var checks = document.getElementsByClassName("text_check");
+    checks.each(function(checkbox){
+      Event.observe(checkbox, "click", function(){
+        $("checked_values").value = checks.collect(function(check){return check.checked ? check.value : "";}).join("");
+      });
+    });
+})();
+</script>
+
+    
+</form>

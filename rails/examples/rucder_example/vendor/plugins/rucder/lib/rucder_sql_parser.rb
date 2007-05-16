@@ -71,6 +71,7 @@ module ActiveRecord
       
       def call(sql, options = nil)
         sql = sql.gsub(/\n/, '').strip
+        sql.gsub!('`', '')
         @select_parser ||= make(relation)
         case(sql)
         when /^select /i
@@ -91,7 +92,6 @@ module ActiveRecord
       WHERE_BRACKET = /where\s*\(\s*([^()]*)\s*\)\s*(group by|order by|having|union|limit|$|\z)/i
       
       def parse_select(sql, options = nil)
-        sql = sql.dup.gsub('`', '')
         sql.gsub!(IGNOREABLE_BRACKET){ "#{$1}#{$2}" } while IGNOREABLE_BRACKET =~ sql
         sql.gsub!(WHERE_BRACKET){ "where #{$1} #{$2}" } while WHERE_BRACKET =~ sql
         sql.gsub!(/\sis\s/i, ' = ')

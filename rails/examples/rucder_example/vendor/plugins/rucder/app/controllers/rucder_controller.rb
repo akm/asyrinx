@@ -20,7 +20,15 @@ class RucderController < ActionController::Base
   end
   
   def tables
-    @tables = RucderTable.find(:all, :order => 'rucder_tables.name asc')
+    @tables = RucderTable.find(:all, RucderTable.options_to_find(params))
+  end
+  
+  def logs
+    @logs = RucderLog.find(:all, RucderLog.options_to_find(params))
+  end
+  
+  def show_log
+    @log = RucderLog.find(params[:id])
   end
   
 end
