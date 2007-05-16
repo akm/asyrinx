@@ -5,10 +5,22 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
   <title><%= params[:controller] %> <%= params[:action] %></title>
+  <%= auto_complete_stylesheet %>
   <%= stylesheet_link_tag 'scaffold' %>
   <%= javascript_include_tag :defaults %>
+<style type="text/css">
+div.rucder_menu {
+  margin: 0.5em;
+}
+div.rucder_menu a{ margin: 0em 0.5em;}
+</style>
 </head>
 <body>
+
+<div class="rucder_menu">
+<a href="/rucder/tables">&#187;tables</a>
+<a href="/rucder/logs">&#187;logs</a>
+</div>
 
 <%= yield  %>
 

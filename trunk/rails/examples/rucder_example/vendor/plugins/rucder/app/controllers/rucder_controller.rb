@@ -20,7 +20,8 @@ class RucderController < ActionController::Base
   end
   
   def tables
-    @tables = RucderTable.find(:all, RucderTable.options_to_find(params))
+    @tables = RucderTable.find(:all, 
+      RucderTable.options_to_find(params).merge(:include => {:cruds => :log}))
   end
   
   def logs
@@ -29,6 +30,11 @@ class RucderController < ActionController::Base
   
   def show_log
     @log = RucderLog.find(params[:id])
+  end
+  
+  def complete_tables
+    tables = RucderTable.find(:all, RucderTable.options_to_find(params))
+    render :text => '<ul>' << tables.map{|t|"<li>#{t.name}</li>"}.join('') << '</ul>'
   end
   
 end

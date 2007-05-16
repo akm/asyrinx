@@ -1,5 +1,8 @@
 <form method="GET" action="/<%= params[:controller] %>/<%= params[:action] %>">
-    <label for="field_table">table</label><input type="text" id="field_table" name="table" value="<%=h params[:table] %>" />
+    <label for="field_table">table</label>
+    <input type="text" id="field_table" name="table" value="<%=h params[:table] %>" />
+    <div id="field_table_auto_complete" class="auto_complete"></div>
+    <%= auto_complete_field("field_table", :min_chars => 1, :url=>{:action=>"complete_tables"}) %>
     <%- 
         checked_attr = 'checked="checked"' 
         types = (params[:types] || 'crud').downcase
