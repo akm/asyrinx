@@ -89,6 +89,7 @@ class RucderLog < ActiveRecord::Base
   def self.options_to_find(params)
     table = (params[:table] || '').downcase
     types = (params[:types] || '').downcase
+    sql = (params[:sql] || '').downcase
     trace_line = (params[:trace_line] || '').strip
     joins = []
     where = []
@@ -118,6 +119,10 @@ class RucderLog < ActiveRecord::Base
     unless trace_line.blank?
       where << "rucder_logs.stack_trace like ?"
       parameters << "%#{trace_line}%"
+    end
+    unless sql.blank?
+      where << "rucder_logs.sql like ?"
+      parameters << "%#{sql}%"
     end
     
     result = {

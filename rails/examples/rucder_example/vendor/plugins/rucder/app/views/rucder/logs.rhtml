@@ -1,26 +1,2 @@
 <%= render :partial => 'form' %>
-
-<table>
-    <thead>
-        <tr>
-            <th>log_id</th>
-            <th>sql</th>
-            <th>CRUD</th>
-            <th>&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
-<%- @logs.each do |log| -%>
-    <tr valign="top">
-        <td><%=h log.id %></td>
-        <td><%=h log.sql %></td>
-        <td nowrap="nowrap">
-            <%- log.cruds.each do |crud| -%>
-                <div><%= crud.name %>: <%= crud.table.name %></div>
-            <%- end -%>
-        </td>
-        <td nowrap="nowrap"><a href="/rucder/show_log/<%= log.id %>">詳細</a></td>
-    </tr>
-<%- end -%>
-    </tbody>
-</table>
+<%= render :partial => 'logs' %>

@@ -30,6 +30,12 @@
     <input type="text" id="field_trace_line" name="trace_line" value="<%=h params[:trace_line] %>" size="100"/>
     <div id="field_trace_line_auto_complete" class="auto_complete"></div>
     <%= auto_complete_field("field_trace_line", :min_chars => 0, :url=>{:action=>"complete_trace_lines"}) %>
+</div>
+<div>
+    <label for="field_sql">sql</label>
+    <input type="text" id="field_sql" name="sql" value="<%=h params[:sql] %>" size="100"/>
+    <div id="field_sql_auto_complete" class="auto_complete"></div>
+    <%= auto_complete_field("field_sql", :min_chars => 0, :url=>{:action=>"complete_sqls"}) %>
     <input type="submit" value="  find  "/>
 </div>
 </form>
