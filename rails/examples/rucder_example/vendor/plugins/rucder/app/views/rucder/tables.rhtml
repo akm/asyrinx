@@ -10,11 +10,11 @@
 <%- @tables.each do |table| -%>
         <tr valign="top">
             <td><%= table.id %></td>
-            <td><a href="javascript:void(0)" class="table_link" id='row_main_<%= table.id %>'><%=h table.name %></a></td>
+            <td><a href="javascript:void(0)" class="table_link" id='row_table_<%= table.id %>'><%=h table.name %></a></td>
         </tr>
-        <tr style="display:none;" id='row_detail_<%= table.id %>'>
+        <tr style="display:none;" id='row_table_detail_<%= table.id %>'>
             <td></td>
-            <td><div id='row_content_<%= table.id %>'></div></td>
+            <td><div id='row_table_content_<%= table.id %>'></div></td>
         </tr>
 <%- end -%>
     </tbody>
@@ -24,9 +24,10 @@
     var table_links = document.getElementsByClassName("table_link");
     table_links.each(function(table_link){
         Event.observe(table_link, "click", function(){
-            var table_id = table_link.id.gsub(/row_main_/, "")
-            Element.show("row_detail_" + table_id);
-            new Ajax.Updater("row_content_" + table_id, "/rucder/ajax_show_table/" + table_id);
+            var table_id = table_link.id.gsub(/row_table_/, "")
+            Element.show("row_table_detail_" + table_id);
+            var url = "/rucder/ajax_show_table/" + table_id;
+            new Ajax.Updater("row_table_content_" + table_id,  url, {evalScripts:true});
         });
     });
 })();

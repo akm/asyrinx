@@ -114,7 +114,6 @@ module ActiveRecord
       end
       
       def retry_parse(sql, context)
-        puts "retry_parse #{sql}"
         result = @select_parser.parse(sql).to_hash(context)
         return result
       rescue

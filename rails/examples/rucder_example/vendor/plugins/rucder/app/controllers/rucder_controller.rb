@@ -16,7 +16,7 @@ class RucderController < ActionController::Base
   
   public
   def index
-    redirect_to :action => 'tables'
+    redirect_to :action => 'logs'
   end
   
   def tables
@@ -53,6 +53,11 @@ class RucderController < ActionController::Base
     table = RucderTable.find(params[:id])
     @logs = RucderLog.find(:all, RucderLog.options_to_find(:table => table.name))
     render :partial => 'logs'
+  end
+  
+  def ajax_show_log
+    log = RucderLog.find(params[:id])
+    render :partial => 'show_log', :locals => {:log => log, :hide_id => true, :hide_sql => true, :hide_crud => true}
   end
   
 end

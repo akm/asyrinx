@@ -4,9 +4,9 @@ class CreateRucderTables < ActiveRecord::Migration
       t.column :name, :string, :null => false
     end
     create_table :rucder_logs do |t|
-      t.column :sql, :text
-      t.column :parsed_sql, :text
-      t.column :stack_trace, :text
+      t.column :sql, :text # :string, :limit => 4000 # for Oracle
+      t.column :parsed_sql, :text # :string, :limit => 4000 # for Oracle
+      t.column :stack_trace, :text # :string, :limit => 4000 # for Oracle
       t.column :created_at, :datetime
     end
     create_table :rucder_trace_lines do |t|
