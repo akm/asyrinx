@@ -1,0 +1,33 @@
+<%- log ||= @log -%>
+<%- hide_id ||= nil -%>
+<%- hide_sql ||= nil -%>
+<%- hide_crud ||= nil -%>
+<%- unless hide_id -%>
+    <div>id: <%=h log.id %></div>
+<%- end -%>
+<%- unless hide_sql -%>
+    <div>SQL: <%=h log.sql %></div>
+<%- end -%>
+<%- unless hide_crud -%>
+    <%- log.cruds.each do |crud| -%>
+        <div><%= crud.name %>: <%= crud.table.name %></div>
+    <%- end -%>
+<%- end -%>
+<div class="stack_trace">
+    <%- log.stack_trace.each do |line| -%>
+    <a href="/rucder/logs?trace_line=<%= CGI.escape(line.strip) %>">
+        <%- param_line = params[:trace_line] ? params[:trace_line].strip : nil -%>
+        <%- if !param_line.blank? and line.include?(param_line) -%>
+            <%- parts = (" " << line).split(param_line) -%>
+            <%- parts.each_with_index do |part, index| -%>
+                <%=h part %>
+                <%- if index == 0 or index != parts.length - 1 -%>
+                    <span class="matching"><%=h param_line %></span>
+                <%- end -%>
+            <%- end -%>
+        <%- else -%>
+            <%=h line.strip %>
+        <%- end -%>
+    </a>
+    <%- end -%>
+</div>

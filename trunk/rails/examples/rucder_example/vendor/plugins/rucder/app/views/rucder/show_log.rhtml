@@ -1,7 +1,1 @@
-<%- log ||= @log -%>
-<div>id: <%=h log.id %></div>
-<div>SQL: <%=h log.sql %></div>
-<%- log.cruds.each do |crud| -%>
-    <div><%= crud.name %>: <%= crud.table.name %></div>
-<%- end -%>
-<pre><%=h log.stack_trace %></pre>
+<%= render :partial => 'show_log' %>

@@ -11,7 +11,20 @@
 <%- @logs.each do |log| -%>
     <tr valign="top">
         <td><%=h log.id %></td>
-        <td><%=h log.sql %></td>
+        <td><a href="javascript:void(0)" class="log_link" id='row_log_<%= log.id %>'>
+            <%- param_sql = params[:sql] ? params[:sql].strip.downcase : nil -%>
+            <%- if !param_sql.blank? and log.sql.downcase.include?(param_sql) -%>
+                <%- parts = (" " << log.sql).split( /#{Regexp.escape(param_sql)}/i) -%>
+                <%- parts.each_with_index do |part, index| -%>
+                    <%=h part %>
+                    <%- if index == 0 or index != parts.length - 1 -%>
+                        <span class="matching"><%=h param_sql %></span>
+                    <%- end -%>
+                <%- end -%>
+            <%- else -%>
+                <%=h log.sql %>
+            <%- end -%>
+        </a></td>
         <td nowrap="nowrap">
             <%- log.cruds.each do |crud| -%>
                 <div><%= crud.name %>: <%= crud.table.name %></div>
@@ -19,6 +32,26 @@
         </td>
         <td nowrap="nowrap"><a href="/rucder/show_log/<%= log.id %>">詳細</a></td>
     </tr>
+    <tr style="display:none;" id='row_log_detail_<%= log.id %>'>
+        <td></td>
+        <td colspan="3"><div id='row_log_content_<%= log.id %>'></div></td>
+    </tr>
 <%- end -%>
     </tbody>
 </table>
+<script>
+(function(){
+    var log_links = document.getElementsByClassName("log_link");
+    log_links.each(function(log_link){
+        Event.observe(log_link, "click", function(){
+            var log_id = log_link.id.gsub(/row_log_/, "")
+            Element.show("row_log_detail_" + log_id);
+            var url = "/rucder/ajax_show_log/" + log_id;
+            if ($("field_trace_line") != null){
+                url += "?trace_line=" + encodeURIComponent($("field_trace_line").value);
+            }
+            new Ajax.Updater("row_log_content_" + log_id, url, {evalScripts:true});
+        });
+    });
+})();
+</script>
