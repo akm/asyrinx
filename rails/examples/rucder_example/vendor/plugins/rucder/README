@@ -47,3 +47,9 @@ end
 rake db:migrate
 
 That's all!
+
+
+
+= how to use =
+Access to http://localhost:3000/rucder
+You can check relations between table's CRUD, SQLs and stacktraces.
