@@ -6,6 +6,16 @@ class RucderController < ActionController::Base
   after_filter :end_rucder_service
   
   protected
+  
+  if /1\.1\./ =~ Rails::VERSION::STRING
+    before_filter :prepare_template_root
+    
+    def prepare_template_root
+      @template.base_path = File.join(File.dirname(__FILE__), '../views')
+      return true
+    end
+  end
+  
   def begin_rucder_service
     RucderLog.service_begin
   end
