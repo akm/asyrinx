@@ -1,6 +1,6 @@
 #!/bin/sh
 # setting RAILS_ROOT and change directory
-RAILS_ROOT="/home/rails/remigrator_example"
+RAILS_ROOT=/home/rails/okamoto_test/remigrator_example
 cd $RAILS_ROOT
 echo "migrate down... "
 eval rake db:migrate VERSION=0
