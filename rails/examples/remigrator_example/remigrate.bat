@@ -11,6 +11,7 @@ exit
 :migrate_down
 @echo "migrate down... "
 set VERSION=0
+set RAILS_ENV=test
 call rake db:migrate
 @echo "-----END-------"
 :end
@@ -18,6 +19,7 @@ call rake db:migrate
 :migrate_up
 @echo "migrate up... "
 set VERSION=
+set RAILS_ENV=test
 call rake db:migrate
 @echo "-----END-------"
 :end
