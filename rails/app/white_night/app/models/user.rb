@@ -1,5 +1,14 @@
 require 'digest/sha1'
 class User < ActiveRecord::Base
+
+  has_many :spots, :class_name => 'Spot', :foreign_key => 'creator_id'
+  
+  
+  
+  
+  
+  
+  
   # Virtual attribute for the unencrypted password
   attr_accessor :password
 

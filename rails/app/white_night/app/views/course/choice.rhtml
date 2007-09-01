@@ -1,22 +1,9 @@
-<%# see also http://www.geekpage.jp/web/google-maps-api/helloworld.php %>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>Google Maps JavaScript API Example - simple</title>
-    <script src="http://maps.google.com/maps?file=api&v=2&key=aaaaa"
-        type="text/javascript" charset="utf-8"></script>
-  </head>
-  <body>
-    <div id="map" style="width:800px; height:500px"></div>
-    <script type="text/javascript">
-    //<![CDATA[
-    if (GBrowserIsCompatible()) {
-      var map = new GMap2(document.getElementById("map"));
-      map.setCenter(new GLatLng(32.74207489599587, 129.87160563468933), 18);
-    }
-    //]]>
-    </script>
-  </body>
-
-</html>
+<div id="map" style="width:800px; height:500px"></div>
+<script type="text/javascript">
+//<![CDATA[
+if (GBrowserIsCompatible()) {
+  var map = new GMap2(document.getElementById("map"));
+  map.setCenter(new GLatLng(32.74207489599587, 129.87160563468933), 18);
+}
+//]]>
+</script>

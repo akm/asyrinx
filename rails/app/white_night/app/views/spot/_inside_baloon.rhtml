@@ -1,0 +1,5 @@
+<div id="spot_in_baloob_<%=h spot.latitude %>_<%=h spot.longitude %>">
+	<b><%=h spot.name %></b>
+	<p><%=h spot.comment %></p>
+	<%= link_to '削除', {:controller => 'spot', :action => 'destroy', :id => spot.id}, :method => 'post' %>
+</div>
