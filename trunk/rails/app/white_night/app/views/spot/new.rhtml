@@ -25,13 +25,24 @@
 
     GEvent.addListener(map, 'click', function(overlay, point) {
       if (point) {
-        document.getElementById("show_x").innerHTML = point.x;
-        document.getElementById("show_y").innerHTML = point.y;
+        document.getElementById("spot_longitude").value = point.x;
+        document.getElementById("spot_latitude").value = point.y;
       }
     });
-
     //]]>
     </script>
+
+	<%- form_tag do -%>
+		<div>
+			<label id='spot_name'>名前</label>
+			<%= text_field 'spot', 'name', :id => 'spot_name', :size => 80 %>
+			
+			<%= text_field 'spot', 'latitude', :class => 'numeric', :id => 'spot_latitude' %>
+			<%= text_field 'spot', 'longitude', :class => 'numeric', :id => 'spot_longitude' %>
+			<%= text_area 'spot', 'comment', :cols => 80, :rows => 4 %>
+		</div>
+		<input type="submit" value="                &raquo; 登録                ">
+	<%- end -%>
 
     <P id="show_x"></P>
     <P id="show_y"></P>
