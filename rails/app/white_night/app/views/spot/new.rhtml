@@ -8,19 +8,41 @@
 	end
 -%>
 
-  <%= map.to_html %>
-  <div style="width: 500px; height: 500px;">
+
+<script type="text/javascript">
+//<![CDATA[
+function customize_google_map(){
+	  var initialize_without_customize = window.onload;
+	  window.onload = function(){
+	  	initialize_without_customize();
+		
+		GEvent.addListener(google_map, 'click', function(overlay, point) {
+		      console.log("click overlay: " + overlay)
+		      console.log("click point: " + point)
+			  if (point) {
+		        $("spot_latitude").value = point.y;
+		        $("spot_longitude").value = point.x;
+		      }
+		    });
+	  }
+}
+//]]>
+</script>
+
+  <%= map.to_html{"customize_google_map();"} %>
+  <div style="width: 800px; height: 600px;">
     <%= map.div %>
   </div>
-
 
 <%- form_tag do -%>
 	<div>
 		<label id='spot_name'>名前</label>
 		<%= text_field 'spot', 'name', :id => 'spot_name', :size => 80 %>
-		<%= text_field 'spot', 'latitude', :class => 'numeric', :id => 'spot_latitude' %>
-		<%= text_field 'spot', 'longitude', :class => 'numeric', :id => 'spot_longitude' %>
+		<%= hidden_field 'spot', 'latitude', :class => 'numeric', :id => 'spot_latitude' %>
+		<%= hidden_field 'spot', 'longitude', :class => 'numeric', :id => 'spot_longitude' %>
+	</div>
+	<div>
 		<%= text_area 'spot', 'comment', :cols => 80, :rows => 4 %>
 	</div>
-	<input type="submit" value="                &raquo; 登録                ">
+	<input type="submit" value="                &raquo; スポットを追加                ">
 <%- end -%>
