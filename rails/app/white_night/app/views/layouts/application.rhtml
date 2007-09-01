@@ -4,11 +4,44 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>Google Maps JavaScript API Example - simple</title>
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+.user_header {
+	
+}
+.dotted_area {
+	border: 3px dotted #777; 
+	margin: 10px; 
+	padding: 5px;
+}
+
+li.menu{
+	list-style-type: '&#xBB;'
+}
+--></style>
+
 	<%= javascript_include_tag :defaults %>
   </head>
   <body>
-
-	<%= yield%>
+	
+	<table>
+		<tr>
+			<td colspan="2" align="right">
+				<%=h current_user.login %>
+				<br/>
+				<%= link_to 'ログアウト', :controller => 'account', :action => 'logout' %>
+			</td>
+		</tr>
+		<tr>
+			<td width="200" valign='top'>
+				<div style='scroll-x: auto; scroll-y: auto; max-height: 800px;'>
+				<%= render :partial => 'layouts/normal_menu' %>
+			</td>
+			<td  width="800">
+				<%= yield%>
+			</td>
+		</tr>
+	</table>
+		
   </body>
 
 </html>
