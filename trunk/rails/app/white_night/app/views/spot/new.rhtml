@@ -11,14 +11,14 @@
 
 <script type="text/javascript">
 //<![CDATA[
+var custom_google_map = null;
 function customize_google_map(){
 	  var initialize_without_customize = window.onload;
 	  window.onload = function(){
 	  	initialize_without_customize();
 		
+		// custom_google_map = google_map;
 		GEvent.addListener(google_map, 'click', function(overlay, point) {
-		      console.log("click overlay: " + overlay)
-		      console.log("click point: " + point)
 			  if (point) {
 		        $("spot_latitude").value = point.y;
 		        $("spot_longitude").value = point.x;
