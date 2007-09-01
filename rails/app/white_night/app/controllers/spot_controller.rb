@@ -5,7 +5,14 @@ class SpotController < ApplicationController
   end
   
   def new
-    render :action => 'new'
+    if request.get?
+      @spot = Spot.new
+      render :action => 'new'
+    else
+      @spot = Spot.new(params['spot'])
+      @spot.save!
+      render :action => 'new'
+    end
   end
 
 end
