@@ -1,0 +1,7 @@
+<%- @course.spots.each_with_index do |spot, index| -%>
+	<a href="javascript:void(0)" 
+		onclick="google_map.panTo(new GLatLng(<%=h spot.latitude %>, <%=h spot.longitude %>));">
+			&nbsp;&nbsp;&nbsp;__<%=h index %>__
+			<%=h spot.name %>
+	</a><br/>
+<%- end -%>

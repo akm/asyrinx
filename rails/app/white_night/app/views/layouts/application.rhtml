@@ -26,7 +26,7 @@ li.menu{
 	<table>
 		<tr>
 			<td colspan="2" align="right">
-				<%=h current_user.login %>
+				<%=h( (current_user && current_user.respond_to?(:login) ) ? current_user.login : nil) %>
 				<br/>
 				<%= link_to 'ログアウト', :controller => 'account', :action => 'logout' %>
 			</td>
@@ -34,7 +34,8 @@ li.menu{
 		<tr>
 			<td width="200" valign='top'>
 				<div style='scroll-x: auto; scroll-y: auto; max-height: 800px;'>
-				<%= render :partial => 'layouts/normal_menu' %>
+					<%= render :partial => (@menu_name || 'layouts/course_menu') %>
+				</div>
 			</td>
 			<td  width="800">
 				<%= yield%>

@@ -6,6 +6,7 @@ class CreateSpots < ActiveRecord::Migration
       t.column :longitude, :string, :limit => 100
       t.column :default_zoom, :string, :limit => 100
       t.column :comment, :text
+      t.column :course_id, :integer
       t.column :creator_id, :integer
       t.column :created_at, :time
       t.column :updated_at, :time

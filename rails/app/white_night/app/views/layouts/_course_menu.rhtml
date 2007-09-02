@@ -1,0 +1,15 @@
+<%- if current_user != :false -%>
+	<%- current_user.courses.each do |course|  -%>
+		<div>
+		<%- if @course && (@course.id == course.id) -%>
+			●<%= h course.name %>
+			<br/>
+			<%=  render :partial => 'course/ajax_spots' %>
+		<%- else -%>
+			<%= link_to "●#{course.name}", :controller => 'course', :action => 'choice', :id => course.id %>
+		<%- end -%>
+		</div>
+	<%- end -%>
+	<br/><br/><br/>
+	<%= link_to '新しいコースを追加してみませんか？', :controller => "course", :action => "new" %>
+<%- end -%>

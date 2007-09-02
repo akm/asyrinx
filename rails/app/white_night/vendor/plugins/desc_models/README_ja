@@ -1,0 +1,46 @@
+DescModels
+======
+テーブル定義書を生成するプラグインです。
+
+
+ドキュメント
+======
+http://qwik.jp/rbc/desc_models.html
+
+
+インストール
+=====
+ ruby script/plugin install http://rubybizcommons.rubyforge.org/svn/plugins/desc_models/trunk/desc_models/
+
+オプション
+=====
+- column_comments
+-- http://blog.inquirylabs.com/2006/11/20/column-comments-13/
+-- http://blog.inquirylabs.com/2006/09/01/updated-columncomments-plugin-v12/
+
+column_commentsプラグインを使うと、マイグレーションの中でカラムのコメントを
+設定することが可能になります。desc_modelsはDB上のコメントも表示可能です。
+
+
+
+
+
+使い方
+=====
+ruby script/serverでサーバーを起動して http://localhost:3000/desc_models/
+へブラウザでアクセスしてください。
+
+ロードされているモデルに対応するテーブルの定義が表示されます。
+
+まだロードされていないモデルをロードしたい場合は、画面上部の'reload models'をクリックしてください。
+
+ブラウザで印刷すると印刷用のCSSが適用され、各テーブルごとに改ページされます。
+
+
+
+== Resources
+Subversion
+Blog
+Author
+
+

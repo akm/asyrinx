@@ -1,9 +1,22 @@
-<div id="map" style="width:800px; height:500px"></div>
-<script type="text/javascript">
-//<![CDATA[
-if (GBrowserIsCompatible()) {
-  var map = new GMap2(document.getElementById("map"));
-  map.setCenter(new GLatLng(32.74207489599587, 129.87160563468933), 18);
-}
-//]]>
-</script>
+<%- map = GoogleMap.new -%>
+<%- if @course -%>
+<%- 
+	@course.spots.each do |spot| 
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => spot.latitude.to_f, 
+	                                   :lng => spot.longitude.to_f,
+	                                   :html => (render :partial => 'spot/inside_baloon', :locals => {:spot => spot }))
+	end
+	if map.markers.empty?
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => 32.74207489599587, 
+	                                   :lng => 129.87160563468933,
+	                                   :html => '')
+	end
+-%>
+
+  <%= map.to_html %>
+  <div style="width: 800px; height: 600px;">
+    <%= map.div %>
+  </div>
+<%- end -%>

@@ -1,0 +1,16 @@
+<%- @menu_name = 'layouts/none' %>
+<%- map = GoogleMap.new -%>
+<%- 
+	current_user.spots.each do |spot| 
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => spot.latitude.to_f, 
+	                                   :lng => spot.longitude.to_f,
+	                                   :html => (render :partial => 'inside_baloon', :locals => {:spot => spot }))
+	end
+-%>
+
+  <%= map.to_html %>
+  <div style="width: 800px; height: 600px;">
+    <%= map.div %>
+  </div>
+

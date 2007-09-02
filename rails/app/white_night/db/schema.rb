@@ -18,7 +18,8 @@ ActiveRecord::Schema.define(:version => 3) do
     t.column "longitude",    :string,  :limit => 100
     t.column "default_zoom", :string,  :limit => 100
     t.column "comment",      :text
-    t.column "creator_id",   :integer,                :default => 0, :null => false
+    t.column "course_id",    :integer
+    t.column "creator_id",   :integer
     t.column "created_at",   :time
     t.column "updated_at",   :time
   end
