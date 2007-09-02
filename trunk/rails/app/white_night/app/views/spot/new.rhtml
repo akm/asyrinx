@@ -6,6 +6,12 @@
 	                                   :lng => spot.longitude.to_f,
 	                                   :html => (render :partial => 'inside_baloon', :locals => {:spot => spot }))
 	end
+	if map.markers.empty?
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => 32.74207489599587, 
+	                                   :lng => 129.87160563468933,
+	                                   :html => '')
+	end
 -%>
 
 
@@ -36,10 +42,10 @@ function customize_google_map(){
 
 <%- form_tag do -%>
 	<div>
-		<label id='spot_name'>名前</label>
+		<label id='spot_name'>スポット</label>
 		<%= text_field 'spot', 'name', :id => 'spot_name', :size => 80 %>
-		<%= hidden_field 'spot', 'latitude', :class => 'numeric', :id => 'spot_latitude' %>
-		<%= hidden_field 'spot', 'longitude', :class => 'numeric', :id => 'spot_longitude' %>
+		<%= text_field 'spot', 'latitude', :class => 'numeric', :id => 'spot_latitude' %>
+		<%= text_field 'spot', 'longitude', :class => 'numeric', :id => 'spot_longitude' %>
 	</div>
 	<div>
 		<%= text_area 'spot', 'comment', :cols => 80, :rows => 4 %>

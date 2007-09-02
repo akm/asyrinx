@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= params[:controller] %> <%= params[:action] %></title>
+  <%= auto_complete_stylesheet %>
+  <%= stylesheet_link_tag 'scaffold' %>
+  <%= javascript_include_tag :defaults %>
+
+<style type="text/css">
+div.desc_models_menu {
+  margin: 0.5em;
+}
+div.desc_models_menu a{ margin: 0em 0.5em;}
+.stack_trace {
+    background-color: #EEEEEE;
+    font-size: 11px;
+    padding: 10px;
+}
+.stack_trace a{display: block; margin: 0px; padding: 0px;}
+
+.matching {background-color: #DD0;}
+.method_params{font-size:small;}
+
+table thead tr {background-color: #999;}
+tr.odd {}
+tr.even {background-color: #CCC;}
+</style>
+
+
+<style type="text/css" media="print">
+@page { 
+    size: 280mm 192mm;
+    margin-left: 0.5cm; 
+    margin-right: 0.5cm; 
+    margin-top: 0.5cm; 
+    margin-bottom: 0.5cm;
+}
+body {
+	background-color: white;
+}
+.invisible_in_print { display: none; }
+</style>
+
+</head>
+<body>
+
+<%= yield  %>
+
+</body>
+</html>

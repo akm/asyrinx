@@ -1,0 +1,108 @@
+<div class="invisible_in_print">
+	<form action="/desc_models/list" method="GET">
+		<input type="text" name="table_name_patterns" size="100"
+			value="<%=h( params[:table_name_patterns] || @models.map{|m|m.table_name}.join(', ') ) %>" />
+		<input type="submit" value="search" />
+	</form>
+	<a href="/desc_models/reload">reload models</a>
+</div>
+
+<%- @models.each do |model| -%>
+	<%-
+	associations_belongs_to = (model.invocations || []).select{|invocation|invocation[:method_name] == 'belongs_to'}
+	associations_has_many_one = (model.invocations || []).select{|invocation|['has_many', 'has_one'].include?(invocation[:method_name])}
+	validations = (model.invocations || []).select{|invocation| /\Avalidates_.*/ =~ invocation[:method_name] }
+	validations.uniq!
+	extends_for_enum = (model.invocations || []).select{|invocation|invocation[:method_name] == 'extends_column'}
+	extends_for_enum.uniq!
+
+	associations_belongs_to.each do |association|
+		options = association[:arguments].last if association[:arguments] and association[:arguments].last.is_a?(Hash)
+		opt = options || {}
+		association[:foreign_key] = (opt[:foreign_key] || "#{association[:arguments].first.to_s}_id").to_s
+		association[:foreign_class] = opt[:polymorphic] ?  nil : (opt[:class_name] || "#{association[:arguments].first.to_s.camelize}").to_s
+		association[:foreign_table] = opt[:polymorphic] ? nil : association[:foreign_class].constantize.table_name
+	end
+	validations.each do |validation|
+		options = validation[:arguments].last if validation[:arguments] and validation[:arguments].last.is_a?(Hash)
+		validation[:options] = options
+	end
+	-%>
+	<a name="<%=h model.table_name %>"><b><%=h model.table_name %></b></a>
+
+	<%=h model.name %>
+	<b><%=h model.table_comment if model.respond_to?(:table_comment) %></b>
+	<table border='1' cellspacing='0' cellpadding='0'>
+		<thead>
+			<tr>
+				<%- @column_variables.each do |var_name| -%>
+					<th><%=h @column_captions[var_name[1..-1]] %></th>
+				<%- end -%>
+				<th>FK</th>
+				<th>validates</th>
+			</tr>
+		</thead>
+		<tbody>
+			<%- model.columns.each do |column| -%>
+				<tr class="<%= cycle('even', 'odd') %>">
+					<%- @column_variables.each do |var_name| -%>
+						<td><%=h column.instance_variable_get(var_name) %></td>
+					<%- end -%>
+					<td>
+						<%- associations_belongs_to.select{|asso|asso[:foreign_key] == column.name}.each do |association| -%>
+							<a href="#<%=h association[:foreign_table] %>">
+								--&gt; <%=h association[:foreign_table] %>
+							</a>
+						<%- end -%>
+					</td>
+					<td>
+						<%- validations.select{|validation|validation[:arguments].map(&:to_s).include?(column.name)}.each do |validation| -%>
+							<b><%=h validation[:method_name].gsub(/\Avalidates_/, '').gsub(/_of\z/, '') %></b>
+							<%- if validation[:options] -%>
+								<span class="method_params">(<%=h validation[:options].inspect %>)</span>
+							<%- end -%>
+							<br/>
+						<%- end -%>
+						
+						<%- extends_for_enum.select{|ext|ext[:arguments].map(&:to_s).include?(column.name)}.each do |ext| -%>
+							<%- enum = model.enum_for(column) if model.respond_to?(:enum_for) -%>
+							<%- next unless enum -%>
+							<%- extra_keys = enum.to_hash_array.map{|hash|hash.keys}.flatten.uniq - [:id, :key, :name] -%>
+							<table cellspacing="0" cellpadding="0" border="1">
+								<thead>
+									<tr>
+										<th>value</th>
+										<th>key</th>
+										<th>name</th>
+										<%- extra_keys.each do |extra_key| -%>
+											<th><%=h extra_key.inspect %></th>
+										<%- end -%>
+									</tr>
+								</thead>
+								<tbody>
+									<%- enum.to_hash_array.each do |entry| -%>
+										<tr>
+											<td><%=h entry[:id].inspect %></td>
+											<td><%=h entry[:key].inspect %></td>
+											<td><%=h entry[:name].inspect %></td>
+											<%- extra_keys.each do |extra_key| -%>
+												<td><%=h entry[extra_key].inspect %></td>
+											<%- end -%>
+										</tr>
+									<%- end -%>
+								</tbody>
+							</table>
+
+							<br/>
+						<%- end -%>
+						
+						
+					</td>
+				</tr>
+			<%- end -%>
+		</tbody>
+	</table>
+	
+	<div style="page-break-after: always;"></div>
+	<p style="height:0; line-height:0"></p>
+<%- end -%>

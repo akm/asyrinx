@@ -1,0 +1,145 @@
+<%- map = GoogleMap.new -%>
+<%- 
+	current_user.spots.each do |spot|
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => spot.latitude.to_f, 
+	                                   :lng => spot.longitude.to_f,
+	                                   :html => (render :partial => 'spot/inside_baloon', :locals => {:spot => spot }))
+	end
+	if map.markers.empty?
+		map.markers << GoogleMapMarker.new(:map => map, 
+	                                   :lat => 32.74207489599587, 
+	                                   :lng => 129.87160563468933,
+	                                   :html => '')
+	end
+-%>
+
+
+<script type="text/javascript">
+//<![CDATA[
+
+JSON = {
+	// escape a character
+	escapeJSONChar: function (c) {
+	    if(c == "\"" || c == "\\") return "\\" + c;
+	    else if (c == "\b") return "\\b";
+	    else if (c == "\f") return "\\f";
+	    else if (c == "\n") return "\\n";
+	    else if (c == "\r") return "\\r";
+	    else if (c == "\t") return "\\t";
+	    var hex = c.charCodeAt(0).toString(16);
+	    if(hex.length == 1) return "\\u000" + hex;
+	    else if(hex.length == 2) return "\\u00" + hex;
+	    else if(hex.length == 3) return "\\u0" + hex;
+	    else return "\\u" + hex;
+	},
+	
+	toQuoted: function( s) {
+	    var parts = s.split("");
+	    for(var i=0; i < parts.length; i++) {
+			var c =parts[i];
+			if(c == '"' || c == '\\' )
+			    parts[i] = JSON.escapeJSONChar(parts[i]);
+	    }
+	    return "\"" + parts.join("") + "\"";
+	},
+	
+	// encode a string into JSON format
+	escapeJSONString: function (s) {
+	    // The following should suffice but Safari's regex is b0rken
+	    // (doesn't support callback substitutions)
+	    //
+	    //   return "\"" + s.replace(/([^\u0020-\u007f]|[\\\"])/g,
+	    //                           JSON.escapeJSONChar) + "\"";
+	
+	    // Rather inefficient way to do it
+	    var parts = s.split("");
+	    for(var i=0; i < parts.length; i++) {
+			var c =parts[i];
+			if(c == '"' ||  c == '\\' || c.charCodeAt(0) < 32 || c.charCodeAt(0) >= 128)
+				parts[i] = JSON.escapeJSONChar(parts[i]);
+	    }
+	    return "\"" + parts.join("") + "\"";
+	}, 
+	
+	// Marshall objects to JSON format
+	toJSON: function (o, propertyPredicate, unescapedString) {
+	    if(o == null) {
+			return "null";
+	    } else if(o.constructor == String) {
+			return (unescapedString) ? JSON.toQuoted(o) : JSON.escapeJSONString(o);
+	    } else if(o.constructor == Number) {
+			return o.toString();
+	    } else if(o.constructor == Boolean) {
+			return o.toString();
+	    } else if(o.constructor == Date) {
+	    	return '{javaClass: "java.util.Date", time: ' + o.valueOf() +'}';
+		//return o.valueOf().toString();
+	    } else if(o.constructor == Array) {
+			var v = [];
+			for(var i = 0; i < o.length; i++)
+				v.push(JSON.toJSON(o[i], propertyPredicate, unescapedString));
+			return "[" + v.join(", ") + "]";
+	    } else {
+		var v = [];
+		for(attr in o) {
+			if (propertyPredicate) {
+				if (propertyPredicate.constructor == Function) {
+					if (!propertyPredicate( attr ))
+						continue;
+				} else if ((propertyPredicate.evaluate) && (propertyPredicate.evaluate.constructor == Function)) {
+					if (!propertyPredicate.evaluate( attr ))
+						continue;
+				} else {
+					if (propertyPredicate != attr)
+						continue;
+				}
+			}
+			if(o[attr] == null) 
+				v.push("\"" + attr + "\": null");
+			else if(typeof o[attr] == "function"); 
+				// skip
+			else 
+				v.push(JSON.escapeJSONString(attr) + ": " + JSON.toJSON(o[attr], propertyPredicate, unescapedString));
+		}
+		return "{" + v.join(", ") + "}";
+	    }
+	}
+}
+
+var spots = []
+var custom_google_map = null;
+function customize_google_map(){
+	  var initialize_without_customize = window.onload;
+	  window.onload = function(){
+	  	initialize_without_customize();
+		
+		// custom_google_map = google_map;
+		GEvent.addListener(google_map, 'click', function(overlay, point) {
+			  if (point) {
+			  	spots.push({latitude: point.y, longitude: point.x});
+		      	$('spots_json').value = JSON.toJSON(spots)
+				google_map.addOverlay( new GMarker(point));
+			  }
+		    });
+	  }
+}
+//]]>
+</script>
+
+  <%= map.to_html{"customize_google_map();"} %>
+  <div style="width: 800px; height: 600px;">
+    <%= map.div %>
+  </div>
+
+<%- form_tag do -%>
+	<div>
+		<label id='spot_name'>コースの名前</label>
+		<%= text_field 'course', 'name', :id => 'course_name', :size => 80 %>
+	</div>
+	<div>
+		<%= text_area 'course', 'comment', :cols => 80, :rows => 4 %>
+	</div>
+		<input type="text" id='spots_json' name="course_spots"/>
+	<input type="submit" value="                &raquo; コースを追加                ">
+<%- end -%>

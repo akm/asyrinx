@@ -1,6 +1,7 @@
 require 'digest/sha1'
 class User < ActiveRecord::Base
 
+  has_many :courses, :class_name => 'Course', :foreign_key => 'creator_id'
   has_many :spots, :class_name => 'Spot', :foreign_key => 'creator_id'
   
   

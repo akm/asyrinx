@@ -24,5 +24,9 @@ class SpotController < ApplicationController
     end
     redirect_to :action => 'new'
   end
+  
+  def roulette
+    render :action => 'roulette'
+  end
 
 end
