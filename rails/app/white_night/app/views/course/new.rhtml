@@ -128,7 +128,7 @@ function customize_google_map(){
 </script>
 
   <%= map.to_html{"customize_google_map();"} %>
-  <div style="width: 800px; height: 600px;">
+  <div style="width: 800px; height: 500px;">
     <%= map.div %>
   </div>
 
@@ -140,6 +140,6 @@ function customize_google_map(){
 	<div>
 		<%= text_area 'course', 'comment', :cols => 80, :rows => 4 %>
 	</div>
-		<input type="text" id='spots_json' name="course_spots"/>
+		<input type="hidden" id='spots_json' name="course_spots"/>
 	<input type="submit" value="                &raquo; コースを追加                ">
 <%- end -%>
