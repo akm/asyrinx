@@ -1,0 +1,7 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* この条件分岐コメントにすべてのバージョンの IE を対象とした css のフィックスを配置します */
+.twoColLiqRt #sidebar1 { padding-top: 30px; }
+.twoColLiqRt #mainContent { zoom: 1; padding-top: 15px; }
+/* 上述の専用のズームプロパティにより、いくつかのバグを回避するのに必要な hasLayout が IE に対して設定されます */

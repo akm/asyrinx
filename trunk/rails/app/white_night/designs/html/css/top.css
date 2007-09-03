@@ -1,0 +1,18 @@
+@charset "utf-8";
+/* index */
+
+h2#top_image{
+  margin-bottom:15px;
+}
+
+ul#examples{
+  margin:10px 0;
+}
+ul#examples li{
+  float:left;
+  padding-bottom:15px;
+}
+
+#right_menu h2{
+  margin-bottom:5px;
+}

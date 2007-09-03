@@ -1,0 +1,18 @@
+@charset "utf-8";
+
+/*
+Theme Name: CGFM
+Theme URI: http://cgfm.jp
+Description:
+Version: 
+Author: Garyu @ CGFM LLC.
+Author URI: http://cgfm.jp
+*/
+
+/*
+----------------------------------------------------------------------------- 
+Import
+----------------------------------------------------------------------------- */
+@import "reset.css";
+@import "font.css";
+@import "common.css";
