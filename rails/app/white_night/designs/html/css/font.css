@@ -1,0 +1,38 @@
+@charset "utf-8";
+
+/*
+Yahoo! UI Library: Fonts CSS
+Version 2.2.0
+http://developer.yahoo.com/yui/fonts/
+*/
+body{font:13px arial,helvetica,clean,sans-serif;*font-size:small;*font:x-small;}
+table {font-size:inherit;font:100%;}
+select, input, textarea {font:99% arial,helvetica,clean,sans-serif;}
+pre, code {font:115% monospace;*font-size:100%;}
+body * {line-height:1.22em;}
+
+body{ color:#555;}
+a:link { color:#006; }
+a:visited { color:#636; }
+a:hover { color:#900; }
+a:active { color: red; }
+
+#header h2{
+  font-size:smaller;
+}
+
+#container h2#h2_title{
+  font-size:x-large;
+  font-weight:bold;
+}
+#main_content h3{
+  font-size:large;
+  font-weight:bold;
+}
+#footer ul li{
+  font-size:0.9em;
+}
+
+.font_small{
+  font-size:x-small;
+}
