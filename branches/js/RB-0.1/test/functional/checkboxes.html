@@ -116,8 +116,57 @@ new HTMLInputElement.WholeCheck( $("whole_check3"), function(event){
 new HTMLInputElement.WholeCheck( $("whole_check4"), "check4" );
 --></script>
 
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>
+      	<a href="javascript:void(0)" id="link_to_select_all" >選択</a>
+      	<a href="javascript:void(0)" id="link_to_deselect_all" >解除</a>
+      </th>
+      <th>名前</th>
+    </tr>
+  </thead>
+  <tbody id="addable_body3">
+    <tr>
+      <td><input class="check5" type="checkbox"/></td>
+      <td>AAAAA</td>
+    </tr>
+    <tr>
+      <td><input class="check5" type="checkbox"/></td>
+      <td>BBBBB</td>
+    </tr>
+    <tr>
+      <td><input class="check5" type="checkbox"/></td>
+      <td>CCCCC</td>
+    </tr>
+    <tr>
+      <td><input class="check5" type="checkbox"/></td>
+      <td>DDDDD</td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="2">
+        <a href="javascript:void(0)" id="add_row_button3">追加</a>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+<script language="javascript" type="text/javascript" ><!--
+Event.observe($("add_row_button3"), "click", function(event){
+    Element.build({tagName: "tr", body: [
+        {tagName: "td", body: {tagName:"input", className:"check5", type:"checkbox"} },
+        {tagName: "td", body: "XXXXXXXX"}
+    ]}, $("addable_body3") );
+});
+HTMLInputElement.WholeCheck.select_all_link('link_to_select_all', 'check5');
+HTMLInputElement.WholeCheck.deselect_all_link('link_to_deselect_all', 'check5');
+--></script>
+
+
 <form id="form1" onsubmit="return false;">
-    本来なら隠されているフィールド<input name="checked_values1" id="checked_values1" type="hidden_checkbox_values" type="text"/>
+    本来なら隠されているフィールド<input name="checked_values1" id="checked_values1" _type="hidden_checkbox_values" type="text"/>
     <input type="checkbox" class="check_group1" value="a"/>a &nbsp;&nbsp;
     <input type="checkbox" class="check_group1" value="b"/>b &nbsp;&nbsp;
     <input type="checkbox" class="check_group1" value="c"/>c &nbsp;&nbsp;
@@ -135,7 +184,7 @@ Event.observe($("form1"), "submit", function(event){
 
 
 <div>
-    フォーム外でもOK<input id="checked_values2" type="hidden_checkbox_values" type="text"/>
+    フォーム外でもOK<input id="checked_values2" _type="hidden_checkbox_values" type="text"/>
     <input type="checkbox" class="check_group2" value="a"/>a &nbsp;&nbsp;
     <input type="checkbox" class="check_group2" value="b"/>b &nbsp;&nbsp;
     <input type="checkbox" class="check_group2" value="c"/>c &nbsp;&nbsp;
@@ -144,6 +193,9 @@ Event.observe($("form1"), "submit", function(event){
 <script language="javascript" type="text/javascript" ><!--
 new HTMLInputElement.CheckboxText( $("checked_values2"), "check_group2");
 --></script>
+
+
+
 
 </body>
 </html>

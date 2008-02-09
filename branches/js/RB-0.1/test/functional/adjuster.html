@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -8,25 +8,40 @@
     <script language="javascript" type="text/javascript" charset="UTF-8" src="../../src/prototype_ext.js" ></script>
 </head>
 <body>
-    <div id="container" style="width: 300px; height: 200px; padding: 5px; border: 1px solid red;">
+    <div id="container1" style="margin: 10px; width: 300px; height: 200px; padding: 10px; border: 5px solid red;">
         <textarea id="textarea1" style="margin: 5px; border: 1px solid black;">aaaaaaaaa</textarea>
     </div>
-    <br/><br/><br/>
-    Width: <input type="text" id="setter_width"/>&nbsp;&nbsp;&nbsp;
-    Height: <input type="text" id="setter_height"/>
-    <input type="button" value="Resize" id="button_resize">
-    
+    <br/>
+    Width: <input type="text" id="setter_width1"/>&nbsp;&nbsp;&nbsp;
+    Height: <input type="text" id="setter_height1"/>
+    <input type="button" value="Resize" id="button_resize1">
+    <br/><br/>
 <script language="javascript" type="text/javascript" ><!--
-//Logger.setActiveOnLoad(true);
-
-var adjuster = HTMLElement.adjustChild.bind(null, "container", "textarea1");
-
-Event.observe($("button_resize"), "click", function(event){
-    $("container").style.width = $("setter_width").value + "px";
-    $("container").style.height = $("setter_height").value + "px";
+var adjuster = HTMLElement.adjustChild.bind(null, "container1", "textarea1");
+Event.observe($("button_resize1"), "click", function(event){
+    $("container1").style.width = $("setter_width1").value + "px";
+    $("container1").style.height = $("setter_height1").value + "px";
     adjuster.apply();
 });
+--></script>
 
+    <div id="container2" style="float:left; margin: 10px; width: 300px; height: 200px; padding: 10px; border: 5px solid red;">
+        <textarea id="textarea2" style="margin: 5px; border: 1px solid black;">aaaaaaaaa</textarea>
+        <div id="container2_child">
+            Width: <input type="text" id="setter_width2"/>&nbsp;&nbsp;&nbsp;
+            Height: <input type="text" id="setter_height2"/>
+            <input type="button" value="Resize" id="button_resize2">
+        </div>
+    </div>
+    <div style="clear:both;"></div>
+    
+<script language="javascript" type="text/javascript" ><!--
+var adjuster2 = HTMLElement.adjustChild.bind(null, "container2", "textarea2");
+Event.observe($("button_resize2"), "click", function(event){
+    $("container2").style.width = $("setter_width2").value + "px";
+    $("container2").style.height = $("setter_height2").value + "px";
+    adjuster2.apply();
+});
 --></script>
 
 </body>
