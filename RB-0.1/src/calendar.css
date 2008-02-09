@@ -6,8 +6,8 @@ div.calendarHeader {
 div.calendarHeader select.era {padding: 0px; margin: 2px; width: 55px; height: 18px; }
 div.calendarHeader select.month {padding: 0px; margin: 2px; width: 55px; height: 18px; }
 div.calendarHeader input.year {padding: 1px 0px; margin: 2px; width: 32px; height: 14px; text-align: right;}
-div.calendarHeader button.prevMonth { padding: 0px 6px; }
-div.calendarHeader button.nextMonth { padding: 0px 6px; }
+div.calendarHeader button.prevMonth { padding: 0px 3px; }
+div.calendarHeader button.nextMonth { padding: 0px 3px; }
 
 div.calendarBody th.weekNumberHead { text-align: left; }
 div.calendarBody th.weekDayHead { font-weight: bold; border-bottom: 1px solid WindowText; }

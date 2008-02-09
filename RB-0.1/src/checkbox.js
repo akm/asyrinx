@@ -13,14 +13,23 @@
 if (!window["HTMLInputElement"]) HTMLInputElement = {};
 
 HTMLInputElement.WholeCheck = Class.create();
+Object.extend(HTMLInputElement.WholeCheck, {
+	select_all_link: function(link, checkboxesProvider){
+		return new HTMLInputElement.WholeCheck(link, checkboxesProvider, function(){return true;});
+	},
+	deselect_all_link: function(link, checkboxesProvider){
+		return new HTMLInputElement.WholeCheck(link, checkboxesProvider, function(){return false;});
+	}
+});
 HTMLInputElement.WholeCheck.prototype = {
-    initialize: function(wholeCheckbox, checkboxesProvider){
+    initialize: function(wholeCheckbox, checkboxesProvider, checkedGetter){
         this.getCheckboxes = Element.getElementsProvider(checkboxesProvider);
-        Event.observe($(wholeCheckbox), "click", this.wholeCheckboxClick.bindAsEventListener(this));
+        this.getChecked = checkedGetter || function(wholeCHeckbox){return wholeCheckbox.checked;};
+		Event.observe($(wholeCheckbox), "click", this.wholeCheckboxClick.bindAsEventListener(this));
     },
     wholeCheckboxClick: function(event){
         var wholeCheckbox = Event.element(event);
-        var checked = wholeCheckbox.checked;
+        var checked = this.getChecked(wholeCheckbox);
         var checkboxes = this.getCheckboxes(event);
         for(var i=0;i<checkboxes.length;i++){
             var checkbox = $(checkboxes[i]);
@@ -37,7 +46,7 @@ HTMLInputElement.CheckboxText.DefaultOptions = {
 }
 HTMLInputElement.CheckboxText.prototype = {
     initialize: function(checkboxText, checkboxesProvider, options){
-        this.options = Object.fill(options||{}, HTMLInputElement.CheckboxText.DefaultOptions);
+        this.options = $H(HTMLInputElement.CheckboxText.DefaultOptions).merge(options||{});
         this.getCheckboxes = Element.getElementsProvider(checkboxesProvider);
         this.checkboxText = $(checkboxText);
         if (this.options.applyAutomatically)

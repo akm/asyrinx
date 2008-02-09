@@ -237,7 +237,7 @@ Object.extend(Date.EraGroup.prototype, {
 		for(var i = 0; i < this.eras.length; i++) {
 			var era = this.eras[i];
 			var propertyValue = era[captionProperty];
-			if (eraDateStr.substring(0, propertyValue.length) == propertyValue)
+			if (propertyValue && eraDateStr.substring(0, propertyValue.length) == propertyValue)
 				return era;
 		}
 		return null;
@@ -265,6 +265,8 @@ Object.extend(Date.EraGroup.prototype, {
 	   date.setEraAndYear(era,era.getEraYear(date));
 	}
 });
+Date.EraGroup.DEFAULT = new Date.EraGroup();
+Date.EraGroup.DEFAULT.add(new Date.Era.ADEra());
 
 
 Object.extend(Date.prototype, {

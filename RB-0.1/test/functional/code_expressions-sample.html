@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja" lang="ja">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>AutoComplete Sample</title>
+<script language="javascript" type="text/javascript" src="../../lib/railties/prototype.js" ></script>
+<script language="JavaScript">
+//<![CDATA[
+Event.observe(window, 'load', function(){
+	if (!!(window.attachEvent && !window.opera))
+		return;
+	for(var view in RBC.CodeView){
+		RBC.CodeView[view.toLowerCase()] = RBC.CodeView[view];
+	}
+	var CODE_CLASS = 'rbc_code'
+	var codes = document.getElementsByClassName(CODE_CLASS);
+	codes.each(function(code){
+		var code_class_names = $A(new Element.ClassNames(code));
+		code_class_names.each(function(code_class_name){
+			var code_view_class = RBC.CodeView[code_class_name];
+			if (code_view_class){
+				var code_view = new code_view_class(code, code_class_names);
+				code_view.process();
+			}
+		})
+	});
+})
+if (!window.RBC) RBC = {};
+RBC.CodeView = {};
+RBC.CodeView.Base = Class.create();
+Object.extend(RBC.CodeView.Base, {
+	create: function(prompt, prompt_class, result_class){
+		var klass = Class.create();
+		Object.extend(klass.prototype, RBC.CodeView.Base.prototype);
+		Object.extend(klass.prototype, {
+			initialize: function(code_element){
+				this.code_element = code_element;
+				this.prompt = prompt;
+				this.prompt_class = prompt_class;
+				this.result_class = result_class;
+			}
+		});
+		return klass;
+	}
+});
+Object.extend(RBC.CodeView.Base.prototype, {
+	process: function(){
+		var prompt = (this.prompt.constructor == RegExp) ? this.prompt : 
+			new RegExp("^" + this.prompt.gsub(">", "&gt;"));
+		var contents = this.code_element.innerHTML.strip();
+		var dest = this.code_element.parentNode;
+		contents.split("\n").each(function(line){
+			line = line.strip();
+			var line_element = document.createElement("span");
+			Element.addClassName(line_element, 'lineno');
+			if (line.match(prompt)){
+				Element.addClassName(line_element, this.prompt_class);
+				line_element.innerHTML = line.sub(prompt, '').strip();
+			} else {
+				Element.addClassName(line_element, this.result_class);
+				line_element.innerHTML = line;
+			}
+			dest.appendChild(line_element);
+			dest.appendChild(document.createTextNode("\n"));
+		}.bind(this));
+		dest.removeChild(this.code_element);
+	}
+});
+RBC.CodeView.CommandConsole = RBC.CodeView.Base.create(">", "comand_prompt", "comand_result");
+RBC.CodeView.CommandLine = RBC.CodeView.CommandConsole;
+RBC.CodeView.command_line = RBC.CodeView.CommandConsole;
+RBC.CodeView.Console = RBC.CodeView.CommandConsole;
+
+RBC.CodeView.MySQL = RBC.CodeView.Base.create("mysql>", "mysql_prompt", "mysql_result");
+
+RBC.CodeView.ScriptConsole = RBC.CodeView.Base.create(">>", "script_console_prompt", "script_console_result");
+RBC.CodeView.script_console = RBC.CodeView.ScriptConsole;
+
+RBC.CodeView.irb = RBC.CodeView.Base.create("irb>", "irb_prompt", "irb_result");
+//]]>
+</script>
+
+<style type="text/css" media="screen" rel="Stylesheet"><!--
+pre { counter-reset: lineno; }
+.lineno:before { counter-increment: lineno; }
+.comand_prompt:before { content: counter(lineno) " > "; }
+.comand_result:before { content: counter(lineno) "  "; }
+.mysql_prompt:before { content: counter(lineno) " mysql> "; }
+.mysql_result:before { content: counter(lineno) "        "; }
+.irb_prompt:before { content: counter(lineno) " irb> "; }
+.irb_result:before { content: counter(lineno) "      "; }
+.script_console_prompt:before { content: counter(lineno) " >> "; }
+.script_console_result:before { content: counter(lineno) "   "; }
+--></style>
+
+</head>
+<body>
+
+command prompt
+<pre><code class="rbc_code command_line">
+> rem testディレクトリを作成
+> dir C:\cygwin
+ ドライブ C のボリューム ラベルがありません。
+ ボリューム シリアル番号は C03A-08A0 です
+
+ C:\cygwin のディレクトリ
+
+2007/07/05  10:59    &lt;DIR&gt;          .
+2007/07/05  10:59    &lt;DIR&gt;          ..
+2007/09/17  06:15    &lt;DIR&gt;          bin
+2006/04/17  21:39                57 cygwin.bat
+2007/09/17  06:15             7,022 cygwin.ico
+2007/09/17  06:15    &lt;DIR&gt;          etc
+2006/11/18  15:58    &lt;DIR&gt;          home
+2007/09/17  06:15    &lt;DIR&gt;          lib
+2007/06/29  00:35    &lt;DIR&gt;          tmp
+2007/08/02  20:06    &lt;DIR&gt;          usr
+2007/08/02  20:06    &lt;DIR&gt;          var
+               2 個のファイル               7,079 バイト
+               9 個のディレクトリ  13,402,390,528 バイトの空き領域
+>
+</code></pre>
+
+
+MySQL
+<pre><code class="rbc_code MySQL">
+mysql> show databases;
++---------------------------------+
+| Database                        |
++---------------------------------+
+| mysql                           |
+| iketeru_development             |
+| iketeru_production              |
+| iketeru_test                    |
++---------------------------------+
+4 rows in set (0.03 sec)
+mysql> 
+</code></pre>
+
+
+script/console
+<pre><code class="rbc_code script_console">
+>> # 実行しているモードを取得してみる
+>> ENV['RAILS_ENV']
+=> "development" 
+>> 
+</code></pre>
+
+
+irb
+<pre><code class="rbc_code irb">
+irb> # rubyだとこんなことできちゃうよ
+irb> # 環境変数からPATHをパースしてソートして一覧表示
+irb> puts ENV['PATH'].split(File::PATH_SEPARATOR).sort.join("\n")
+C:\WINDOWS
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\system32
+C:\WINDOWS\system32\WindowsPowerShell\v1.0
+C:\cygwin\bin
+=> nil
+irb> 
+</code></pre>
+
+
+
+</body>
+</html>

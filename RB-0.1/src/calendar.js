@@ -16,7 +16,8 @@ Date.Calendar={};
 Date.Calendar.Model = Class.create();
 Date.Calendar.Model.prototype = {
 	initialize: function(value, eraGroup){
-		this.eraGroup = eraGroup || Date.EraGroup.DEFAULT;
+	  console.debug(Date.EraGroup)
+  	this.eraGroup = eraGroup || Date.EraGroup.DEFAULT;
 		this.setValue(value||new Date());
 		this.observers = null;
 		Object.Aspect.after(this, 
@@ -368,36 +369,44 @@ Date.Calendar.View.prototype = {
 	},
 	
 	createHeader: function(parentNode) {
-	   return Element.build({
+     var eraSelect = 
+       (this.eraGroup.size() < 2) ? null :
+         {tagName:"select", className:"era", body: 
+             this.eraGroup.collect(function(era, index){
+                 return {
+                     tagName:"option", value:index, body: era["longName"], 
+                     selected:(index == this.eraGroup.size() -1)
+                 };
+             }.bind(this)),
+             afterBuild: function(element){ this.eraSelection = element; }.bind(this)
+         };
+     var yearField = 
+         {tagName:"input", className: "year", value: this.model.getYear(), size:4,
+             afterBuild: function(element){ this.yearField = element; }.bind(this)
+         };
+     
+     return Element.build({
 	       tagName:"div", className:"calendarHeader",
 	       body: [
 	           {tagName:"table", boder:0, cellSpacing:0, body:
 	               {tagName:"tbody", body:[
-	                   {tagName:"tr", body:[
-    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
-        	                   {tagName:"select", className:"era", body: 
-    	                           this.eraGroup.collect(function(era, index){
-    	                               return {
-    	                                   tagName:"option", value:index, body: era["longName"], 
-    	                                   selected:(index == this.eraGroup.size() -1)
-    	                               };
-    	                           }.bind(this)),
-        	                       afterBuild: function(element){ this.eraSelection = element; }.bind(this)
-            	               }
-        	               },
-    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
-        	                   {tagName:"input", className: "year", value: this.model.getYear(), size:4,
-        	                       afterBuild: function(element){ this.yearField = element; }.bind(this)
-            	               }
-        	               }
-    	               ]},
+                     (
+                       eraSelect ? 
+                         {tagName:"tr", body:[
+                             {tagName:"td", className:"labelContainer", colSpan: 2, align:"center", body: eraSelect},
+                             {tagName:"td", className:"labelContainer", colSpan: 2, align:"center", body: yearField}
+                         ]} : null
+                     ),
 	                   {tagName:"tr", body:[
     	                   {tagName:"td", align:"right", body:
         	                   {tagName:"button", className:"prevMonth", body:"<<",
         	                       afterBuild:function(element){ this.prevMonthButton = element; }.bind(this)
             	               }
         	               },
-    	                   {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
+                         (eraSelect ? null :
+                            {tagName:"td", className:"labelContainer", align:"center", body: yearField}
+    	                   ),
+                         {tagName:"td", className:"labelContainer", colSpan:2, align:"center", body:
         	                   {tagName:"select", className:"month", body:
     	                           this.options.MonthNames.collect(function(monthName, index){
     	                               return {
@@ -408,7 +417,7 @@ Date.Calendar.View.prototype = {
         	                       afterBuild: function(element){ this.monthSelection = element; }.bind(this)
             	               }
         	               },
-    	                   {tagName:"td", align:"left", body:
+                         {tagName:"td", align:"left", body:
         	                   {tagName:"button", className:"nextMonth", body:">>",
         	                       afterBuild: function(element){ this.nextMonthButton = element; }.bind(this)
             	               }
@@ -427,7 +436,8 @@ Date.Calendar.View.prototype = {
 	    var era = this.eraGroup.getEraByDate(d);
 		var eraIndex = this.eraGroup.indexOf(era);
 		this.eraGroup.updateEraAndYear(d);
-		Form.Element.setValue(this.eraSelection, eraIndex);
+		if (this.eraSelection)
+      Form.Element.setValue(this.eraSelection, eraIndex);
 		Form.Element.setValue(this.yearField, d.getEraYear());
 		Form.Element.setValue(this.monthSelection, d.getMonth() + 1);
 	},
@@ -590,7 +600,8 @@ Date.Calendar.ViewController.Methods = {
     activate: function() {
         Event.observe(this.view.element, "click", this.paneClick.bindAsEventListener(this));
         //Event.observe(this.view.element, "dblclick", this.paneDblClick.bindAsEventListener(this));
-        Event.observe(this.view.eraSelection, "change", this.eraChanged.bindAsEventListener(this));
+        if (this.view.eraSelection)
+          Event.observe(this.view.eraSelection, "change", this.eraChanged.bindAsEventListener(this));
         Event.observe(this.view.monthSelection, "change", this.monthChanged.bindAsEventListener(this));
         var keyHandlingElement = this.options["keyHandlingElement"] || this.view.element; 
         this.keyHandler = new Event.KeyHandler(keyHandlingElement, this.getActions());
