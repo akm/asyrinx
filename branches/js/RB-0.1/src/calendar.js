@@ -16,7 +16,6 @@ Date.Calendar={};
 Date.Calendar.Model = Class.create();
 Date.Calendar.Model.prototype = {
 	initialize: function(value, eraGroup){
-	  console.debug(Date.EraGroup)
   	this.eraGroup = eraGroup || Date.EraGroup.DEFAULT;
 		this.setValue(value||new Date());
 		this.observers = null;
